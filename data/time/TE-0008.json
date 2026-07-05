@@ -1,0 +1,9 @@
+{
+  "id": "TE-0008",
+  "project_id": "PR-001",
+  "date": "2026-06-24",
+  "hours": 2.25,
+  "description": "Draft findings: ingestion bottlenecks",
+  "billed": true,
+  "invoice_id": "INV-2026-001"
+}

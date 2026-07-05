@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Dashboard</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --bar: #2a78d6; --track: #f0efec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --bar: #3987e5; --track: #2c2c2a;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 15px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 32px 24px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 1.3rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.85rem; margin-bottom: 28px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+            margin-bottom: 28px; }
+  .tile { background: var(--card); border: 1px solid var(--border);
+           border-radius: 10px; padding: 16px 18px; }
+  .tile .label { font-size: 0.78rem; color: var(--ink-2);
+                  text-transform: uppercase; letter-spacing: 0.05em; }
+  .tile .value { font-size: 1.7rem; font-weight: 650; margin-top: 2px;
+                  font-variant-numeric: tabular-nums; }
+  .tile .ctx { font-size: 0.8rem; color: var(--ink-2); }
+  .card { background: var(--card); border: 1px solid var(--border);
+           border-radius: 10px; padding: 18px 20px; margin-bottom: 28px; }
+  .card h2 { font-size: 0.95rem; margin-bottom: 14px; }
+  .bar-row { display: grid; grid-template-columns: 190px 1fr 84px; gap: 10px;
+              align-items: center; margin-bottom: 2px; padding: 4px 0; }
+  .bar-row:hover .bar { filter: brightness(1.12); }
+  .bar-label { font-size: 0.86rem; color: var(--ink); overflow: hidden;
+                text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { display: block; background: var(--track); border-radius: 0 4px 4px 0;
+                height: 18px; }
+  .bar { display: block; height: 100%; background: var(--bar);
+          border-radius: 0 4px 4px 0; }
+  .bar-value { font-size: 0.86rem; text-align: right; color: var(--ink);
+                font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  th { text-align: left; color: var(--ink-2); font-weight: 600; padding: 6px 10px;
+        border-bottom: 1px solid var(--border); }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--border);
+        vertical-align: top; }
+  tr:hover td { background: var(--track); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.state { color: var(--ink-2); white-space: nowrap; }
+  .empty { color: var(--ink-2); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Practice Dashboard</h1>
+  <p class="sub">Generated from <code>data/</code> by <code>views/build_dashboard.py</code> —
+    regenerate after any data change.</p>
+
+  <div class="tiles">
+    <div class="tile"><div class="label">Unbilled hours</div>
+      <div class="value">8.00</div>
+      <div class="ctx">across 3 entries</div></div>
+    <div class="tile"><div class="label">Unbilled value</div>
+      <div class="value">$1,400</div>
+      <div class="ctx">at project rates</div></div>
+    <div class="tile"><div class="label">Active projects</div>
+      <div class="value">3</div>
+      <div class="ctx">2 clients &middot; 1 invoices</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Unbilled value by client</h2>
+    <div class="bar-row" title="Bluefield Logistics: $1,400.00 unbilled"><span class="bar-label">Bluefield Logistics</span><span class="bar-track"><span class="bar" style="width:100.0%"></span></span><span class="bar-value">$1,400</span></div>
+
+  </div>
+
+  <div class="card">
+    <h2>Recent time</h2>
+    <table>
+      <tr><th>Date</th><th>Project</th><th style="text-align:right">Hours</th>
+          <th>Description</th><th>Invoice</th></tr>
+      <tr><td>2026-07-03</td><td>Route Optimization Pilot</td><td class="num">1.75</td><td>Pilot metrics review with ops team</td><td class="state">unbilled</td></tr>
+<tr><td>2026-07-02</td><td>Vendor Selection</td><td class="num">2.50</td><td>Vendor demos: scoring session one</td><td class="state">INV-2026-001</td></tr>
+<tr><td>2026-06-24</td><td>Data Platform Assessment</td><td class="num">2.25</td><td>Draft findings: ingestion bottlenecks</td><td class="state">INV-2026-001</td></tr>
+<tr><td>2026-06-19</td><td>Route Optimization Pilot</td><td class="num">3.75</td><td>Baseline route data analysis</td><td class="state">unbilled</td></tr>
+<tr><td>2026-06-18</td><td>Vendor Selection</td><td class="num">3.00</td><td>Vendor long-list assembly and screening criteria</td><td class="state">INV-2026-001</td></tr>
+<tr><td>2026-06-16</td><td>Vendor Selection</td><td class="num">1.50</td><td>Requirements workshop prep</td><td class="state">INV-2026-001</td></tr>
+<tr><td>2026-06-12</td><td>Route Optimization Pilot</td><td class="num">2.50</td><td>Pilot scoping with ops team</td><td class="state">unbilled</td></tr>
+<tr><td>2026-06-11</td><td>Data Platform Assessment</td><td class="num">4.00</td><td>Warehouse and pipeline inventory</td><td class="state">INV-2026-001</td></tr>
+
+    </table>
+  </div>
+</div>
+</body>
+</html>

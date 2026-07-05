@@ -1,0 +1,9 @@
+{
+  "id": "TE-0003",
+  "project_id": "PR-001",
+  "date": "2026-06-11",
+  "hours": 4.0,
+  "description": "Warehouse and pipeline inventory",
+  "billed": true,
+  "invoice_id": "INV-2026-001"
+}

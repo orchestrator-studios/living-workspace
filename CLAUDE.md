@@ -26,9 +26,13 @@ they are an application — one that starts empty and comes to life through conv
    that covers the operation at hand.
 5. **Regenerate views after data changes.** Views are projections; they are cheap to rebuild and
    must never be hand-edited out of sync with the data.
-6. **Grow the workspace as a side effect of the work.** When an operation repeats, propose a tool.
-   When a rule is stated, capture it as a skill. When scanning beats asking, propose a view.
-   New capability is added in place — there is no deploy step.
+6. **Do it, or grow it.** When the user states a want: if it's reachable with the access,
+   understanding, and views that already exist — just do it. If it isn't, the next move is
+   acquiring what's missing, checked in order: **access** (add the tool or connection),
+   **understanding** (write the schema or skill), **presentation** (generate the view). Then
+   retry the want. Every gap-fill is deposited permanently, in place — there is no deploy step.
+   Signals worth acting on: an operation repeating (→ tool), a rule being stated (→ skill),
+   scanning beating asking (→ view).
 
 ## On entry
 

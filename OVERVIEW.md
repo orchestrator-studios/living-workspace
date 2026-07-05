@@ -1,24 +1,37 @@
 # System Overview
 
-*This file is filled in first — before any schema, record, tool, or view exists. The agent
-interviews you; the answers land here. Everything else in the workspace traces back to it.*
+*Filled in by interview, 2026-07-04. Everything else in this workspace traces back to this file.*
 
 ## Purpose
 
-*(One paragraph: what this workspace exists to do.)*
+Track a solo consulting practice end to end: who the clients are, what projects are running at
+what rates, where the billable time goes, and what has and hasn't been invoiced — so that
+monthly invoicing is mechanical and nothing billable is ever lost or double-billed.
 
 ## The things
 
-*(The entities the work is made of — one line each: name, and what it is.)*
+- **Client** — an organization that hires the practice; has a primary contact.
+- **Project** — one engagement for one client, billed hourly at a project-specific rate.
+- **Time entry** — a block of work on one project on one date, with a note a client could read.
+- **Invoice** — a monthly bill to one client, drawing that client's unbilled time.
 
 ## The rules
 
-*(The invariants that must always hold — one line each.)*
+- Time is billed in **quarter-hour increments**; smallest entry 0.25h.
+- **Rates belong to projects**, not clients — one client can run two projects at two rates.
+- Once a time entry is on an invoice it is **frozen** — never edited, never re-billed.
+- An invoice draws **only unbilled time**, for **one client**. The same hour can never appear
+  on two invoices.
 
 ## Where the data lives today
 
-*(Existing sources to seed from or bind to: folders, drives, apps, spreadsheets.)*
+One **Google Drive folder per client**, each containing the engagement letter (contacts,
+projects, rates, start dates) and a running **time-log sheet** (date, project, hours, notes).
+Nothing else — no invoicing has happened yet this cycle.
 
 ## What you'll ask of it
 
-*(The recurring requests: questions, operations, outputs.)*
+- "Log two and a half hours on vendor selection for Wednesday — scoring session."
+- "What's unbilled, by client?"
+- "Invoice Meridian for everything outstanding."
+- A glanceable view: unbilled by client, recent time — without having to ask.

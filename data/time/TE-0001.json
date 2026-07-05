@@ -1,0 +1,9 @@
+{
+  "id": "TE-0001",
+  "project_id": "PR-001",
+  "date": "2026-06-02",
+  "hours": 3.5,
+  "description": "Kickoff and current-state architecture review",
+  "billed": true,
+  "invoice_id": "INV-2026-001"
+}
