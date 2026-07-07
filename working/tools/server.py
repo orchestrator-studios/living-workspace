@@ -25,6 +25,7 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
+import build_report
 import repo
 
 TEMPLATE = repo.ROOT / "views" / "dashboard.template.html"
@@ -93,6 +94,15 @@ class Handler(BaseHTTPRequestHandler):
                 if not repo.has_protocol(slug):
                     return self._err(404, f"no review '{slug}'")
                 html = TEMPLATE.read_text(encoding="utf-8")
+                return self._send(200, html, "text/html; charset=utf-8")
+
+            # export: regenerate the static report from the data-access layer and serve it
+            if parts[0] == "report" and len(parts) == 2:
+                slug = parts[1]
+                if not repo.has_protocol(slug):
+                    return self._err(404, f"no review '{slug}'")
+                build_report.write(slug)                 # refresh the on-disk snapshot too
+                html = build_report.render(slug)
                 return self._send(200, html, "text/html; charset=utf-8")
 
             if parts[0] == "api" and len(parts) >= 2 and parts[1] == "reviews":

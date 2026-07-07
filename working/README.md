@@ -104,6 +104,36 @@ never a stale snapshot, and shows exactly the numbers the static views would.
 
 ---
 
+## The state machine: one linear sweep, ending in an evaluation
+
+Under the conversation there is a simple, explicit process, and the dashboard puts it front and centre.
+A review moves through one **linear sweep** of phases:
+
+```
+Protocol → Queries written → Queries run → De-duplicated → Title/abstract → Full text → Extraction → Evaluation
+```
+
+The dashboard renders this as a pronounced stepper: filled nodes are done, the highlighted node is where the
+review is *now*, and one plain sentence states the single next action. None of this is a stored status that
+could drift — it is **derived from the data on every read**, exactly like the counts. The furthest-along
+incomplete phase *is* where you are; there is nothing else to trust.
+
+The sweep ends at an **evaluation** — a checklist run once the analysis of what we have is complete. It is
+**optimistic**: the review is assumed good and the evaluation passes unless a check fails. Completeness and
+integrity checks — every record screened, every conflict resolved, every included study extracted, every
+record traceable, every exclusion reason valid, the search actually yielded studies — are *blocking*: if one
+fails, the machine **pauses and recruits you, carrying the reason**. Quality concerns that are not hard
+failures (for example a corpus screened single-pass rather than dual-independent) are surfaced as *advisories*
+that do not pause. So the branch every pass reaches — good to compile, or needs a human — is expressed as
+visible, data-derived checks, never a hidden decision.
+
+When the evaluation passes, one action remains: **export**. The dashboard's Export button regenerates the
+self-contained HTML report from the same data-access layer and opens it — the deep, drillable view (full
+records explorer, methodology trace, extraction table, protocol) travels as a single file, while the dashboard
+stays live. The dashboard is where you *work*; the report is what you *ship*.
+
+---
+
 ## Anatomy — and what each part lets you see
 
 The workspace separates a reusable **engine** (topic-agnostic) from **reviews** (data instances). The
@@ -189,7 +219,8 @@ python tools/screen.py queue <slug>                             # what awaits yo
 python tools/screen.py adjudicate <slug> --stage title-abstract --pmid <id> --decision include|exclude
 
 # watch it live while you work
-python tools/server.py                  # serves /dashboard/<slug> — the pipeline, live as it changes
+python tools/server.py                  # /dashboard/<slug> — the state machine + pipeline, live
+#                                        # /report/<slug>    — Export: regenerate the report and open it
 
 # always, after any change to data
 python tools/validate.py  <slug>        # schemas are law; provenance and reasons are checked

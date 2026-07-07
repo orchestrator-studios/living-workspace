@@ -64,6 +64,57 @@
   .fn .v.flash{animation:flash .9s ease-out;}
   @keyframes flash{0%{color:var(--accent);}100%{}}
 
+  /* state machine — where we are */
+  .statebar{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-bottom:14px;}
+  .statebar .phase .k,.statebar .next .k{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .statebar .phase .v{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.1;margin-top:2px;}
+  .statebar.blocked .phase .v{color:var(--warn);}
+  .statebar.done .phase .v{color:var(--pos);}
+  .statebar .next{flex:1;min-width:230px;border-left:1px solid var(--line-2);padding-left:22px;}
+  .statebar .next .v{font-size:14.5px;color:var(--ink);margin-top:3px;font-weight:500;}
+  .statebar .goal{width:100%;font-size:12.5px;color:var(--ink-2);border-top:1px solid var(--line-2);padding-top:11px;}
+
+  /* the linear sweep — the pronounced centrepiece */
+  .stepper{position:relative;display:flex;flex-wrap:wrap;gap:14px 0;padding:22px 12px 18px;margin-bottom:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);}
+  .stp{position:relative;flex:1;min-width:104px;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 4px;}
+  .stp::before{content:"";position:absolute;top:17px;left:-50%;width:100%;height:2px;background:var(--line);z-index:0;}
+  .stp:first-child::before{display:none;}
+  .stp.done::before,.stp.active::before{background:var(--pos);}
+  .stp.blocked::before{background:var(--warn);}
+  .stp .node{position:relative;z-index:1;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:13px;font-weight:700;background:var(--surface-2);border:2px solid var(--line);color:var(--ink-3);transition:transform .2s;}
+  .stp.done .node{background:var(--pos);border-color:var(--pos);color:#fff;}
+  .stp.active .node{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);transform:scale(1.14);box-shadow:0 0 0 4px var(--accent-soft);}
+  .stp.blocked .node{border-color:var(--warn);background:var(--warn-soft);color:var(--warn);transform:scale(1.14);animation:pulse 1.7s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px var(--warn-soft);}50%{box-shadow:0 0 0 8px transparent;}}
+  .stp .plabel{font-size:12px;font-weight:600;color:var(--ink-2);margin-top:9px;line-height:1.25;}
+  .stp.active .plabel,.stp.blocked .plabel{color:var(--ink);}
+  .stp .pdetail{font-size:10.5px;color:var(--ink-3);margin-top:3px;line-height:1.3;}
+  :root[data-theme="dark"] .stp.done .node{color:#0d1417;}
+
+  /* evaluation gate */
+  .eval{border-radius:12px;padding:15px 18px;margin-bottom:14px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow);}
+  .eval.pass{border-left:4px solid var(--pos);}
+  .eval.paused{border-left:4px solid var(--warn);background:var(--warn-soft);}
+  .eval .eh{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-size:15.5px;font-weight:600;}
+  .eval.pass .eh{color:var(--pos);} .eval.paused .eh{color:var(--warn);}
+  .eval .ex{font-size:13px;color:var(--ink);margin:8px 0 10px;}
+  .eval .checks{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+  .chk{display:grid;grid-template-columns:18px 1fr;gap:9px;align-items:start;font-size:12.5px;}
+  .chk .ci{font-weight:700;font-family:var(--mono);line-height:1.35;}
+  .chk.ok .ci{color:var(--pos);} .chk.fail .ci{color:var(--warn);} .chk.adv .ci{color:var(--warn);}
+  .chk .cl{color:var(--ink);font-weight:600;} .chk .cd{color:var(--ink-2);font-weight:400;}
+  .eval .muted{color:var(--ink-2);font-size:12.5px;}
+
+  .statetiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:760px){.statetiles{grid-template-columns:repeat(2,1fr);}}
+  .tile{border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);padding:13px 15px;}
+  .tile .tv{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1;transition:color .3s;}
+  .tile .tk{font-size:11.5px;color:var(--ink-2);margin-top:6px;}
+  .tile.zero{opacity:.5;} .tile.zero .tv{color:var(--ink-3);}
+  .tile.act .tv{color:var(--accent);}
+  .tile.block{border-color:var(--warn);background:var(--warn-soft);} .tile.block .tv{color:var(--warn);} .tile.block .tk{color:var(--warn);}
+  .tile .tv.flash{animation:flash .9s ease-out;}
+
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
   .badge{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--ink-2);box-shadow:var(--shadow);}
   .badge b{color:var(--ink);font-variant-numeric:tabular-nums;}
@@ -93,6 +144,7 @@
 <div class="topbar"><div class="wrap">
   <div class="brand">Living Review <small>· live pipeline</small></div>
   <div class="live"><span class="dot" id="dot"></span><span id="liveTxt">connecting…</span>
+    <a class="tgl" id="export" href="#" title="Regenerate the full static report from the current data and open it">Export report ↗</a>
     <button class="tgl" id="theme" type="button">Theme</button></div>
 </div></div>
 
@@ -106,8 +158,17 @@
   <div class="banner" id="banner"></div>
 
   <section>
-    <div class="sh">Pipeline</div>
-    <p class="ss">Screening state, read live from <code id="src">records.json</code>. Refreshes on its own; numbers animate when they move.</p>
+    <div class="sh">Where we are</div>
+    <p class="ss">The review as a state machine — a single linear sweep from protocol to a passed evaluation. The stepper is the sweep; the highlighted node is where we are now, the one thing to do next is spelled out, and the run ends at an evaluation that either passes or pauses for you with reasons.</p>
+    <div class="card statebar" id="statebar"></div>
+    <div class="stepper" id="stepper"></div>
+    <div id="evalpanel"></div>
+    <div class="statetiles" id="statetiles"></div>
+  </section>
+
+  <section>
+    <div class="sh">The corpus</div>
+    <p class="ss">How many records sit at each point of the funnel, read live from <code id="src">records.json</code>. Numbers animate when they move.</p>
     <div class="funnel" id="funnel"></div>
     <div class="chips" id="chips"></div>
   </section>
@@ -161,6 +222,66 @@ function setLive(state, txt){
   $("liveTxt").textContent=txt;
 }
 
+// ---------- state machine (the primary view) ----------
+let prevState={};
+function renderStatebar(wf){
+  const sb=$("statebar"); sb.className="card statebar"+(wf.blocked?" blocked":(wf.complete?" done":""));
+  sb.replaceChildren(
+    el("div",{class:"phase"}, el("div",{class:"k",text:wf.blocked?"Phase · blocked":"Current phase"}),
+      el("div",{class:"v",text:wf.phase_label||"—"})),
+    el("div",{class:"next"}, el("div",{class:"k",text:"Next action"}),
+      el("div",{class:"v",text:wf.next_action||"—"})),
+    el("div",{class:"goal",text:wf.goal||""}));
+}
+function renderStepper(phases){
+  const s=$("stepper"); s.replaceChildren();
+  phases.forEach((p,i)=>{
+    s.append(el("div",{class:"stp "+p.status},
+      el("div",{class:"node",text:p.status==="done"?"✓":(p.status==="blocked"?"!":String(i+1))}),
+      el("div",{class:"plabel",text:p.label}),
+      el("div",{class:"pdetail",text:p.detail})));
+  });
+}
+function renderEvaluation(ev){
+  const box=$("evalpanel"); box.replaceChildren();
+  if(!ev || ev.status==="pending"){
+    if(ev) box.append(el("div",{class:"eval"}, el("div",{class:"muted",text:"Evaluation runs once the analysis of what we have is complete."})));
+    return;
+  }
+  const paused=ev.status==="paused";
+  const card=el("div",{class:"eval "+(paused?"paused":"pass")});
+  const advN=(ev.advisories||[]).length;
+  card.append(el("div",{class:"eh"}, el("span",{text:paused?"⏸":"✓"}),
+    el("span",{text:paused?"Paused for your review":("Evaluation passed"+(advN?" · "+advN+" advisory":""))})));
+  if(ev.explanation) card.append(el("div",{class:"ex",text:ev.explanation}));
+  const checks=el("div",{class:"checks"});
+  (ev.checks||[]).forEach(c=>{
+    const cls=c.ok?"ok":(c.severity==="advisory"?"adv":"fail");
+    const icon=c.ok?"✓":(c.severity==="advisory"?"!":"✗");
+    checks.append(el("div",{class:"chk "+cls},
+      el("div",{class:"ci",text:icon}),
+      el("div",{}, el("span",{class:"cl",text:c.label}), el("span",{class:"cd",text:" — "+c.detail}))));
+  });
+  card.append(checks); box.append(card);
+}
+const TILES=[
+  ["awaiting_title_abstract","Awaiting title / abstract"],
+  ["awaiting_full_text","Awaiting full text"],
+  ["awaiting_adjudication","Awaiting adjudication"],
+  ["awaiting_extraction","Awaiting extraction"],
+];
+function renderStateTiles(st){
+  const box=$("statetiles"); box.replaceChildren();
+  TILES.forEach(([key,label])=>{
+    const v=st[key]??0, changed=prevState[key]!=null&&prevState[key]!==v;
+    const block = key==="awaiting_adjudication" && v>0;
+    const cls="tile"+(v===0?" zero":(block?" block":" act"));
+    box.append(el("div",{class:cls},
+      el("div",{class:"tv num"+(changed?" flash":""),text:v}), el("div",{class:"tk",text:label})));
+  });
+  prevState=st;
+}
+
 // funnel stages: [key in totals, label, sublabel, isFinal]
 const STAGES=[
   ["retrieved","Retrieved","raw, with overlap",false],
@@ -180,8 +301,6 @@ function renderFunnel(t){
 function renderChips(t){
   const c=$("chips"); c.replaceChildren();
   const add=(label,val,warn)=>{ if(val) c.append(el("span",{class:"badge"+(warn?" warn":"")}, label+" ", el("b",{text:val}))); };
-  add("Unscreened",t.unscreened);
-  add("Awaiting adjudication",t.needs_adjudication,true);
   add("Excluded · title/abstract",t.ta_excluded);
   add("Excluded · full-text",t.ft_excluded);
   add("Extraction arms",t.extraction_arms);
@@ -225,11 +344,12 @@ function renderStudies(list){
 }
 
 function apply(p){
-  const t=p.totals;
+  const t=p.totals, wf=p.workflow||{};
   $("eyebrow").textContent=(p.screening_methods||[]).includes("dual-independent")?"Systematic review · dual-independent screening":"Systematic review";
   $("title").textContent=p.title||SLUG;
   $("question").textContent=p.question||"";
   if(p.source) $("src").textContent=p.source+"/records.json";
+  renderStatebar(wf); renderStepper(wf.phases||[]); renderEvaluation(wf.evaluation); renderStateTiles(wf.state||{});
   renderFunnel(t); renderChips(t);
   renderExclusions(p.exclusions||{}); renderQueries(p.queries||[]);
   renderStudies(p.included_studies||[]);
@@ -245,12 +365,23 @@ async function poll(){
     lastOk=new Date();
     $("banner").classList.remove("on");
     setLive("ok","live · updated "+lastOk.toLocaleTimeString());
-    $("footmeta").textContent=p.totals.retrieved+" retrieved · "+p.totals.unique+" unique · "+p.totals.included+" included";
+    $("footmeta").textContent=(p.workflow?("phase: "+p.workflow.phase_label+" · "):"")+p.totals.unique+" unique · "+p.totals.included+" included";
   }catch(err){
     setLive("err","reconnecting…");
     const b=$("banner"); b.textContent="Could not reach the server ("+err.message+"). Is tools/server.py running? Retrying…"; b.classList.add("on");
   }
 }
+const exportLink=$("export");
+if(SLUG) exportLink.setAttribute("href","/report/"+encodeURIComponent(SLUG));
+exportLink.addEventListener("click",e=>{
+  if(!SLUG){ e.preventDefault(); return; }
+  exportLink.textContent="Regenerating…";
+  // the server rebuilds the report from the same data-access layer, then serves it;
+  // let the navigation proceed to open it in a new tab
+  exportLink.setAttribute("target","_blank"); exportLink.setAttribute("rel","noopener");
+  setTimeout(()=>{ exportLink.textContent="Export report ↗"; }, 2500);
+});
+
 if(!SLUG){
   $("title").textContent="No review selected";
   $("question").textContent="Open /dashboard/<slug>.";

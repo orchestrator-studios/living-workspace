@@ -116,6 +116,221 @@ def _is_ft_excluded(r):
     return r.get("status") == "excluded" and r.get("screening_stage") == "full-text"
 
 
+def _ta_screened(r):
+    return bool((r.get("screening") or {}).get("title-abstract"))
+
+
+def _ta_included(r):
+    sc = (r.get("screening") or {}).get("title-abstract") or {}
+    return sc.get("outcome", {}).get("decision") == "include"
+
+
+def _ft_screened(r):
+    return bool((r.get("screening") or {}).get("full-text"))
+
+
+def _plural(n, one="", many="s"):
+    return one if n == 1 else many
+
+
+def _evaluation(protocol, records, *, awaiting_ta, awaiting_ft, awaiting_ext,
+                needs_adj, n_inc, n_arms, reached):
+    """The evaluation gate: a checklist run after the analysis of what we have.
+
+    Optimistic by design — the review is assumed good and passes unless a check fails.
+    A failing *block* check pauses the machine for human review and carries the reason;
+    *advisory* checks are surfaced but do not pause. This is the loop-or-compile branch
+    the review needs, expressed as data-derived quality/completeness checks rather than a
+    stored decision that could drift. The checklist is meant to grow (see skills/evaluation.md).
+    """
+    allowed = set(protocol.get("exclusion_reasons", []))
+    missing_trace = [r for r in records if not r.get("found_by")]
+    bad_reason = [r for r in records if r.get("status") == "excluded" and allowed
+                  and r.get("exclusion_reason") not in allowed]
+    methods = {(r.get("screening") or {}).get(st, {}).get("method")
+               for r in records for st in ("title-abstract", "full-text")}
+    methods.discard(None)
+    single = bool(methods & {"single", "single-pass-legacy"})
+    dual = "dual-independent" in methods
+
+    checks = [
+        {"key": "screening-complete", "label": "All records screened", "severity": "block",
+         "ok": not awaiting_ta and not awaiting_ft,
+         "detail": (f"{len(awaiting_ta) + len(awaiting_ft)} record(s) still to screen"
+                    if (awaiting_ta or awaiting_ft) else "every record reached a decision")},
+        {"key": "no-open-conflicts", "label": "No unresolved conflicts", "severity": "block",
+         "ok": not needs_adj,
+         "detail": (f"{len(needs_adj)} record(s) awaiting adjudication" if needs_adj
+                    else "all conflicts resolved")},
+        {"key": "included-extracted", "label": "Every included study has extracted data",
+         "severity": "block", "ok": not awaiting_ext,
+         "detail": (f"{len(awaiting_ext)} included stud{_plural(len(awaiting_ext), 'y', 'ies')} missing extraction"
+                    if awaiting_ext
+                    else f"{n_inc} stud{_plural(n_inc, 'y', 'ies')} extracted into {n_arms} arm{_plural(n_arms)}")},
+        {"key": "traceability", "label": "Every record traces to a search", "severity": "block",
+         "ok": not missing_trace,
+         "detail": (f"{len(missing_trace)} record(s) have no found_by provenance"
+                    if missing_trace else "all records trace to a query")},
+        {"key": "exclusion-reasons", "label": "Exclusions carry a valid reason", "severity": "block",
+         "ok": not bad_reason,
+         "detail": (f"{len(bad_reason)} exclusion(s) use an off-vocabulary reason"
+                    if bad_reason else "all from the controlled vocabulary")},
+        {"key": "has-included", "label": "The search yielded includable studies", "severity": "block",
+         "ok": n_inc > 0,
+         "detail": ("no studies were included — verify the search before concluding empty"
+                    if n_inc == 0 else f"{n_inc} stud{_plural(n_inc, 'y', 'ies')} included")},
+        {"key": "dual-review", "label": "Screened by dual independent review", "severity": "advisory",
+         "ok": dual and not single,
+         "detail": ("two independent reviewers, conflicts adjudicated" if (dual and not single)
+                    else ("screened single-pass; dual-independent review recommended" if single
+                          else "screening method not recorded"))},
+    ]
+
+    block_fail = [c for c in checks if c["severity"] == "block" and not c["ok"]]
+    advisory_fail = [c for c in checks if c["severity"] == "advisory" and not c["ok"]]
+    if not reached:
+        status = "pending"
+    elif block_fail:
+        status = "paused"
+    else:
+        status = "pass"
+    explanation = ("Paused for review — " + "; ".join(c["detail"] for c in block_fail) + "."
+                   if status == "paused" else "")
+    return {"reached": reached, "status": status, "checks": checks,
+            "failures": block_fail, "advisories": advisory_fail, "explanation": explanation}
+
+
+def workflow_state(protocol, records, *, retrieved, included, ta_excluded, ft_excluded,
+                   needs_adj, n_arms):
+    """The review as an explicit state machine, DERIVED from protocol + records.
+
+    Not a stored, mutable status that could drift from the evidence — it is recomputed
+    from the same files every time, like the funnel. It answers three questions the raw
+    counts do not: which phase of the pass we are in, what the single next action is, and
+    what the whole thing is running toward. The `state` block groups the live process
+    signals (what is waiting on screening, on you, on extraction) that would otherwise be
+    scattered — the decomposed `unscreened` number is the heart of it.
+    """
+    n = len(records)
+    n_inc = len(included)
+    n_queries = len(protocol.get("searches", []))
+
+    # the meaning of "unscreened", split into what it actually represents
+    awaiting_ta = [r for r in records if r.get("status") == "unscreened" and not _ta_screened(r)]
+    awaiting_ft = [r for r in records if _ta_included(r) and not _ft_screened(r)]
+    awaiting_ext = [r for r in included if not (r.get("extraction") or {}).get("arms")]
+
+    # per-phase completion predicates (the earliest incomplete one is "active")
+    p_protocol = bool(protocol.get("inclusion_criteria"))
+    p_written = n_queries > 0
+    # records existing proves the queries ran; `retrieved` can read 0 when a review's
+    # records carry no labeled-search provenance, and that must not stall the state machine.
+    p_run = retrieved > 0 or n > 0
+    p_dedup = n > 0
+    p_ta = n > 0 and not awaiting_ta
+    p_ft = p_ta and not awaiting_ft
+    # extraction is complete when nothing included is missing data — vacuously true when
+    # nothing was included at all (that case is caught by the evaluation gate, not here)
+    p_ext = p_ft and not awaiting_ext
+
+    # the evaluation gate runs once the analysis of what we have is complete
+    ev_reached = p_ext
+    ev = _evaluation(protocol, records, awaiting_ta=awaiting_ta, awaiting_ft=awaiting_ft,
+                     awaiting_ext=awaiting_ext, needs_adj=needs_adj, n_inc=n_inc,
+                     n_arms=n_arms, reached=ev_reached)
+    ev_paused = ev["status"] == "paused"
+    blocked = len(needs_adj) > 0 or ev_paused
+
+    n_crit = len(protocol.get("inclusion_criteria", []))
+    specs = [
+        ("protocol", "Protocol", p_protocol,
+         f"{n_crit} criteria" if p_protocol else "not defined"),
+        ("queries-written", "Queries written", p_written,
+         f"{n_queries} quer{'y' if n_queries == 1 else 'ies'}" if p_written else "none yet"),
+        ("queries-run", "Queries run", p_run,
+         f"{retrieved} retrievals" if retrieved else (f"{n} records" if n else "not run")),
+        ("dedup", "De-duplicated", p_dedup,
+         f"{n} unique" if p_dedup else "—"),
+        ("title-abstract", "Title / abstract", p_ta,
+         f"{len(awaiting_ta)} to screen" if awaiting_ta else f"{len(ta_excluded)} excluded"),
+        ("full-text", "Full text", p_ft,
+         f"{len(awaiting_ft)} to assess" if awaiting_ft else f"{len(ft_excluded)} excluded"),
+        ("extraction", "Extraction", p_ext,
+         f"{len(awaiting_ext)} to extract" if awaiting_ext
+         else (f"{n_arms} arms" if n_inc else "no studies")),
+        ("evaluation", "Evaluation", ev["status"] == "pass",
+         "pending" if not ev_reached
+         else (f"{len(ev['failures'])} to resolve" if ev_paused
+               else "passed" + (f" · {len(ev['advisories'])} advisory" if ev["advisories"] else ""))),
+    ]
+
+    active_idx = next((i for i, (_, _, done, _) in enumerate(specs) if not done), None)
+    phases = []
+    for i, (key, label, done, detail) in enumerate(specs):
+        if done:
+            status = "done"
+        elif i == active_idx:
+            status = "blocked" if blocked else "active"
+        else:
+            status = "pending"
+        phases.append({"key": key, "label": label, "status": status, "detail": detail})
+
+    complete = active_idx is None
+    active = specs[active_idx] if active_idx is not None else None
+
+    # the single next action, in priority order
+    if not p_written:
+        nxt = "Define and run the first search"
+    elif not p_run:
+        nxt = "Run the written queries"
+    elif needs_adj:
+        nxt = f"Adjudicate {len(needs_adj)} record(s) awaiting your decision"
+    elif awaiting_ta:
+        nxt = f"Screen {len(awaiting_ta)} record(s) at title / abstract"
+    elif awaiting_ft:
+        nxt = f"Assess {len(awaiting_ft)} record(s) at full text"
+    elif awaiting_ext:
+        nxt = f"Extract data from {len(awaiting_ext)} included stud{'y' if len(awaiting_ext) == 1 else 'ies'}"
+    elif ev_paused:
+        nxt = "Review needed — " + ev["failures"][0]["detail"]
+    elif complete:
+        nxt = "Evaluation passed — compile the report, or extend the search for new records"
+    else:
+        nxt = "Regenerate the views"
+
+    if complete:
+        goal = (f"Evaluation passed — {n_inc} included stud{'y' if n_inc == 1 else 'ies'}, "
+                f"ready to compile the report or extend the search.")
+    elif ev_paused:
+        goal = (f"Paused for your review — {len(ev['failures'])} check(s) to resolve "
+                f"before this pass is done.")
+    else:
+        goal = (f"Running toward a reconciled set of included studies with full extraction"
+                f" — {n_inc} included so far.")
+
+    return {
+        "goal": goal,
+        "phase": active[0] if active else "complete",
+        "phase_label": active[1] if active else "Complete",
+        "blocked": blocked,
+        "complete": complete,
+        "next_action": nxt,
+        "phases": phases,
+        "state": {
+            "awaiting_title_abstract": len(awaiting_ta),
+            "awaiting_full_text": len(awaiting_ft),
+            "awaiting_adjudication": len(needs_adj),
+            "awaiting_extraction": len(awaiting_ext),
+        },
+        "evaluation": ev,
+    }
+
+
+def workflow(slug):
+    """The state machine for one review, read live."""
+    return pipeline(slug)["workflow"]
+
+
 def pipeline(slug):
     """Read a review live and return its canonical funnel projection."""
     return pipeline_from(load_protocol(slug), load_records(slug), slug)
@@ -169,11 +384,16 @@ def pipeline_from(protocol, records, slug=None):
     n_arms = sum(len((r.get("extraction") or {}).get("arms", [])) for r in included)
     methods = {s.get("method") for r in records for s in (r.get("screening") or {}).values()}
 
+    wf = workflow_state(protocol, records, retrieved=raw_retrievals, included=included,
+                        ta_excluded=ta_excluded, ft_excluded=ft_excluded,
+                        needs_adj=needs_adj, n_arms=n_arms)
+
     return {
         "slug": slug,
         "title": protocol.get("title", slug),
         "question": protocol.get("question", ""),
         "source": f"data/reviews/{slug}" if slug else None,
+        "workflow": wf,
         "totals": {
             "retrieved": raw_retrievals,
             "unique": N,

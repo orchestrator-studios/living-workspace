@@ -16,6 +16,7 @@ Usage:
 Views are projections. Never hand-edit them; re-run this after any data change.
 """
 import sys
+from collections import Counter
 
 import repo
 
@@ -42,9 +43,12 @@ def build_prisma(slug):
     lines.append("## Exclusion reasons")
     lines.append("| Reason | n |")
     lines.append("|---|---|")
+    combined = Counter()
     for stage in ("title-abstract", "full-text"):
         for reason, n in p["exclusions"][stage]:
-            lines.append(f"| {reason} | {n} |")
+            combined[reason] += n
+    for reason, n in combined.most_common():
+        lines.append(f"| {reason} | {n} |")
     lines.append("")
     lines.append("## Included studies")
     for s in p["included_studies"]:
