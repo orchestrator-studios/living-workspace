@@ -45,6 +45,11 @@ def validate_review(slug, errors):
             errors.append(f"[{slug}] records.json: {list(e.path)}: {e.message}")
 
         allowed = set(protocol.get("exclusion_reasons", [])) if protocol else set()
+        profile = (protocol or {}).get("extraction_profile")
+        fields = {f["key"]: f for f in profile["fields"]} if profile else {}
+        required_fields = [k for k, f in fields.items() if f.get("required")]
+        cat_allowed = {k: set(f["categorical"]["values"]) for k, f in fields.items() if f.get("categorical")}
+
         seen = set()
         for i, r in enumerate(records if isinstance(records, list) else []):
             pmid = r.get("pmid", f"#{i}")
@@ -57,6 +62,31 @@ def validate_review(slug, errors):
                 reason = r.get("exclusion_reason")
                 if reason not in allowed:
                     errors.append(f"[{slug}] records.json: pmid {pmid} exclusion_reason '{reason}' not in protocol list")
+            # profile-driven extraction checks (domain fields live in the review, not the engine)
+            if r.get("status") == "included" and profile:
+                for j, arm in enumerate(r.get("extraction", {}).get("arms", [])):
+                    for k in required_fields:
+                        if not str(arm.get(k, "")).strip():
+                            errors.append(f"[{slug}] records.json: pmid {pmid} arm {j} missing required field '{k}'")
+                    for k, vals in cat_allowed.items():
+                        if k in arm and arm[k] not in vals:
+                            errors.append(f"[{slug}] records.json: pmid {pmid} arm {j} field '{k}'='{arm[k]}' not in profile values {sorted(vals)}")
+                    unknown = [k for k in arm if k not in fields]
+                    if unknown:
+                        errors.append(f"[{slug}] records.json: pmid {pmid} arm {j} has fields not in extraction_profile: {unknown}")
+            if r.get("status") == "included" and not profile:
+                errors.append(f"[{slug}] protocol.json: has included records but no extraction_profile to validate them against")
+            # screening provenance consistency (only when present)
+            for st, sc in (r.get("screening") or {}).items():
+                out = sc.get("outcome", {}).get("decision")
+                if out == "needs-adjudication" and r.get("status") != "needs-adjudication":
+                    errors.append(f"[{slug}] records.json: pmid {pmid} {st} outcome is needs-adjudication but status is '{r.get('status')}'")
+                if sc.get("agreement") == "conflict" and "adjudication" not in sc and out != "needs-adjudication":
+                    errors.append(f"[{slug}] records.json: pmid {pmid} {st} is a conflict resolved without an adjudication record")
+            if r.get("status") == "needs-adjudication":
+                q = [st for st, sc in (r.get("screening") or {}).items() if sc.get("outcome", {}).get("decision") == "needs-adjudication"]
+                if not q:
+                    errors.append(f"[{slug}] records.json: pmid {pmid} status needs-adjudication but no stage is awaiting it")
 
 
 def main():

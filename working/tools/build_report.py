@@ -180,10 +180,11 @@ TEMPLATE = r"""<style>
   .pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;}
   .pill.inc{background:var(--pos-soft);color:var(--pos);}
   .pill.exc{background:var(--neutral-soft);color:var(--neutral);}
-  .pill.eff-increased-susceptibility{background:var(--neg-soft);color:var(--neg);}
-  .pill.eff-decreased-susceptibility{background:var(--pos-soft);color:var(--pos);}
-  .pill.eff-no-effect,.pill.eff-unclear{background:var(--neutral-soft);color:var(--neutral);}
-  .pill.eff-mixed{background:var(--warn-soft);color:var(--warn);}
+  .pill.tone-positive{background:var(--pos-soft);color:var(--pos);}
+  .pill.tone-negative{background:var(--neg-soft);color:var(--neg);}
+  .pill.tone-neutral{background:var(--neutral-soft);color:var(--neutral);}
+  .pill.tone-warn{background:var(--warn-soft);color:var(--warn);}
+  .pill.tone-accent{background:var(--accent-soft);color:var(--accent-ink);}
   .rlabel{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
   .rec .bd{display:none;padding:2px 14px 16px;border-top:1px solid var(--line-2);}
   .rec.open .bd{display:block;}
@@ -197,6 +198,13 @@ TEMPLATE = r"""<style>
   .note{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border-left:3px solid var(--accent);
     padding:8px 12px;border-radius:0 7px 7px 0;margin-top:10px;}
   .lnk{font-size:12px;margin-top:12px;display:inline-block;}
+  .screen-prov{font-size:12px;color:var(--ink-2);margin-top:12px;border:1px solid var(--line-2);border-radius:8px;padding:10px 12px;}
+  .screen-prov .sph{font-weight:600;color:var(--ink);font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+  .screen-prov .meth{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
+  .screen-prov .pass{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-top:4px;}
+  .screen-prov .adj{color:var(--accent-ink);font-weight:600;margin-top:4px;}
+  .screen-prov .stg{margin-top:8px;}
+  .screen-prov .stg:first-child{margin-top:6px;}
   .empty{text-align:center;color:var(--ink-3);padding:40px;font-size:13.5px;}
 
   /* findings */
@@ -271,9 +279,19 @@ const DATA = __DATA__;
 const P = DATA.protocol, R = DATA.records;
 const QORDER = (P.searches||[]).map(s => (s.note.match(/label=([^;]+)/)||[])[1]).filter(Boolean);
 const QINITIAL = {"broad":"B","gene-specific":"G","susceptibility":"S"};
-const EFFECTS = ["increased-susceptibility","decreased-susceptibility","no-effect","mixed","unclear"];
-const EFFECT_LABEL = {"increased-susceptibility":"Increased susceptibility","decreased-susceptibility":"Decreased susceptibility (protective)","no-effect":"No measurable effect","mixed":"Mixed / modifier","unclear":"Unclear"};
-const EFFECT_COLOR = {"increased-susceptibility":"var(--neg)","decreased-susceptibility":"var(--pos)","no-effect":"var(--neutral)","mixed":"var(--warn)","unclear":"var(--neutral)"};
+// extraction is topic-agnostic: everything below is derived from protocol.extraction_profile
+const PROFILE = P.extraction_profile || {fields:[], summary_field:null};
+const FIELDS = PROFILE.fields || [];
+const FIELD_BY_KEY = Object.fromEntries(FIELDS.map(f=>[f.key,f]));
+const SUMMARY = PROFILE.summary_field;
+const SUMMARY_LABEL = (FIELD_BY_KEY[SUMMARY]||{}).label || "Category";
+const CATVALUES = ((FIELD_BY_KEY[SUMMARY]||{}).categorical||{values:{}}).values || {};
+const TONE_COLOR = {positive:"var(--pos)",negative:"var(--neg)",neutral:"var(--neutral)",warn:"var(--warn)",accent:"var(--accent-ink)"};
+const EFFECTS = Object.keys(CATVALUES);
+const EFFECT_LABEL = Object.fromEntries(Object.entries(CATVALUES).map(([k,v])=>[k,v.label]));
+const EFFECT_COLOR = Object.fromEntries(Object.entries(CATVALUES).map(([k,v])=>[k,TONE_COLOR[v.tone]||"var(--neutral)"]));
+const EFFECT_TONE = Object.fromEntries(Object.entries(CATVALUES).map(([k,v])=>[k,v.tone||"neutral"]));
+const TABLE_FIELDS = FIELDS.filter(f=>f.in_table!==false);
 
 function el(tag, props, ...kids){
   const n=document.createElement(tag); props=props||{};
@@ -283,7 +301,7 @@ function el(tag, props, ...kids){
   for(const c of kids){ if(c==null||c===false)continue; n.append(c.nodeType?c:document.createTextNode(String(c))); }
   return n;
 }
-const recEffects = r => (r.extraction&&r.extraction.arms||[]).map(a=>a.effect_direction);
+const recEffects = r => (r.extraction&&r.extraction.arms||[]).map(a=>a[SUMMARY]);
 const cite = r => { const a=r.authors||[]; return (a[0]?a[0].split(" ")[0]:"?")+(a.length>1?" et al.":"")+" "+(r.year||"n.d."); };
 const isTaExc = r => r.status==="excluded" && r.screening_stage==="title-abstract";
 const isFtExc = r => r.status==="excluded" && r.screening_stage==="full-text";
@@ -316,6 +334,11 @@ function reasonBreak(pred){ const m={}; R.filter(pred).forEach(r=>{m[r.exclusion
 const taReasons = reasonBreak(isTaExc);
 const ftReasons = reasonBreak(isFtExc);
 const nGeneArms = R.filter(r=>r.status==="included").reduce((n,r)=>n+(r.extraction.arms||[]).length,0);
+const SCREEN_METHODS = new Set(); R.forEach(r=>Object.values(r.screening||{}).forEach(s=>SCREEN_METHODS.add(s.method)));
+const nNeedsAdj = R.filter(r=>r.status==="needs-adjudication").length;
+const SCREEN_METHOD_NOTE = SCREEN_METHODS.has("dual-independent")
+  ? "Records were screened by two independent slr-screener passes against the four criteria; agreements were auto-resolved and disagreements or low-confidence calls adjudicated by a human. Each record's passes, agreement, and adjudication are recorded and inspectable in the Records tab."
+  : "This corpus was screened single-pass against the four criteria, each record assigned the single most decisive exclusion reason from the controlled vocabulary, with borderline records retained rather than dropped. Every decision is recorded per record (see its screening provenance in the Records tab). The engine also supports dual-independent screening with human adjudication of conflicts and low-confidence calls (skills/screening.md).";
 
 // ---------- filter state ----------
 const S = { scope:"all", query:null, reason:null, effect:null, foundCount:null, search:"" };
@@ -453,7 +476,7 @@ function buildMethod(){
         drillBtn("Excluded here", nTaExc, {scope:"ta-excluded"}, "neg"),
         drillBtn("Retained for full-text", nPassedTa, {scope:"ta-passed"}, "pos")),
       el("span",{class:"carry"},"Carried forward: ",el("b",{class:"num",text:nPassedTa})," records ",el("span",{class:"recon",text:"("+N+" − "+nTaExc+" = "+nPassedTa+" ✓)"})),
-      el("div",{class:"method-note"}, el("b",{text:"How screening was done. "}),"Each record was classified against the four criteria and assigned the single most decisive exclusion reason from the controlled vocabulary; borderline records were retained rather than dropped. Every decision and reason is inspectable per record in the Records tab."))));
+      el("div",{class:"method-note"}, el("b",{text:"How screening was done. "}), SCREEN_METHOD_NOTE))));
 
   // Step 4 — full-text
   steps.append(el("div",{class:"step"},
@@ -472,7 +495,7 @@ function buildMethod(){
     el("div",{class:"snum",text:"5"}),
     el("div",{},
       el("h3",{text:"Included studies & data extraction"}),
-      el("p",{class:"sdesc"},nInc+" studies met all four criteria. Structured data were extracted into "+nGeneArms+" gene arms (a study reporting several genotypes yields several arms). See the Findings tab for the full extraction table and the effect summary."),
+      el("p",{class:"sdesc"},nInc+" studies met all "+(P.inclusion_criteria||[]).length+" criteria. Structured data were extracted into "+nGeneArms+" "+((PROFILE.arm_noun||"arm"))+"s (a study reporting several conditions yields several arms). See the Findings tab for the full extraction table and the summary."),
       el("div",{style:"display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"},
         drillBtn("Included studies", nInc, {scope:"included"}, "pos"),
         el("button",{class:"drill",type:"button",onclick:()=>setTab("findings")}, el("span",{text:"Open extraction table"}), el("span",{class:"go",text:"→"}))),
@@ -512,7 +535,7 @@ function buildRecords(){
   fQuery=el("select",{class:"f",onchange:()=>{S.query=fQuery.value||null;render();}}); fQuery.append(el("option",{value:"",text:"Any query"})); QORDER.forEach(l=>fQuery.append(el("option",{value:l,text:"query: "+l})));
   fReason=el("select",{class:"f",onchange:()=>{S.reason=fReason.value||null;render();}}); fReason.append(el("option",{value:"",text:"Any reason"}));
   [...taReasons,...ftReasons].map(r=>r[0]).forEach(rz=>fReason.append(el("option",{value:rz,text:rz})));
-  fEffect=el("select",{class:"f",onchange:()=>{S.effect=fEffect.value||null;render();}}); fEffect.append(el("option",{value:"",text:"Any effect"})); EFFECTS.filter(e=>R.some(r=>recEffects(r).includes(e))).forEach(e=>fEffect.append(el("option",{value:e,text:EFFECT_LABEL[e]})));
+  fEffect=el("select",{class:"f",onchange:()=>{S.effect=fEffect.value||null;render();}}); fEffect.append(el("option",{value:"",text:"Any "+SUMMARY_LABEL.toLowerCase()})); EFFECTS.filter(e=>R.some(r=>recEffects(r).includes(e))).forEach(e=>fEffect.append(el("option",{value:e,text:EFFECT_LABEL[e]})));
   row1.append(search,fScope,fQuery,fReason,fEffect);
   const row2=el("div",{class:"toolrow"}); chipsEl=el("div",{class:"chips"}); resEl=el("div",{class:"rescount"}); row2.append(chipsEl,resEl);
   bar.append(row1,row2); p.append(bar);
@@ -525,22 +548,36 @@ function provMarkers(r){
     wrap.append(el("i",{class:on?"on":"",title:l+(on?" — returned this":" — did not"),text:QINITIAL[l]||l[0].toUpperCase()})); });
   return wrap;
 }
+function armCell(f, a){
+  const v=a[f.key];
+  if(f.key===SUMMARY && v!=null && v!=="") return el("td",{}, el("span",{class:"pill tone-"+(EFFECT_TONE[v]||"neutral"),text:EFFECT_LABEL[v]||v}));
+  return el("td",{text:(v==null||v==="")?"—":String(v)});
+}
 function extractionTable(ex){
-  const cols=["Gene","Modification","Mouse model","Asbestos","Route","Comparator","MM incidence","Latency","Effect"];
-  const keys=["gene","modification","mouse_model","asbestos_type","route","comparator","incidence","latency","effect_direction"];
   const table=el("table",{class:"xtable"});
-  const h=el("tr"); cols.forEach(c=>h.append(el("th",{text:c}))); table.append(el("thead",{},h));
+  const h=el("tr"); TABLE_FIELDS.forEach(f=>h.append(el("th",{text:f.label}))); table.append(el("thead",{},h));
   const tb=el("tbody");
-  (ex.arms||[]).forEach(a=>{ const tr=el("tr");
-    keys.forEach(k=>{ if(k==="effect_direction") tr.append(el("td",{}, el("span",{class:"pill eff-"+a[k],text:a[k]})));
-      else tr.append(el("td",{text:a[k]||"—"})); });
-    tb.append(tr); });
+  (ex.arms||[]).forEach(a=>{ const tr=el("tr"); TABLE_FIELDS.forEach(f=>tr.append(armCell(f,a))); tb.append(tr); });
   table.append(tb); return el("div",{class:"xwrap"},table);
+}
+const METHOD_LABEL={"dual-independent":"dual independent reviewers","single":"single reviewer","single-pass-legacy":"single pass (legacy)"};
+const STAGE_LABEL={"title-abstract":"Title / abstract","full-text":"Full text"};
+function screeningBlock(r){
+  const sc=r.screening; if(!sc||!Object.keys(sc).length) return null;
+  const box=el("div",{class:"screen-prov"}, el("div",{class:"sph",text:"Screening provenance"}));
+  ["title-abstract","full-text"].forEach(st=>{ const s=sc[st]; if(!s) return;
+    const stg=el("div",{class:"stg"},
+      el("div",{}, el("b",{text:STAGE_LABEL[st]+" "}), el("span",{class:"meth",text:"· "+(METHOD_LABEL[s.method]||s.method)+(s.agreement&&s.agreement!=="n/a"?" · "+s.agreement:"")})));
+    (s.passes||[]).forEach(p=>stg.append(el("div",{class:"pass",text:p.reviewer+": "+p.decision+(p.reason?" / "+p.reason:"")+(p.confidence?" ("+p.confidence+")":"")})));
+    if(s.adjudication) stg.append(el("div",{class:"adj",text:"adjudicated by "+s.adjudication.by+" -> "+s.adjudication.decision+(s.adjudication.reason?" / "+s.adjudication.reason:"")}));
+    box.append(stg);
+  });
+  return box;
 }
 function recRow(r){
   const isInc=r.status==="included";
   const rt=el("div",{class:"rt"}, provMarkers(r));
-  if(isInc){ [...new Set(recEffects(r))].forEach(e=>rt.append(el("span",{class:"pill eff-"+e,text:EFFECT_LABEL[e]}))); rt.append(el("span",{class:"pill inc",text:"included"})); }
+  if(isInc){ [...new Set(recEffects(r))].forEach(e=>rt.append(el("span",{class:"pill tone-"+(EFFECT_TONE[e]||"neutral"),text:EFFECT_LABEL[e]||e}))); rt.append(el("span",{class:"pill inc",text:"included"})); }
   else { rt.append(el("span",{class:"rlabel",text:r.exclusion_reason})); rt.append(el("span",{class:"pill exc",text:r.screening_stage==="full-text"?"excl · full-text":"excl · title/abs"})); }
   const hd=el("div",{class:"hd"},
     el("div",{class:"yr num",text:r.year||"—"}),
@@ -561,6 +598,7 @@ function recRow(r){
         r.doi?el("span",{},"DOI ",el("b",{class:"mono",text:r.doi})):null,
         el("span",{},"Status ",el("b",{text:r.status+(r.screening_stage?" ("+r.screening_stage+")":"")}))));
       if(r.screening_note) bd.append(el("div",{class:"note"}, el("b",{text:(isInc?"Screening note: ":"Excluded — ")}), r.screening_note));
+      const sp=screeningBlock(r); if(sp) bd.append(sp);
       if(isInc && r.extraction) bd.append(extractionTable(r.extraction));
       bd.append(el("a",{class:"lnk",href:"https://pubmed.ncbi.nlm.nih.gov/"+r.pmid+"/",target:"_blank",rel:"noopener"},"Open on PubMed ↗"));
     }});
@@ -576,7 +614,7 @@ function renderChips(){
   if(S.scope!=="all") a.push(chip("Scope",SCOPE_LABEL[S.scope],()=>{S.scope="all";render();}));
   if(S.query) a.push(chip("Query",S.query,()=>{S.query=null;render();}));
   if(S.reason) a.push(chip("Reason",S.reason,()=>{S.reason=null;render();}));
-  if(S.effect) a.push(chip("Effect",EFFECT_LABEL[S.effect],()=>{S.effect=null;render();}));
+  if(S.effect) a.push(chip(SUMMARY_LABEL,EFFECT_LABEL[S.effect]||S.effect,()=>{S.effect=null;render();}));
   if(S.foundCount) a.push(chip("Returned by",S.foundCount+(S.foundCount===1?" query":" queries"),()=>{S.foundCount=null;render();}));
   if(S.search) a.push(chip("Search","“"+S.search+"”",()=>{S.search="";render();}));
   a.forEach(c=>chipsEl.append(c));
@@ -603,12 +641,13 @@ function render(){
 // ---------- FINDINGS ----------
 function buildFindings(){
   const p=document.getElementById("panel-findings");
+  const FIRST=(TABLE_FIELDS[0]||{}).key;
   p.append(el("div",{class:"sec-h",text:"Findings"}),
-    el("p",{class:"sec-sub"},"The "+nInc+" included studies, by the extracted direction of effect on asbestos-induced mesothelioma susceptibility. Click a group to inspect those studies; the full extraction table follows."));
+    el("p",{class:"sec-sub"},"The "+nInc+" included studies, grouped by extracted "+SUMMARY_LABEL.toLowerCase()+". Click a group to inspect those studies; the full extraction table follows."));
   const grid=el("div",{class:"fbars"});
   const groups={}; R.filter(r=>r.status==="included").forEach(r=>(r.extraction.arms||[]).forEach(a=>{
-    (groups[a.effect_direction]=groups[a.effect_direction]||{studies:new Set(),genes:new Set()});
-    groups[a.effect_direction].studies.add(r.pmid); groups[a.effect_direction].genes.add(a.gene); }));
+    const sv=a[SUMMARY]; (groups[sv]=groups[sv]||{studies:new Set(),genes:new Set()});
+    groups[sv].studies.add(r.pmid); if(a[FIRST]) groups[sv].genes.add(a[FIRST]); }));
   EFFECTS.filter(e=>groups[e]).forEach(e=>{ const g=groups[e];
     grid.append(el("div",{class:"fb",onclick:()=>drill({scope:"included",effect:e})},
       el("div",{class:"fbh"}, el("span",{class:"swatch",style:"background:"+EFFECT_COLOR[e]}), el("span",{class:"fbn",text:EFFECT_LABEL[e]}), el("span",{class:"fbc num",text:g.studies.size})),
@@ -616,16 +655,15 @@ function buildFindings(){
   p.append(grid);
   // full extraction table
   p.append(el("div",{class:"sec-h",style:"font-size:16px;margin-top:8px",text:"Extraction table"}),
-    el("p",{class:"sec-sub"},"One row per gene arm across all included studies."));
-  const cols=["Study (PMID)","Gene","Modification","Mouse model","Asbestos","Route","Comparator","MM incidence","Latency","Effect"];
+    el("p",{class:"sec-sub"},"One row per "+((PROFILE.arm_noun||"arm"))+" across all included studies."));
+  const cols=["Study (PMID)"].concat(TABLE_FIELDS.map(f=>f.label));
   const t=el("table",{class:"xtable"}); const h=el("tr"); cols.forEach(c=>h.append(el("th",{text:c}))); t.append(el("thead",{},h));
   const tb=el("tbody");
-  R.filter(r=>r.status==="included").sort((a,b)=>{const ga=(a.extraction.arms[0]||{}).gene||"",gb=(b.extraction.arms[0]||{}).gene||"";return ga<gb?-1:ga>gb?1:0;}).forEach(r=>{
+  R.filter(r=>r.status==="included").sort((a,b)=>{const va=(a.extraction.arms[0]||{})[FIRST]||"",vb=(b.extraction.arms[0]||{})[FIRST]||"";return va<vb?-1:va>vb?1:0;}).forEach(r=>{
     (r.extraction.arms||[]).forEach(a=>{
       const tr=el("tr");
       tr.append(el("td",{class:"study"}, cite(r)+" ("+r.pmid+")"));
-      ["gene","modification","mouse_model","asbestos_type","route","comparator","incidence","latency"].forEach(k=>tr.append(el("td",{text:a[k]||"—"})));
-      tr.append(el("td",{}, el("span",{class:"pill eff-"+a.effect_direction,text:a.effect_direction})));
+      TABLE_FIELDS.forEach(f=>tr.append(armCell(f,a)));
       tb.append(tr); }); });
   t.append(tb); p.append(el("div",{class:"xwrap"},t));
 }

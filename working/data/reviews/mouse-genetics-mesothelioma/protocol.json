@@ -26,6 +26,32 @@
     "wrong-language",
     "duplicate"
   ],
+  "extraction_profile": {
+    "arm_noun": "gene arm",
+    "summary_field": "effect_direction",
+    "fields": [
+      { "key": "gene", "label": "Gene", "required": true },
+      { "key": "modification", "label": "Modification", "required": true, "help": "e.g. heterozygous knockout, conditional deletion, transgenic" },
+      { "key": "mouse_model", "label": "Mouse model", "required": true, "help": "strain / background / allele detail" },
+      { "key": "asbestos_type", "label": "Asbestos", "required": true, "help": "crocidolite, amosite, chrysotile, or other fibre" },
+      { "key": "route", "label": "Route", "required": true, "help": "intraperitoneal, intrapleural, inhalation, etc." },
+      { "key": "comparator", "label": "Comparator", "required": false },
+      { "key": "incidence", "label": "MM incidence", "required": false },
+      { "key": "latency", "label": "Latency", "required": false },
+      { "key": "effect_direction", "label": "Effect", "required": true,
+        "categorical": {
+          "values": {
+            "increased-susceptibility": { "label": "Increased susceptibility", "tone": "negative" },
+            "decreased-susceptibility": { "label": "Decreased susceptibility (protective)", "tone": "positive" },
+            "no-effect": { "label": "No measurable effect", "tone": "neutral" },
+            "mixed": { "label": "Mixed / modifier", "tone": "warn" },
+            "unclear": { "label": "Unclear", "tone": "neutral" }
+          }
+        }
+      },
+      { "key": "notes", "label": "Notes", "required": false, "in_table": false }
+    ]
+  },
   "searches": [
     {
       "database": "PubMed",

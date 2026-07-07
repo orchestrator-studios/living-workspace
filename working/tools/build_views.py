@@ -67,21 +67,27 @@ def build_prisma(slug, protocol, records):
 
 def build_extraction(slug, protocol, records):
     included = [r for r in records if r.get("status") == "included"]
+    profile = protocol.get("extraction_profile") or {"fields": []}
+    table_fields = [f for f in profile["fields"] if f.get("in_table", True)]
+    keys = [f["key"] for f in table_fields]
+    sort_key = profile.get("summary_field") or (keys[0] if keys else None)
+
     lines = [f"# Extraction table — {protocol.get('title', slug)}", ""]
     lines.append("_Generated from data by `tools/build_views.py` — do not edit by hand._\n")
-    cols = ["Study (PMID)", "Gene", "Modification", "Mouse model", "Asbestos", "Route",
-            "Comparator", "MM incidence", "Latency", "Effect"]
+    cols = ["Study (PMID)"] + [f["label"] for f in table_fields]
     lines.append("| " + " | ".join(cols) + " |")
     lines.append("|" + "|".join(["---"] * len(cols)) + "|")
-    for r in sorted(included, key=lambda r: (r.get("extraction", {}).get("arms", [{}])[0].get("gene", ""))):
+
+    def first_arm_key(r):
+        arms = r.get("extraction", {}).get("arms", [{}])
+        return (arms[0].get(sort_key, "") if arms else "") or ""
+
+    for r in sorted(included, key=first_arm_key):
         cite = f"{citation(r)} ({r['pmid']})"
         for arm in r.get("extraction", {}).get("arms", []):
             def c(k):
-                return (arm.get(k, "") or "").replace("|", "\\|").replace("\n", " ")
-            lines.append("| " + " | ".join([
-                cite, c("gene"), c("modification"), c("mouse_model"), c("asbestos_type"),
-                c("route"), c("comparator"), c("incidence"), c("latency"), c("effect_direction"),
-            ]) + " |")
+                return str(arm.get(k, "") or "").replace("|", "\\|").replace("\n", " ")
+            lines.append("| " + " | ".join([cite] + [c(k) for k in keys]) + " |")
     return "\n".join(lines) + "\n"
 
 
