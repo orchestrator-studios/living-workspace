@@ -30,26 +30,25 @@ Lifecycle (per stage: title-abstract | full-text):
 After adjudication, run tools/validate.py then regenerate views.
 """
 import argparse
-import json
 import random
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-REVIEWS = ROOT / "data" / "reviews"
+import repo
+
+ROOT = repo.ROOT
 STAGES = ["title-abstract", "full-text"]
 
 
 def load(p):
-    return json.loads(Path(p).read_text(encoding="utf-8"))
+    return repo._read_json(p)
 
 
 def save(p, obj):
-    Path(p).write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8")
+    repo._write_json(p, obj)
 
 
 def revdir(slug):
-    return REVIEWS / slug
+    return repo.review_dir(slug)
 
 
 def stagedir(slug, stage):

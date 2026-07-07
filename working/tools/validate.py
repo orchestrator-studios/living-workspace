@@ -10,27 +10,23 @@ Also enforces cross-field invariants that JSON Schema can't express cleanly:
 - every record has at least one found_by entry (traceability)
 Exit code is non-zero if anything fails.
 """
-import json
 import sys
-from pathlib import Path
 
 from jsonschema import Draft7Validator
 
-ROOT = Path(__file__).resolve().parent.parent
-SCHEMAS = ROOT / "schemas"
-REVIEWS = ROOT / "data" / "reviews"
+import repo
 
 
 def load(p):
-    return json.loads(Path(p).read_text(encoding="utf-8"))
+    return repo._read_json(p)
 
 
 def validate_review(slug, errors):
-    revdir = REVIEWS / slug
+    revdir = repo.review_dir(slug)
     protocol = records = None
 
-    proto_schema = Draft7Validator(load(SCHEMAS / "protocol.schema.json"))
-    rec_schema = Draft7Validator(load(SCHEMAS / "records.schema.json"))
+    proto_schema = Draft7Validator(load(repo.SCHEMAS / "protocol.schema.json"))
+    rec_schema = Draft7Validator(load(repo.SCHEMAS / "records.schema.json"))
 
     pp = revdir / "protocol.json"
     if pp.exists():
@@ -90,7 +86,7 @@ def validate_review(slug, errors):
 
 
 def main():
-    slugs = [sys.argv[1]] if len(sys.argv) > 1 else [p.name for p in REVIEWS.iterdir() if p.is_dir()] if REVIEWS.exists() else []
+    slugs = [sys.argv[1]] if len(sys.argv) > 1 else repo.list_reviews()
     if not slugs:
         print("no reviews found")
         return

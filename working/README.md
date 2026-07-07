@@ -1,5 +1,55 @@
 # A living workspace for systematic literature reviews
 
+## What this is
+
+This is a **workspace for running systematic literature reviews** — the rigorous kind: search the
+literature, screen every candidate study against fixed criteria, extract structured data from the ones that
+qualify, and account for every record dropped along the way. You run it **by talking to Claude** — you say
+what you want ("search PubMed for X," "screen the new records," "why was this one excluded?") and Claude does
+the work through versioned tools, keeping every study, decision, and reason as a plain file.
+
+You see the review three ways at once: **the chat** (Claude tells you what it did), a **live dashboard** (the
+pipeline updates as the work lands), and **the files themselves** (the ground truth, always openable). The
+result is a review whose every number can be traced back to its source and re-derived by someone who does
+not take your word for it.
+
+It ships with one finished review already inside — a study of how genetic mutations affect mice's
+susceptibility to asbestos-induced mesothelioma — so there is something real to look at from the first minute.
+
+## Getting started
+
+**You need:** Python 3, plus the one library the tools depend on — `pip install jsonschema`.
+
+**1. Open the live dashboard** and keep it beside your chat:
+
+```bash
+python tools/server.py
+# → http://127.0.0.1:8765/dashboard/mouse-genetics-mesothelioma
+```
+
+The bundled review is complete, so you see a finished pipeline immediately: 532 retrievals → 324 unique →
+33 full-text → 23 included, with every exclusion reason and included study.
+
+**2. Talk to Claude.** Everything is driven by conversation — try:
+
+- "Walk me through how this review reached its 23 included studies."
+- "Re-run the susceptibility search and fold in anything genuinely new."
+- "Screen the unscreened records and show me any conflicts to adjudicate."
+
+**3. Watch it move, then check the files.** As Claude works, the dashboard funnel updates on its own; when
+you want the ground truth behind a number, open `data/reviews/<slug>/` and read the JSON yourself.
+
+**Starting your own review?** Ask Claude to begin one. It interviews you for the question and criteria, writes
+the protocol, runs the first search, and a new `data/reviews/<your-slug>/` appears alongside the examples.
+(`CLAUDE.md` describes how the agent operates inside this workspace.)
+
+---
+
+The rest of this README is the *why* — the commitments that make a review here trustworthy, and where each
+one lives in the system.
+
+## Why it is built this way
+
 A systematic review is only worth as much as it can be trusted, and it can only be trusted to the
 extent it can be **seen**. Its authority does not come from the conclusion; it comes from the fact
 that every record considered, every decision made, and every number reported can be traced back to
@@ -9,8 +59,8 @@ section you write at the end. It is the product.
 This workspace is built so that visibility is a property of the system the whole way through — from
 the first search query to the final included study. And because you cannot trust a review produced
 by a machine you cannot see into, **providing that visibility requires making the system itself
-visible.** This README is the first act of that: it shows you how the thing is built, so that
-nothing about how a result was reached is hidden from you.
+visible.** So the sections below show you how the thing is built, so that nothing about how a result
+was reached is hidden from you.
 
 ---
 
@@ -34,6 +84,26 @@ record it rests on.
 
 ---
 
+## The experience: a conversation you can watch happen
+
+You operate this workspace by **talking to Claude** — "run the susceptibility search," "screen the new
+records," "why was this one excluded?" Claude answers in two places at once:
+
+- **In the chat**, in words — what it did, what it found, what it needs you to decide.
+- **On the live dashboard**, in motion — the pipeline funnel, the exclusion reasons, the included studies,
+  all updating as the work lands. Start it with `python tools/server.py`, open `/dashboard/<slug>`, and
+  leave it up; it moves as the review moves.
+
+And beneath both, nothing is sealed off: **every fact is a plain file you can open yourself.** The chat is
+the dialogue, the dashboard is the live picture, and the files are the ground truth — three views of one
+system. You can drop to the files at any moment to check what either of the other two just told you.
+
+The dashboard is not a report you generate at the end. It is served live from the same data-access layer
+the review is built on (`tools/repo.py`), reading the same files Claude writes — so it is always current,
+never a stale snapshot, and shows exactly the numbers the static views would.
+
+---
+
 ## Anatomy — and what each part lets you see
 
 The workspace separates a reusable **engine** (topic-agnostic) from **reviews** (data instances). The
@@ -44,10 +114,11 @@ shape of the data it extracts.
 |---|---|---|
 | `OVERVIEW.md` | What this system is and the rules it holds to | The intent, before any data exists |
 | `schemas/` | The structure and validity rules for all data (`protocol`, `records`) | *What is allowed* — the law every record is checked against |
-| `tools/` | Deterministic operations: search, validate, screen, and the *code* that renders views | *How* every transformation happens — nothing is done off the record |
+| `tools/` | Deterministic operations: search, validate, screen; the shared data-access layer (`repo.py`); the code that renders views; and the dashboard `server.py` | *How* every transformation happens — nothing is done off the record |
+| `tools/repo.py` | The one data-access layer: where data lives, how it is read/written, and the canonical projections | *That every surface reads the same numbers* — chat, dashboard, and static views all draw from here |
 | `skills/` | The written procedures: the review workflow, screening, extraction | The method, in words, so it can be audited and repeated |
 | `.claude/agents/` | The versioned `slr-screener` — the reviewer's fixed instructions | *How articles are judged* — the exact standard, not an improvised prompt |
-| `views/` | View *logic*: the reusable templates (e.g. `report.template.html`) | *How* the evidence is rendered — one template, every review |
+| `views/` | View *logic*: the reusable templates — static `report.template.html` and live `dashboard.template.html` | *How* the evidence is rendered — one set of templates, every review |
 | `data/reviews/<slug>/` | One review's system of record — `protocol.json`, `records.json`, the screening trail, and its rendered `views/` | The evidence, every decision on it, and the evidence made legible |
 
 The domain lives in the review, not the engine. A review's `protocol.json` declares its
@@ -76,8 +147,9 @@ extract       structured fields per study → 27 gene arms
 views         PRISMA account · extraction table · synthesis · interactive report
 ```
 
-Every count above is a link in the HTML report: click it and you land on exactly the records behind
-it. `291 + 10 + 23 = 324` is shown reconciling, not asserted.
+You watch this funnel fill on the **live dashboard** as screening runs, and every count is a link in the
+static HTML report: click it and you land on exactly the records behind it. `291 + 10 + 23 = 324` is shown
+reconciling, not asserted — in both places, because both read the one projection in `tools/repo.py`.
 
 ---
 
@@ -116,16 +188,22 @@ python tools/screen.py merge <slug> --stage title-abstract      # reconcile, rep
 python tools/screen.py queue <slug>                             # what awaits your adjudication
 python tools/screen.py adjudicate <slug> --stage title-abstract --pmid <id> --decision include|exclude
 
+# watch it live while you work
+python tools/server.py                  # serves /dashboard/<slug> — the pipeline, live as it changes
+
 # always, after any change to data
 python tools/validate.py  <slug>        # schemas are law; provenance and reasons are checked
 python tools/build_views.py  <slug>     # regenerate PRISMA + extraction table
 python tools/build_report.py <slug>     # regenerate the interactive audit report
 ```
 
-The interactive report is written to `data/reviews/<slug>/views/<slug>-report.html` — a single self-contained file with
-tabs for **Methodology** (the reconciling trace, every count drillable), **Records** (the full corpus
-at any filter point, each with its provenance), **Findings**, and **Protocol** (the criteria and the
-exact, copy-pasteable search commands).
+The **live dashboard** (`python tools/server.py`, then `/dashboard/<slug>`) is the everyday view: it polls
+the data-access layer and moves as records are screened, so you keep it open beside the chat. The **static
+report** at `data/reviews/<slug>/views/<slug>-report.html` is the self-contained, shareable snapshot — a
+single file with tabs for **Methodology** (the reconciling trace, every count drillable), **Records** (the
+full corpus at any filter point, each with its provenance), **Findings**, and **Protocol** (the criteria and
+the exact, copy-pasteable search commands). Both render the same projection; the dashboard is live, the
+report travels.
 
 ---
 
@@ -161,7 +239,10 @@ Visibility includes being visible about limits.
 
 - `OVERVIEW.md` — the system's own statement of purpose and rules.
 - `CLAUDE.md` — how the agent operates inside this workspace (the operating manual).
+- `python tools/server.py` → `/dashboard/mouse-genetics-mesothelioma` — the live pipeline; keep it open
+  beside the chat and watch it move.
 - `data/reviews/mouse-genetics-mesothelioma/` — the live review: protocol, records, screening trail, views.
-- `data/reviews/mouse-genetics-mesothelioma/views/mouse-genetics-mesothelioma-report.html` — open it,
-  and start distrusting a number until you have followed it home.
-- `views/report.template.html` — the template that renders it, reused by every review.
+- `data/reviews/mouse-genetics-mesothelioma/views/mouse-genetics-mesothelioma-report.html` — the shareable
+  snapshot; open it and start distrusting a number until you have followed it home.
+- `tools/repo.py` — the data-access layer every surface reads from; `views/report.template.html` and
+  `views/dashboard.template.html` — the templates it feeds, reused by every review.
