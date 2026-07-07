@@ -23,6 +23,10 @@ workspace, not part of the framework.
 6. **Do it, or grow it** — the [move rule](the-move-rule.md). This is the rule that makes
    the workspace *living*: capability is added at the moment its absence blocks a want,
    permanently, in place.
+7. **Navigate big work from the end** — [the journey](the-journey.md). A move can only be
+   judged against a described destination, and a route sketched finer than your knowledge
+   is a guess wearing a schedule. The final state and the chunks hold steady; the hops
+   absorb all the uncertainty.
 
 ## Canonical text
 
@@ -63,6 +67,11 @@ conversation.
    Then retry the want. Every gap-fill is deposited permanently, in place — there is no
    deploy step. Signals worth acting on: an operation repeating (→ tool), a rule being
    stated (→ skill), scanning beating asking (→ view).
+7. **Navigate big work from the end.** When the want is a whole deliverable, not a single
+   step: first write down the final state — what will exist when the work is done, and
+   what must be true of it — as a file. Then chunk the route coarse: typically about three
+   phases, each naming where it ends, not how it goes. Then hop the insides — one visible
+   move at a time, applying rule 6 at every hop.
 
 ## On entry
 

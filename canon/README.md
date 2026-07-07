@@ -1,14 +1,15 @@
 # The Canon — how a living workspace works
 
-This folder is the system's doctrine: what a living workspace *is*, the one rule it moves
-by, and what it's made of. Everything here is general — nothing about any particular
+This folder is the system's doctrine: what a living workspace *is*, how work moves through
+it — from whole journeys down to single moves — and what it's made of. Everything here is general — nothing about any particular
 project. For the concept in action, see [the worked example](../example/JOURNEY.md); to
 start your own, copy [the template](../template/).
 
 | Doc | Question it answers |
 |---|---|
 | this file | What is a living workspace? |
-| [the-move-rule.md](the-move-rule.md) | How does it move forward? |
+| [the-journey.md](the-journey.md) | How does a whole piece of work get from here to done? |
+| [the-move-rule.md](the-move-rule.md) | How does a single move get made? |
 | [anatomy.md](anatomy.md) | What is it made of? |
 | [operating-manual.md](operating-manual.md) | What does the agent follow, and why? |
 

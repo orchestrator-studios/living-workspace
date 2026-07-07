@@ -1,7 +1,9 @@
 # The Move Rule — do it, or grow it
 
 A living workspace moves by one rule. It is simple enough to state completely and it
-generates the entire life of the workspace.
+generates the entire life of the workspace. It is the discipline of a **single move** —
+how whole pieces of work are framed around those moves (final state, chunks, hops) is
+[the journey](the-journey.md).
 
 ## The rule
 
@@ -33,10 +35,12 @@ powerful over time because they land on everything previous moves deposited.
 
 ## Consequences
 
-- **Milestones are a trace, not a recipe.** Any particular workspace's history — see
-  [the example's journey](../example/JOURNEY.md) — is just the rule's execution trace on
-  that project's wants. A different project produces a different trace from the same rule.
-  There is no step list to follow; there is one rule to apply.
+- **A journey's steps are a trace, not a recipe.** Any particular workspace's history —
+  see [the example's journey](../example/JOURNEY.md) — is just the rule's execution trace
+  on that project's wants, inside a route sketched only as coarse chunks
+  ([the journey](the-journey.md)). A different project produces a different trace from
+  the same rule. There is no fine-grained step list to follow; there is a described
+  destination and one rule to apply.
 - **The folders wake in need-order.** The rule only ever acquires what's blocking the
   current move — so schemas arrive when understanding is missing, tools when a path is
   missing, views when seeing is missing. Never in build-order, never speculatively.

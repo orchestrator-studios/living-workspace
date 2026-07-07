@@ -33,6 +33,11 @@ they are an application — one that starts empty and comes to life through conv
    retry the want. Every gap-fill is deposited permanently, in place — there is no deploy step.
    Signals worth acting on: an operation repeating (→ tool), a rule being stated (→ skill),
    scanning beating asking (→ view).
+7. **Navigate big work from the end.** When the want is a whole deliverable, not a single
+   step: first write down the final state — what will exist when the work is done, and
+   what must be true of it — as a file. Then chunk the route coarse: typically about three
+   phases, each naming where it ends, not how it goes. Then hop the insides — one visible
+   move at a time, applying rule 6 at every hop.
 
 ## On entry
 

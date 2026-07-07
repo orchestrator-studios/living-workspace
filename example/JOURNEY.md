@@ -1,8 +1,10 @@
 # JOURNEY — how this workspace was built, step by step
 
-This file is the execution trace of [the move rule](../canon/the-move-rule.md) on one real
-project: a client-commissioned literature review, from empty folders to the delivered
-report. Each step records what was wanted, what was missing, what got built to close the
+This file is the trace of one [journey](../canon/the-journey.md) — a client-commissioned
+literature review, from empty folders to the delivered report — navigated by
+[the move rule](../canon/the-move-rule.md). It runs the canonical shape: the final state
+described first (step 2), the route chunked coarse, and the insides taken one hop at a
+time. Each step records what was wanted, what was missing, what got built to close the
 gap, and what was deposited on disk. The gaps are called out inline, in prose — when a
 step needed a schema, a tool, or a skill that didn't exist yet, that's where it got made,
 and not before.
@@ -56,16 +58,18 @@ is logged; and the search strategy itself is **validated against the client's fi
 papers**: a strategy that can't find the papers the medical director already knows about
 can't be trusted to find the ones he doesn't.
 
-The spec also lays out the plan those criteria imply:
+With the destination described, the spec sketches the route — three chunks, coarse on
+purpose, each naming where it ends, not how it goes:
 
-1. Write the search queries.
-2. Run them; keep the raw results.
-3. Build a semantic filter for each query — the brief's criteria as a per-paper judgment.
-4. Run every result through the filters; the survivors are the pool.
-5. Check: are the five flagged papers accounted for?
-6. Decide — if the check fails, fix the strategy and rerun; if it holds, proceed.
-7. Extract and compile the learnings from the pool.
-8. Generate the report from the data.
+1. **A validated pool** — a set of papers that passed the brief's criteria, produced by a
+   search strategy proven against the client's five flagged papers.
+2. **The learnings** — every claim the pool supports, extracted and compiled under themes.
+3. **The report** — generated from the data, meeting the acceptance criteria above.
+
+The insides of the chunks are not planned here. They get discovered one hop at a time —
+steps 3 through 8 below are chunk one unfolding — per
+[the journey doctrine](../canon/the-journey.md): commit fully to the destination,
+coarsely to the route, and one move at a time to everything else.
 
 Then a question with no obvious answer: **where does this document live?** It isn't data,
 a schema, a tool, a skill, or a view — none of the five folders fit a document *about the
@@ -294,6 +298,12 @@ is a document about the work, not data or machinery — it lands at the workspac
 
 ## Notes
 
+- **The journey ran the canonical shape** ([the journey](../canon/the-journey.md)): the
+  final state written down before any work (step 2), the route sketched as three coarse
+  chunks, and every step after taken as a hop — with capability grown at exactly the hop
+  that was blocked without it. Chunk one took six steps to unfold; chunks two and three
+  took one each, because the hops inside chunk one had already deposited most of what
+  they needed.
 - **The deliverable was described before any work and generated after all of it** — the
   spec (step 2) and the report (step 10) bracket the journey, and both live at the root:
   the workspace's one unresolved placement question.
