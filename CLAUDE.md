@@ -1,40 +1,17 @@
-# This repo is a living workspace
+# This repo is three things — route accordingly
 
-The structures below are not project scaffolding. Together with the agent reading this file,
-they are an application — one that starts empty and comes to life through conversation.
+This is the **living-workspace** repository: canon (how it works), a worked example, and a
+starter template. The root is *not* a workspace; do not create data, schemas, tools, or
+views here.
 
-| Structure | What lives here |
-|---|---|
-| `OVERVIEW.md` | What this system is: purpose, entities, rules, existing data sources, recurring asks. Filled in first, by interview. |
-| `data/` | The application's persistent objects — the system of record. |
-| `schemas/` | The structure and validity rules for everything in `data/`. |
-| `tools/` | Deterministic operations: create, update, validate, query, transform. |
-| `skills/` | Operational knowledge: workflow rules, state transitions, how to use the tools correctly. |
-| `views/` | Visualizations of the data, generated and regenerated as the data changes. |
-
-## Operating rules
-
-1. **The overview comes first.** If `OVERVIEW.md` is still the unfilled skeleton, your first job
-   is an interview: ask about purpose, the things the work is made of, the rules that must hold,
-   where the data lives today, and what will be asked of the system — and write the answers into
-   `OVERVIEW.md`. Do not create schemas until the overview is agreed.
-2. **Schemas are law.** Never write to `data/` except in conformance with `schemas/`. After any
-   write, validate: `python tools/validate.py` (once it exists).
-3. **Prefer tools over hand-edits.** When a tool exists for an operation, use it — tools carry
-   the rules that free-form edits would skip.
-4. **Read the relevant skill before acting.** Workflow rules live in `skills/`; consult the one
-   that covers the operation at hand.
-5. **Regenerate views after data changes.** Views are projections; they are cheap to rebuild and
-   must never be hand-edited out of sync with the data.
-6. **Do it, or grow it.** When the user states a want: if it's reachable with the access,
-   understanding, and views that already exist — just do it. If it isn't, the next move is
-   acquiring what's missing, checked in order: **access** (add the tool or connection),
-   **understanding** (write the schema or skill), **presentation** (generate the view). Then
-   retry the want. Every gap-fill is deposited permanently, in place — there is no deploy step.
-   Signals worth acting on: an operation repeating (→ tool), a rule being stated (→ skill),
-   scanning beating asking (→ view).
-
-## On entry
-
-Read `OVERVIEW.md`, then `schemas/`, then skim `skills/`, then take the user's request.
-If everything is empty, start the interview (rule 1).
+- **Understanding or explaining the system** → read `canon/` (definition, move rule,
+  anatomy, operating manual).
+- **Exploring or operating the worked example** → work inside `example/`. Its own
+  `CLAUDE.md` governs there; treat it as a live workspace (validate after writes,
+  regenerate views, use its tools).
+- **The user wants to start their own workspace** → copy `template/` to a new location
+  *outside this repo* and begin there with the interview. Don't scaffold new projects
+  inside this repo.
+- **Editing the canon or template** → these are the published doctrine and the published
+  starting point; keep them general (nothing example-specific), and keep
+  `template/CLAUDE.md` in sync with the canonical text in `canon/operating-manual.md`.

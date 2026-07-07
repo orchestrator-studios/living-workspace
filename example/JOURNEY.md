@@ -4,10 +4,10 @@ This is the timeline of how this workspace came to be: **eight milestones, all i
 document**, each linking to the live files it produced. No git archaeology required — the
 finished workspace is the tree around you; this file is how it got that way.
 
-Every milestone is one firing of the same rule (see [README](README.md#how-it-works--one-rule)):
-state the want; **if it's reachable with what exists, do it** — otherwise **grow** the missing
-capability (access → understanding → presentation), then do it. The badge on each milestone
-says which branch fired.
+Every milestone is one firing of the same rule (see
+[the move rule](../canon/the-move-rule.md)): state the want; **if it's reachable with what
+exists, do it** — otherwise **grow** the missing capability (access → understanding →
+presentation), then do it. The badge on each milestone says which branch fired.
 
 *(Client, correspondence, and papers are fictional throughout.)*
 
@@ -17,8 +17,8 @@ says which branch fired.
 ## m0 · The Template
 
 **The starting point — before any want.** Five empty folders, an operating manual
-([CLAUDE.md](CLAUDE.md)), and an unfilled overview (the skeleton is preserved in
-[template/OVERVIEW.md](template/OVERVIEW.md)). Nothing installed, nothing configured.
+([CLAUDE.md](CLAUDE.md)), and an unfilled overview (the skeleton is what
+[the template](../template/OVERVIEW.md) still holds). Nothing installed, nothing configured.
 
 ```
 OVERVIEW.md (skeleton)   CLAUDE.md
@@ -228,6 +228,5 @@ OVERVIEW.md ✓   schemas/ 4   data/ 27 records   views/ 1   tools/ 6   skills/ 
 - **There was never a launch.** The workspace was in use from m1 and never stopped being
   built. That's not a phase that ended; it's what kind of thing this is.
 
-*Start your own: copy [CLAUDE.md](CLAUDE.md) and [template/OVERVIEW.md](template/OVERVIEW.md)
-into a folder with the five empty directories, open Claude Code, and point it at whatever
-your project already has.*
+*Start your own: copy [the template](../template/) to wherever your project will live, open
+Claude Code there, and point it at whatever the project already has.*
