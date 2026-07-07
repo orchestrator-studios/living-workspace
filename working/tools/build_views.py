@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-"""Regenerate a review's views from its data: PRISMA account + extraction table.
+"""Regenerate a review's Markdown views from its data: PRISMA account + extraction table.
+
+This is the *code* half of the view logic (the templating is trivial here, so it lives inline);
+the rendered *instances* are written into the study folder, next to the data they project:
+    data/reviews/<slug>/views/<slug>-prisma.md       PRISMA-style flow + exclusion-reason breakdown
+    data/reviews/<slug>/views/<slug>-extraction.md   one row per (study, arm)
 
 Usage:
     python tools/build_views.py <slug>
-
-Writes:
-    views/<slug>-prisma.md         PRISMA-style flow with exclusion-reason breakdown
-    views/<slug>-extraction.md     one row per (study, gene arm)
 
 Views are projections. Never hand-edit them; re-run this after any data change.
 """
@@ -17,7 +18,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REVIEWS = ROOT / "data" / "reviews"
-VIEWS = ROOT / "views"
 
 
 def load(p):
@@ -99,10 +99,11 @@ def main():
     revdir = REVIEWS / slug
     protocol = load(revdir / "protocol.json")
     records = load(revdir / "records.json")
-    VIEWS.mkdir(exist_ok=True)
-    (VIEWS / f"{slug}-prisma.md").write_text(build_prisma(slug, protocol, records), encoding="utf-8")
-    (VIEWS / f"{slug}-extraction.md").write_text(build_extraction(slug, protocol, records), encoding="utf-8")
-    print(f"wrote views/{slug}-prisma.md and views/{slug}-extraction.md")
+    outdir = revdir / "views"
+    outdir.mkdir(parents=True, exist_ok=True)
+    (outdir / f"{slug}-prisma.md").write_text(build_prisma(slug, protocol, records), encoding="utf-8")
+    (outdir / f"{slug}-extraction.md").write_text(build_extraction(slug, protocol, records), encoding="utf-8")
+    print(f"wrote {(outdir / f'{slug}-prisma.md').relative_to(ROOT)} and {slug}-extraction.md")
 
 
 if __name__ == "__main__":

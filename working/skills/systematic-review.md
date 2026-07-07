@@ -30,8 +30,11 @@ After ANY write to data:
 
     python tools/validate.py <slug>
     python tools/build_views.py <slug>
+    python tools/build_report.py <slug>
 
-Never hand-edit files under `views/`.
+Rendered views are written into the study's own folder, `data/reviews/<slug>/views/`, next to the
+data they project (the reusable templates live in the top-level `views/`). They are projections —
+never hand-edit them; change the data and regenerate.
 
 ## Re-running later
 Re-run a search with a new `--date`; only genuinely new PMIDs are added (as `unscreened`),

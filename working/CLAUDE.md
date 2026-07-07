@@ -6,11 +6,11 @@ they are an application — one that starts empty and comes to life through conv
 | Structure | What lives here |
 |---|---|
 | `OVERVIEW.md` | What this system is: purpose, entities, rules, existing data sources, recurring asks. Filled in first, by interview. |
-| `data/` | The application's persistent objects — the system of record. |
+| `data/` | The application's persistent objects — the system of record. Each study is a folder under `data/reviews/<slug>/`; its rendered views live in that folder's `views/` subfolder. |
 | `schemas/` | The structure and validity rules for everything in `data/`. |
-| `tools/` | Deterministic operations: create, update, validate, query, transform. |
+| `tools/` | Deterministic operations: create, update, validate, query, transform. The *code* half of view logic. |
 | `skills/` | Operational knowledge: workflow rules, state transitions, how to use the tools correctly. |
-| `views/` | Visualizations of the data, generated and regenerated as the data changes. |
+| `views/` | View *logic* — the reusable templates (e.g. `report.template.html`). Not rendered output: a study's rendered instances live in `data/reviews/<slug>/views/`. |
 
 ## Operating rules
 
