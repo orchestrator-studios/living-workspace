@@ -11,7 +11,15 @@ and not before.
 
 **How to read each step:** the **Ask** is what the user typed, verbatim. The prose after
 it is what actually happened — including any capability that had to be created first.
-**New on disk** is what the workspace permanently gained.
+Each step closes with its **delta** — the difference between the workspace before and
+after, split along the two axes state evolves on:
+
+| Content & data | Capability |
+|---|---|
+| what is now *known and recorded* — documents, records, results | what can now be *done* — schemas, tools, skills, views |
+
+A dash means that axis didn't move. Watching which column fills, step by step, is half
+the story of this journey.
 
 *(Draft note: terminal output in this version is illustrative. It will be replaced with
 real captured output once the workspace's artifacts are regenerated to match this journey.)*
@@ -42,7 +50,9 @@ client file doesn't answer, it asks — do systematic reviews count as primary r
 record the criterion it was made on (yes, always) — and writes the answers into
 [`OVERVIEW.md`](OVERVIEW.md).
 
-**New on disk:** `OVERVIEW.md` — from skeleton to filled.
+| Content & data | Capability |
+|---|---|
+| `OVERVIEW.md` — from skeleton to filled | — |
 
 ---
 
@@ -77,7 +87,9 @@ work itself*. For now it sits at the workspace root, next to `OVERVIEW.md`, as
 `DELIVERABLE.md`. (Open question, flagged and parked: the right home for spec-like
 documents — the report will pose the same question at the end.)
 
-**New on disk:** `DELIVERABLE.md` — the spec and the plan.
+| Content & data | Capability |
+|---|---|
+| `DELIVERABLE.md` — the destination and the route | — |
 
 ---
 
@@ -95,7 +107,9 @@ Claude proposes a query record — id, query text, database, rationale, status �
 approves it, and it becomes the workspace's first schema. The four queries are written as
 records.
 
-**New on disk:** `schemas/query.schema.json` · `data/queries/Q-01.json` … `Q-04.json`.
+| Content & data | Capability |
+|---|---|
+| `data/queries/Q-01…Q-04.json` — the search strategy, on the record | `schemas/query.schema.json` — the workspace's first schema |
 
 ---
 
@@ -123,8 +137,9 @@ Four runs, 96 raw hits, untouched and unjudged. Overlap between queries is expec
 preserved — deduplication is a judgment about *papers*, and papers don't exist as records
 yet.
 
-**New on disk:** `tools/run_query.py` · `schemas/result.schema.json` ·
-`data/results/R-01.json` … `R-04.json`.
+| Content & data | Capability |
+|---|---|
+| `data/results/R-01…R-04.json` — 96 raw hits, kept verbatim | `tools/run_query.py` — the path to the database · `schemas/result.schema.json` |
 
 ---
 
@@ -144,8 +159,9 @@ cost query's filter, for instance, spells out what counts as a cost outcome).
 Filters are records too — they'll be applied, cited, and possibly revised — so they get a
 schema and a folder.
 
-**New on disk:** `schemas/filter.schema.json` · `data/filters/F-01.json` … `F-04.json` —
-one per query.
+| Content & data | Capability |
+|---|---|
+| `data/filters/F-01…F-04.json` — the judgment standard, written down, one per query | `schemas/filter.schema.json` |
 
 ---
 
@@ -175,8 +191,9 @@ static HTML page — every paper as a card, pass/fail columns, the failing crite
 card. 71 papers judged; **9 pass**. The board is regenerated after any data change, never
 edited by hand.
 
-**New on disk:** `schemas/paper.schema.json` · `data/papers/P-001.json` … `P-071.json` ·
-`tools/apply_filter.py` · `views/build_pool_board.py` · `views/pool_board.html`.
+| Content & data | Capability |
+|---|---|
+| `data/papers/P-001…P-071.json` — 71 papers judged, verdicts frozen, 9 in the pool | `schemas/paper.schema.json` · `tools/apply_filter.py` — carries the dedup and frozen-verdict rules · `views/build_pool_board.py` and its generated board |
 
 ---
 
@@ -206,7 +223,9 @@ Mbeki never being retrieved at all is a **query gap**: every query says telemoni
 remote monitoring, wearables — none says *structured telephone support*, which the brief
 explicitly includes as an intervention.
 
-**New on disk:** `tools/check_flagged.py`.
+| Content & data | Capability |
+|---|---|
+| — (the check's verdict drives the next step; nothing new is recorded) | `tools/check_flagged.py` — the strategy validator, rerunnable at any time |
 
 ---
 
@@ -230,8 +249,9 @@ which queries, which filters, what the check found on each pass, and the basis f
 exclusions the client will see in the appendix. Dr. Reyes's question — "why did anything
 get ruled in or out?" — now has a mechanical answer for all five of his papers.
 
-**New on disk:** `data/queries/Q-05.json` · `data/filters/F-05.json` ·
-`data/results/R-05.json` · two paper records · `DELIVERABLE.md` — validation section.
+| Content & data | Capability |
+|---|---|
+| `data/queries/Q-05.json` · `data/filters/F-05.json` · `data/results/R-05.json` · two paper records — the pool is now 11 · `DELIVERABLE.md` gains its validation section | — (nothing built; the existing machinery carried the whole repair) |
 
 ---
 
@@ -264,8 +284,9 @@ OK — 94 records valid; citation closure holds (no learning cites outside the p
 Twelve learnings, compiled under four themes: 30-day readmissions, mortality and
 long-term outcomes, adherence and engagement, cost.
 
-**New on disk:** `schemas/learning.schema.json` · `skills/learnings.md` ·
-`tools/add_learning.py` · `tools/validate.py` · `data/learnings/L-001.json` … `L-012.json`.
+| Content & data | Capability |
+|---|---|
+| `data/learnings/L-001…L-012.json` — twelve claims under four themes | `schemas/learning.schema.json` · `skills/learnings.md` · `tools/add_learning.py` — the pool-only citation gate · `tools/validate.py` — the global closure check |
 
 ---
 
@@ -292,7 +313,9 @@ And the same placement question as step 2, with the same provisional answer: the
 is a document about the work, not data or machinery — it lands at the workspace root,
 [`report.md`](report.md), next to the spec it fulfills. The user reads it and sends it.
 
-**New on disk:** `tools/assemble_report.py` · `report.md`.
+| Content & data | Capability |
+|---|---|
+| `report.md` — the deliverable itself | `tools/assemble_report.py` — regenerates it from the data, any time |
 
 ---
 
@@ -307,6 +330,12 @@ is a document about the work, not data or machinery — it lands at the workspac
 - **The deliverable was described before any work and generated after all of it** — the
   spec (step 2) and the report (step 10) bracket the journey, and both live at the root:
   the workspace's one unresolved placement question.
+- **Read the delta tables down the page** and the workspace's economics are visible in
+  one pass: the capability column is busiest early (steps 3–7) and the content column
+  late — because [every move pays twice](../canon/the-move-rule.md), and the capability
+  deposited by early steps is what lets late steps be pure content. Step 7 lands nothing
+  but capability; step 8, its repair, lands nothing but content — the machinery already
+  existed. Step 10 delivers the whole report as one row of content.
 - **Everything stored, at every stage:** queries, raw results, filters, verdicts,
   learnings — each became records the moment it needed to outlive the conversation, and
   each got its schema at that moment, not in an up-front design phase.
