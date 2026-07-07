@@ -1,0 +1,12 @@
+{
+  "id": "Q-02",
+  "date": "2026-07-05",
+  "database": "MedSearch (fict.)",
+  "query": "(\"heart failure\") AND (app OR wearable OR \"patient engagement\") AND (adherence OR usage)",
+  "hits": 17,
+  "added": [
+    "S-011",
+    "S-012"
+  ],
+  "notes": "One duplicate (S-003) refused by add_source."
+}

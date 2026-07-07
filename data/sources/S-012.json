@@ -1,0 +1,18 @@
+{
+  "id": "S-012",
+  "title": "Protocol: cluster-randomized evaluation of RPM in rural heart-failure cohorts",
+  "authors": [
+    "Osei K",
+    "Hartwell R"
+  ],
+  "year": 2024,
+  "venue": "Trials Register (fict.)",
+  "doi": "10.9999/fict.2024.0777",
+  "found_via": "search:Q-02",
+  "screening": {
+    "status": "excluded",
+    "criterion": "exclusion: protocol without results",
+    "reason": "Study protocol; no results reported",
+    "date": "2026-07-05"
+  }
+}

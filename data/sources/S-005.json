@@ -1,0 +1,17 @@
+{
+  "id": "S-005",
+  "title": "The promise of remote patient monitoring: an editorial",
+  "authors": [
+    "Vance P"
+  ],
+  "year": 2021,
+  "venue": "Journal of Cardiac Care",
+  "doi": "10.9999/fict.2021.0033",
+  "found_via": "seeded",
+  "screening": {
+    "status": "excluded",
+    "criterion": "exclusion: not primary research",
+    "reason": "Editorial / opinion piece; no data",
+    "date": "2026-07-03"
+  }
+}

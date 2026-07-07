@@ -1,0 +1,18 @@
+{
+  "id": "S-004",
+  "title": "Wearable-based remote monitoring in atrial fibrillation: a feasibility study",
+  "authors": [
+    "Chen W",
+    "Duplessis A"
+  ],
+  "year": 2023,
+  "venue": "Cardiac Rhythm Reports",
+  "doi": "10.9999/fict.2023.0561",
+  "found_via": "seeded",
+  "screening": {
+    "status": "excluded",
+    "criterion": "exclusion: different patient population",
+    "reason": "Atrial fibrillation cohort, not heart failure",
+    "date": "2026-07-03"
+  }
+}

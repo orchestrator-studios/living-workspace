@@ -1,37 +1,45 @@
 # System Overview
 
-*Filled in by interview, 2026-07-04. Everything else in this workspace traces back to this file.*
+*Drafted from the client's file (`seed/`) on 2 July 2026, gaps closed by interview.
+Everything else in this workspace traces back to this file.*
 
 ## Purpose
 
-Track a solo consulting practice end to end: who the clients are, what projects are running at
-what rates, where the billable time goes, and what has and hasn't been invoiced — so that
-monthly invoicing is mechanical and nothing billable is ever lost or double-billed.
+Produce a structured literature review for Lakeshore Health System: **does remote patient
+monitoring of heart-failure patients after discharge reduce hospital readmissions?**
+(Secondary outcomes: mortality, adherence, cost.) Deliverable: a report the client's board
+can act on, in which every claim traces to an explicitly included source, and every
+exclusion is recorded with its reason — due ahead of the September board cycle.
 
 ## The things
 
-- **Client** — an organization that hires the practice; has a primary contact.
-- **Project** — one engagement for one client, billed hourly at a project-specific rate.
-- **Time entry** — a block of work on one project on one date, with a note a client could read.
-- **Invoice** — a monthly bill to one client, drawing that client's unbilled time.
+- **Source** — a paper under consideration: citation, how it was found, and its screening
+  status (unscreened → included / excluded, with the criterion it was decided on).
+- **Finding** — one extracted claim from one included source: outcome, direction, evidence.
+- **Theme** — a synthesis bucket the findings are organized under in the report.
+- **Search** — a logged sweep: query, database, date, hits, which sources it added.
 
 ## The rules
 
-- Time is billed in **quarter-hour increments**; smallest entry 0.25h.
-- **Rates belong to projects**, not clients — one client can run two projects at two rates.
-- Once a time entry is on an invoice it is **frozen** — never edited, never re-billed.
-- An invoice draws **only unbilled time**, for **one client**. The same hour can never appear
-  on two invoices.
+- Screening criteria are the brief's (`seed/brief.md`), verbatim — not improvised per paper.
+- Every screening decision records **which criterion** it was decided on.
+- A source enters the review **once** — the same DOI can never be added twice.
+- A finding may only cite an **included** source. Nothing in the report may reference
+  anything that wasn't screened in. Excluded sources appear only in the exclusions appendix.
+- Once the report is delivered, the underlying decisions are frozen — revisions happen as
+  a new versioned pass, not silent edits.
 
 ## Where the data lives today
 
-One **Google Drive folder per client**, each containing the engagement letter (contacts,
-projects, rates, start dates) and a running **time-log sheet** (date, project, hours, notes).
-Nothing else — no invoicing has happened yet this cycle.
+The client's file, mirrored in `seed/`: the email thread (the ask), the brief (question,
+criteria, ground rules), and `flagged-papers.csv` — five papers the client's medical
+director considers the starting point. Everything else will come from logged searches.
 
 ## What you'll ask of it
 
-- "Log two and a half hours on vendor selection for Wednesday — scoring session."
-- "What's unbilled, by client?"
-- "Invoice Meridian for everything outstanding."
-- A glanceable view: unbilled by client, recent time — without having to ask.
+- "Pull in the papers the client already flagged."
+- "Run a sweep with the brief's criteria; add what's new."
+- "Screen S-007 — include or exclude, against the criteria, with the reason."
+- "What's still unscreened?" / a glanceable screening board.
+- "Extract the findings from the included sources and organize them into themes."
+- "Assemble the report."

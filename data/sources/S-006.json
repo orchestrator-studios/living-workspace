@@ -1,0 +1,18 @@
+{
+  "id": "S-006",
+  "title": "Home telemonitoring and 30-day readmission after acute decompensated heart failure: a pragmatic randomized trial",
+  "authors": [
+    "Ijeoma N",
+    "Kaplan S",
+    "Verhoeven D"
+  ],
+  "year": 2023,
+  "venue": "Annals of Digital Medicine",
+  "doi": "10.9999/fict.2023.0790",
+  "found_via": "search:Q-01",
+  "screening": {
+    "status": "included",
+    "criterion": "HF population; RPM intervention; readmission outcome; pragmatic RCT",
+    "date": "2026-07-04"
+  }
+}

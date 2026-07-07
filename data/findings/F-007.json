@@ -1,0 +1,9 @@
+{
+  "id": "F-007",
+  "source_id": "S-003",
+  "claim": "Adherence to daily transmissions fell from 88% (month 1) to 61% (month 6) in adults over 75",
+  "outcome": "adherence",
+  "direction": "reduction",
+  "evidence": "Cohort n=612; steepest decline after care-team contact frequency dropped",
+  "theme_id": "T-03"
+}

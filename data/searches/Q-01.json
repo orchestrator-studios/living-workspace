@@ -1,0 +1,15 @@
+{
+  "id": "Q-01",
+  "date": "2026-07-04",
+  "database": "MedSearch (fict.)",
+  "query": "(\"heart failure\") AND (\"remote monitoring\" OR telemonitoring OR \"telephone support\") AND (readmission OR mortality OR adherence OR cost)",
+  "hits": 41,
+  "added": [
+    "S-006",
+    "S-007",
+    "S-008",
+    "S-009",
+    "S-010"
+  ],
+  "notes": "Top relevant hits added; three hits were duplicates of seeded papers and were refused by add_source."
+}

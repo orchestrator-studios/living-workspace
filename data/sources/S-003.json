@@ -1,0 +1,17 @@
+{
+  "id": "S-003",
+  "title": "Patient adherence to home telemonitoring in older adults with heart failure",
+  "authors": [
+    "Solano J",
+    "Grieve H"
+  ],
+  "year": 2024,
+  "venue": "Journal of Patient Engagement",
+  "doi": "10.9999/fict.2024.0117",
+  "found_via": "seeded",
+  "screening": {
+    "status": "included",
+    "criterion": "HF population; RPM intervention; adherence outcome; cohort",
+    "date": "2026-07-03"
+  }
+}

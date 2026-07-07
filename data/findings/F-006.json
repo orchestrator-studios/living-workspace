@@ -1,0 +1,9 @@
+{
+  "id": "F-006",
+  "source_id": "S-002",
+  "claim": "Six-month all-cause mortality unchanged under structured telephone support",
+  "outcome": "mortality",
+  "direction": "no_effect",
+  "evidence": "RCT n=740; 4.1% vs 4.4%",
+  "theme_id": "T-02"
+}

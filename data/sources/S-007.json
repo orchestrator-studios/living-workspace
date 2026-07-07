@@ -1,0 +1,17 @@
+{
+  "id": "S-007",
+  "title": "Twelve-month mortality and rehospitalization under remote monitoring in chronic heart failure: registry analysis",
+  "authors": [
+    "Aldana P",
+    "Brekke T"
+  ],
+  "year": 2022,
+  "venue": "European Journal of Cardiac Telemetry",
+  "doi": "10.9999/fict.2022.0655",
+  "found_via": "search:Q-01",
+  "screening": {
+    "status": "included",
+    "criterion": "HF population; RPM intervention; mortality + readmission outcomes; registry cohort",
+    "date": "2026-07-04"
+  }
+}

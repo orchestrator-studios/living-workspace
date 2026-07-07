@@ -1,0 +1,18 @@
+{
+  "id": "S-010",
+  "title": "Remote monitoring for heart failure: an updated systematic review and meta-analysis of readmission outcomes",
+  "authors": [
+    "Farrow E",
+    "Nkosi Z",
+    "Halloran B"
+  ],
+  "year": 2024,
+  "venue": "Cochrane-Style Reviews (fict.)",
+  "doi": "10.9999/fict.2024.0509",
+  "found_via": "search:Q-01",
+  "screening": {
+    "status": "included",
+    "criterion": "HF population; RPM intervention; readmission outcome; systematic review/MA",
+    "date": "2026-07-04"
+  }
+}

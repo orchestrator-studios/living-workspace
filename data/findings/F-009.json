@@ -1,0 +1,9 @@
+{
+  "id": "F-009",
+  "source_id": "S-008",
+  "claim": "Nurse-led telemonitoring produced modest net savings per patient-year from the payer perspective, driven by avoided readmissions",
+  "outcome": "cost",
+  "direction": "reduction",
+  "evidence": "$412 net saving per patient-year (sensitivity range -$88 to $904)",
+  "theme_id": "T-04"
+}

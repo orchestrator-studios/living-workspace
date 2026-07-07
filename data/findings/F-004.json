@@ -1,0 +1,9 @@
+{
+  "id": "F-004",
+  "source_id": "S-002",
+  "claim": "Structured telephone support with device data showed no significant 30-day readmission effect but reduced HF-specific readmissions at 6 months",
+  "outcome": "readmission",
+  "direction": "mixed",
+  "evidence": "RCT n=740; 30-day RR 0.93 (0.78-1.11); 6-month HF readmission RR 0.81 (0.67-0.98)",
+  "theme_id": "T-01"
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screening Board</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --track: #f0efec; --accent: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --track: #2c2c2a; --accent: #3987e5;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 28px 22px; }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 22px; }
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .col { background: var(--track); border-radius: 10px; padding: 12px; }
+  .col h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+             color: var(--ink-2); margin: 2px 4px 10px; }
+  .count { float: right; background: var(--card); border: 1px solid var(--border);
+            border-radius: 999px; padding: 0 8px; font-size: 0.75rem; color: var(--ink); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+           padding: 10px 12px; margin-bottom: 8px; }
+  .sid { font-family: ui-monospace, Consolas, monospace; font-size: 0.7rem;
+          color: var(--accent); font-weight: 700; }
+  .ttl { font-size: 0.84rem; font-weight: 600; line-height: 1.35; margin: 2px 0 4px; }
+  .meta { font-size: 0.72rem; color: var(--ink-2); }
+  .why { font-size: 0.72rem; color: var(--ink-2); border-top: 1px solid var(--border);
+          margin-top: 6px; padding-top: 5px; font-style: italic; }
+  .empty { color: var(--ink-2); font-size: 0.8rem; padding: 4px; }
+  @media (max-width: 760px) { .board { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Screening Board</h1>
+  <p class="sub">12 sources · 9 findings extracted ·
+    generated from <code>data/</code> by <code>views/build_screening_board.py</code></p>
+  <div class="board">
+<section class="col"><h2>unscreened <span class="count">0</span></h2><p class="empty">none</p></section>
+<section class="col"><h2>included <span class="count">8</span></h2><div class="card"><div class="sid">S-001</div><div class="ttl">Remote telemonitoring after heart-failure discharge: a multicenter cohort study of 30-day readmissions</div><div class="meta">Hartwell R et al. · 2023 · via seeded</div><div class="why">HF population; RPM intervention; readmission outcome; primary research</div></div>
+<div class="card"><div class="sid">S-002</div><div class="ttl">Structured telephone support with device data versus usual care in chronic heart failure</div><div class="meta">Mbeki T et al. · 2022 · via seeded</div><div class="why">HF population; RPM intervention (device-data STS); readmission + mortality outcomes; RCT</div></div>
+<div class="card"><div class="sid">S-003</div><div class="ttl">Patient adherence to home telemonitoring in older adults with heart failure</div><div class="meta">Solano J et al. · 2024 · via seeded</div><div class="why">HF population; RPM intervention; adherence outcome; cohort</div></div>
+<div class="card"><div class="sid">S-006</div><div class="ttl">Home telemonitoring and 30-day readmission after acute decompensated heart failure: a pragmatic randomized trial</div><div class="meta">Ijeoma N et al. · 2023 · via search:Q-01</div><div class="why">HF population; RPM intervention; readmission outcome; pragmatic RCT</div></div>
+<div class="card"><div class="sid">S-007</div><div class="ttl">Twelve-month mortality and rehospitalization under remote monitoring in chronic heart failure: registry analysis</div><div class="meta">Aldana P et al. · 2022 · via search:Q-01</div><div class="why">HF population; RPM intervention; mortality + readmission outcomes; registry cohort</div></div>
+<div class="card"><div class="sid">S-008</div><div class="ttl">Cost consequences of a nurse-led telemonitoring program for heart failure: payer-perspective analysis</div><div class="meta">Okafor C et al. · 2024 · via search:Q-01</div><div class="why">HF population; RPM intervention; cost outcome; economic analysis of trial data</div></div>
+<div class="card"><div class="sid">S-010</div><div class="ttl">Remote monitoring for heart failure: an updated systematic review and meta-analysis of readmission outcomes</div><div class="meta">Farrow E et al. · 2024 · via search:Q-01</div><div class="why">HF population; RPM intervention; readmission outcome; systematic review/MA</div></div>
+<div class="card"><div class="sid">S-011</div><div class="ttl">Engagement decay in app-based heart-failure monitoring: a 12-month usage analysis</div><div class="meta">Delgado M et al. · 2023 · via search:Q-02</div><div class="why">HF population; RPM intervention; adherence outcome; usage cohort</div></div></section>
+<section class="col"><h2>excluded <span class="count">4</span></h2><div class="card"><div class="sid">S-004</div><div class="ttl">Wearable-based remote monitoring in atrial fibrillation: a feasibility study</div><div class="meta">Chen W et al. · 2023 · via seeded</div><div class="why">Atrial fibrillation cohort, not heart failure</div></div>
+<div class="card"><div class="sid">S-005</div><div class="ttl">The promise of remote patient monitoring: an editorial</div><div class="meta">Vance P · 2021 · via seeded</div><div class="why">Editorial / opinion piece; no data</div></div>
+<div class="card"><div class="sid">S-009</div><div class="ttl">Device accuracy of consumer blood-pressure cuffs in home settings</div><div class="meta">Tran L et al. · 2023 · via search:Q-01</div><div class="why">Device accuracy only; no readmission, mortality, adherence, or cost outcome</div></div>
+<div class="card"><div class="sid">S-012</div><div class="ttl">Protocol: cluster-randomized evaluation of RPM in rural heart-failure cohorts</div><div class="meta">Osei K et al. · 2024 · via search:Q-02</div><div class="why">Study protocol; no results reported</div></div></section>
+
+  </div>
+</div>
+</body>
+</html>

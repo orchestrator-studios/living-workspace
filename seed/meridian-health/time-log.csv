@@ -1,7 +1,0 @@
-date,project,hours,notes
-2026-06-02,Data Platform Assessment,3.5,Kickoff and current-state architecture review
-2026-06-05,Data Platform Assessment,2,Stakeholder interviews: data engineering leads
-2026-06-11,Data Platform Assessment,4,Warehouse and pipeline inventory
-2026-06-16,Vendor Selection,1.5,Requirements workshop prep
-2026-06-18,Vendor Selection,3,Vendor long-list assembly and screening criteria
-2026-06-24,Data Platform Assessment,2.25,Draft findings: ingestion bottlenecks

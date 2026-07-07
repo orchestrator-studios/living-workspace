@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Validate every record in data/ against its schema in schemas/.
+"""Validate every record in data/ against its schema, plus the review's integrity rules.
 
-Dependency-free: implements the subset of JSON Schema the schemas use
-(type, required, additionalProperties, enum, pattern, multipleOf, minimum,
-maximum, exclusiveMinimum, minLength, minItems, oneOf, items, properties).
+Dependency-free: implements the subset of JSON Schema the schemas use, then checks the
+rules no per-record schema can express:
+  - DOI uniqueness (a paper enters the review once)
+  - screening consistency (decisions carry criterion; exclusions carry reason)
+  - citation closure: every finding cites a source that exists AND is included
+  - referential integrity for themes and searches
 
-Usage:  python tools/validate.py
-Exit 0 = all records valid; exit 1 = violations (printed).
+Usage:  python tools/validate.py        (exit 0 = clean; exit 1 = violations, printed)
 """
 import json
 import re
@@ -15,32 +17,24 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_FOR_DIR = {
-    "clients": "client.schema.json",
-    "projects": "project.schema.json",
-    "time": "time_entry.schema.json",
-    "invoices": "invoice.schema.json",
+    "sources": "source.schema.json",
+    "findings": "finding.schema.json",
+    "themes": "theme.schema.json",
+    "searches": "search.schema.json",
 }
-
-TYPES = {
-    "object": dict, "array": list, "string": str,
-    "boolean": bool, "null": type(None),
-}
+TYPES = {"object": dict, "array": list, "string": str, "boolean": bool, "null": type(None)}
 
 
 def check(value, schema, path, errors):
     t = schema.get("type")
     if t == "number":
         if isinstance(value, bool) or not isinstance(value, (int, float)):
-            errors.append(f"{path}: expected number, got {type(value).__name__}")
-            return
+            errors.append(f"{path}: expected number"); return
     elif t is not None:
         if t == "boolean" and not isinstance(value, bool):
-            errors.append(f"{path}: expected boolean")
-            return
+            errors.append(f"{path}: expected boolean"); return
         if t != "boolean" and not isinstance(value, TYPES[t]):
-            errors.append(f"{path}: expected {t}, got {type(value).__name__}")
-            return
-
+            errors.append(f"{path}: expected {t}, got {type(value).__name__}"); return
     if "oneOf" in schema:
         for sub in schema["oneOf"]:
             sub_errors: list[str] = []
@@ -50,7 +44,6 @@ def check(value, schema, path, errors):
         else:
             errors.append(f"{path}: matches no allowed alternative")
         return
-
     if "enum" in schema and value not in schema["enum"]:
         errors.append(f"{path}: {value!r} not in {schema['enum']}")
     if "pattern" in schema and isinstance(value, str) and not re.match(schema["pattern"], value):
@@ -58,15 +51,10 @@ def check(value, schema, path, errors):
     if "minLength" in schema and isinstance(value, str) and len(value) < schema["minLength"]:
         errors.append(f"{path}: shorter than minLength {schema['minLength']}")
     if isinstance(value, (int, float)) and not isinstance(value, bool):
-        if "multipleOf" in schema and round(value / schema["multipleOf"], 9) % 1 != 0:
-            errors.append(f"{path}: {value} not a multiple of {schema['multipleOf']}")
         if "minimum" in schema and value < schema["minimum"]:
             errors.append(f"{path}: {value} below minimum {schema['minimum']}")
         if "maximum" in schema and value > schema["maximum"]:
             errors.append(f"{path}: {value} above maximum {schema['maximum']}")
-        if "exclusiveMinimum" in schema and value <= schema["exclusiveMinimum"]:
-            errors.append(f"{path}: {value} not above {schema['exclusiveMinimum']}")
-
     if isinstance(value, dict):
         for req in schema.get("required", []):
             if req not in value:
@@ -79,7 +67,6 @@ def check(value, schema, path, errors):
         for key, sub in props.items():
             if key in value:
                 check(value[key], sub, f"{path}.{key}", errors)
-
     if isinstance(value, list):
         if "minItems" in schema and len(value) < schema["minItems"]:
             errors.append(f"{path}: fewer than {schema['minItems']} items")
@@ -93,22 +80,42 @@ def load(path):
         return json.load(f)
 
 
-def referential_checks(errors):
-    """Cross-record rules the schemas alone can't express."""
-    clients = {p.stem for p in (ROOT / "data/clients").glob("*.json")}
-    projects = {p.stem: load(p) for p in (ROOT / "data/projects").glob("*.json")}
-    invoices = {p.stem for p in (ROOT / "data/invoices").glob("*.json")}
-    for pid, pr in projects.items():
-        if pr["client_id"] not in clients:
-            errors.append(f"{pid}: client_id {pr['client_id']} does not exist")
-    for p in (ROOT / "data/time").glob("*.json"):
-        te = load(p)
-        if te["project_id"] not in projects:
-            errors.append(f"{te['id']}: project_id {te['project_id']} does not exist")
-        if te["billed"] and not te["invoice_id"]:
-            errors.append(f"{te['id']}: billed but no invoice_id")
-        if te["invoice_id"] and te["invoice_id"] not in invoices:
-            errors.append(f"{te['id']}: invoice_id {te['invoice_id']} does not exist")
+def integrity_checks(errors):
+    sources = {p.stem: load(p) for p in (ROOT / "data/sources").glob("*.json")}
+    themes = {p.stem for p in (ROOT / "data/themes").glob("*.json")}
+    searches = {p.stem for p in (ROOT / "data/searches").glob("*.json")}
+
+    seen_dois = {}
+    for sid, s in sources.items():
+        doi = s["doi"].lower()
+        if doi in seen_dois:
+            errors.append(f"{sid}: duplicate DOI (already on {seen_dois[doi]})")
+        seen_dois[doi] = sid
+        st = s["screening"]
+        if st["status"] in ("included", "excluded") and not st.get("criterion"):
+            errors.append(f"{sid}: {st['status']} without recording the criterion")
+        if st["status"] == "excluded" and not st.get("reason"):
+            errors.append(f"{sid}: excluded without a reason")
+        fv = s["found_via"]
+        if fv.startswith("search:") and fv.split(":")[1] not in searches:
+            errors.append(f"{sid}: found_via references unknown {fv}")
+
+    for p in (ROOT / "data/findings").glob("*.json"):
+        f = load(p)
+        src = sources.get(f["source_id"])
+        if src is None:
+            errors.append(f"{f['id']}: cites {f['source_id']}, which does not exist")
+        elif src["screening"]["status"] != "included":
+            errors.append(f"{f['id']}: cites {f['source_id']}, which is "
+                          f"{src['screening']['status']} — findings may only cite included sources")
+        if f["theme_id"] and f["theme_id"] not in themes:
+            errors.append(f"{f['id']}: theme {f['theme_id']} does not exist")
+
+    for p in (ROOT / "data/searches").glob("*.json"):
+        q = load(p)
+        for sid in q["added"]:
+            if sid not in sources:
+                errors.append(f"{q['id']}: added source {sid} does not exist")
 
 
 def main() -> int:
@@ -122,13 +129,14 @@ def main() -> int:
         for record_path in sorted(folder.glob("*.json")):
             total += 1
             check(load(record_path), schema, record_path.stem, errors)
-    referential_checks(errors)
+    integrity_checks(errors)
     if errors:
         print(f"INVALID — {len(errors)} violation(s) across {total} records:")
         for e in errors:
             print("  -", e)
         return 1
-    print(f"OK — {total} records valid, referential integrity holds.")
+    print(f"OK — {total} records valid; citation closure holds "
+          f"(no finding cites anything but an included source).")
     return 0
 
 

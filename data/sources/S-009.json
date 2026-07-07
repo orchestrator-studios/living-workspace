@@ -1,0 +1,18 @@
+{
+  "id": "S-009",
+  "title": "Device accuracy of consumer blood-pressure cuffs in home settings",
+  "authors": [
+    "Tran L",
+    "Whitcombe A"
+  ],
+  "year": 2023,
+  "venue": "Journal of Medical Devices (fict.)",
+  "doi": "10.9999/fict.2023.0344",
+  "found_via": "search:Q-01",
+  "screening": {
+    "status": "excluded",
+    "criterion": "exclusion: no outcome of interest",
+    "reason": "Device accuracy only; no readmission, mortality, adherence, or cost outcome",
+    "date": "2026-07-04"
+  }
+}

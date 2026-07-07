@@ -1,0 +1,17 @@
+{
+  "id": "S-011",
+  "title": "Engagement decay in app-based heart-failure monitoring: a 12-month usage analysis",
+  "authors": [
+    "Delgado M",
+    "Fitch R"
+  ],
+  "year": 2023,
+  "venue": "Journal of Patient Engagement",
+  "doi": "10.9999/fict.2023.0888",
+  "found_via": "search:Q-02",
+  "screening": {
+    "status": "included",
+    "criterion": "HF population; RPM intervention; adherence outcome; usage cohort",
+    "date": "2026-07-05"
+  }
+}

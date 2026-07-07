@@ -1,0 +1,9 @@
+{
+  "id": "F-003",
+  "source_id": "S-010",
+  "claim": "Meta-analysis: pooled 30-day readmission effect favors RPM, moderate heterogeneity",
+  "outcome": "readmission",
+  "direction": "reduction",
+  "evidence": "18 studies; RR 0.85 (0.77-0.94); I2=41%",
+  "theme_id": "T-01"
+}

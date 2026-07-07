@@ -71,40 +71,56 @@ skills/       workflow rules and know-how — how to use the tools correctly
 views/        generated ways of seeing the data
 ```
 
+In this repo you'll also find [`JOURNEY.md`](JOURNEY.md) (the story of how this particular
+workspace came to be), [`seed/`](seed/) (the client file it bootstrapped from), and
+[`template/`](template/) (the blank overview skeleton for starting your own).
+
 ## The worked example — a commissioned literature review
 
-The repo doubles as a worked example: a consulting firm's client commissions a structured
-literature review (*remote patient monitoring for heart failure — does it reduce
+This repo doubles as a finished worked example: a consulting firm's client commissions a
+structured literature review (*remote patient monitoring for heart failure — does it reduce
 readmissions?*). The project bootstraps from the client's own file — an email thread, a
-brief, five flagged papers — and runs to a delivered report.
+brief, five flagged papers, all in [`seed/`](seed/) — and runs to a delivered
+[`report.md`](report.md).
 
-The git history is the walkthrough: **one commit per milestone**, tagged, so you can check
-out any moment and stand inside it. Each milestone is one firing of the rule above:
+**The whole timeline is one document: [`JOURNEY.md`](JOURNEY.md)** — eight milestones,
+each linking to the live files it produced, with the real tool outputs (including the
+refusals). Nothing to check out, nothing to diff. Each milestone is one firing of the rule
+above:
 
-| Tag | Milestone | The want | Do it, or grow it? |
-|---|---|---|---|
-| `m0` | The template | — | the starting point: empty folders |
-| `m1` | The Intake | "set up the project from the client's file" | grow **understanding** → OVERVIEW.md filled |
-| `m2` | The Agreement | "manage sources properly" | grow **understanding** → four schemas |
-| `m3` | The Move-In | "pull in what the client gave us" | **do it** — seed data, nothing new needed |
-| `m4` | The Mirror | "how do I know what we've got?" | grow **presentation** → the screening board |
-| `m5` | The Routine | "run sweeps without duplicate papers" | grow **access** → the `add_source` tool |
-| `m6` | The Guarantee | "nothing may ever cite an excluded paper" | grow **understanding** (hard form) → skill + enforcer |
-| `m7` | The Handoff | "assemble the client's report" | **do it** — one sentence; every capability already exists |
+| Milestone | The want | Do it, or grow it? |
+|---|---|---|
+| [m0 · The Template](JOURNEY.md#m0) | — | the starting point: empty folders + the client's file |
+| [m1 · The Intake](JOURNEY.md#m1) | "set up the project from the client's file" | grow **understanding** → OVERVIEW.md filled |
+| [m2 · The Agreement](JOURNEY.md#m2) | "manage sources properly" | grow **understanding** → four schemas |
+| [m3 · The Move-In](JOURNEY.md#m3) | "pull in what the client gave us" | **do it** — nothing new needed |
+| [m4 · The Mirror](JOURNEY.md#m4) | "how do I know what we've got?" | grow **presentation** → the screening board |
+| [m5 · The Routine](JOURNEY.md#m5) | "run sweeps without duplicate papers" | grow **access** → the `add_source` tool |
+| [m6 · The Guarantee](JOURNEY.md#m6) | "nothing may ever cite an excluded paper" | grow **understanding** (hard form) → skills + enforcers |
+| [m7 · The Handoff](JOURNEY.md#m7) | "assemble the client's report" | **do it** — one sentence; every capability already exists |
 
-Note the shape: the biggest deliverable is the smallest move. By `m7`, every prerequisite has
+Note the shape: the biggest deliverable is the smallest move. By m7, every prerequisite has
 already been deposited by an earlier milestone — the report assembles on demand, every claim
-tracing to an included source, because `m6` made anything else impossible.
+tracing to an included source, because m6 made anything else impossible.
+
+Try it against the finished workspace (Python 3.10+, no dependencies):
+
+```bash
+python tools/validate.py                          # 27 records; citation closure holds
+python views/build_screening_board.py             # then open views/screening_board.html
+python tools/add_finding.py --source S-004 ...    # → REFUSED: source S-004 is excluded
+python tools/assemble_report.py --date 2026-07-06 # regenerates report.md from the data
+```
 
 *(The client, correspondence, and papers in this example are fictional.)*
 
 ## Start your own
 
-1. Copy the skeleton (clone this repo and check out `m0`, or just make the folders and copy
-   in `CLAUDE.md` + `OVERVIEW.md`).
+1. Make the five folders and copy in [`CLAUDE.md`](CLAUDE.md) +
+   [`template/OVERVIEW.md`](template/OVERVIEW.md) (as `OVERVIEW.md`).
 2. Open Claude Code in the folder.
 3. Point it at whatever your project already has — a brief, an email thread, a spreadsheet —
-   and start talking. The interview fills the overview; everything else follows the rule.
+   and start talking. The intake fills the overview; everything else follows the rule.
 
 The folders start empty on purpose.
 

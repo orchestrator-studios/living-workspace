@@ -1,0 +1,17 @@
+{
+  "id": "S-002",
+  "title": "Structured telephone support with device data versus usual care in chronic heart failure",
+  "authors": [
+    "Mbeki T",
+    "Ferrara L"
+  ],
+  "year": 2022,
+  "venue": "Clinical Telehealth Quarterly",
+  "doi": "10.9999/fict.2022.0288",
+  "found_via": "seeded",
+  "screening": {
+    "status": "included",
+    "criterion": "HF population; RPM intervention (device-data STS); readmission + mortality outcomes; RCT",
+    "date": "2026-07-03"
+  }
+}

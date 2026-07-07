@@ -1,0 +1,18 @@
+{
+  "id": "S-001",
+  "title": "Remote telemonitoring after heart-failure discharge: a multicenter cohort study of 30-day readmissions",
+  "authors": [
+    "Hartwell R",
+    "Osei K",
+    "Lindqvist M"
+  ],
+  "year": 2023,
+  "venue": "Journal of Cardiac Care",
+  "doi": "10.9999/fict.2023.0412",
+  "found_via": "seeded",
+  "screening": {
+    "status": "included",
+    "criterion": "HF population; RPM intervention; readmission outcome; primary research",
+    "date": "2026-07-03"
+  }
+}
