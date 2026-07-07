@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+"""Validate every review's protocol.json and records.json against schemas/.
+
+Usage:
+    python tools/validate.py            # validate all reviews
+    python tools/validate.py <slug>     # validate one review
+
+Also enforces cross-field invariants that JSON Schema can't express cleanly:
+- every record's exclusion_reason (when excluded) is in the protocol's exclusion_reasons list
+- every record has at least one found_by entry (traceability)
+Exit code is non-zero if anything fails.
+"""
+import json
+import sys
+from pathlib import Path
+
+from jsonschema import Draft7Validator
+
+ROOT = Path(__file__).resolve().parent.parent
+SCHEMAS = ROOT / "schemas"
+REVIEWS = ROOT / "data" / "reviews"
+
+
+def load(p):
+    return json.loads(Path(p).read_text(encoding="utf-8"))
+
+
+def validate_review(slug, errors):
+    revdir = REVIEWS / slug
+    protocol = records = None
+
+    proto_schema = Draft7Validator(load(SCHEMAS / "protocol.schema.json"))
+    rec_schema = Draft7Validator(load(SCHEMAS / "records.schema.json"))
+
+    pp = revdir / "protocol.json"
+    if pp.exists():
+        protocol = load(pp)
+        for e in proto_schema.iter_errors(protocol):
+            errors.append(f"[{slug}] protocol.json: {list(e.path)}: {e.message}")
+
+    rp = revdir / "records.json"
+    if rp.exists():
+        records = load(rp)
+        for e in rec_schema.iter_errors(records):
+            errors.append(f"[{slug}] records.json: {list(e.path)}: {e.message}")
+
+        allowed = set(protocol.get("exclusion_reasons", [])) if protocol else set()
+        seen = set()
+        for i, r in enumerate(records if isinstance(records, list) else []):
+            pmid = r.get("pmid", f"#{i}")
+            if pmid in seen:
+                errors.append(f"[{slug}] records.json: duplicate pmid {pmid}")
+            seen.add(pmid)
+            if not r.get("found_by"):
+                errors.append(f"[{slug}] records.json: pmid {pmid} has no found_by (traceability)")
+            if r.get("status") == "excluded" and allowed:
+                reason = r.get("exclusion_reason")
+                if reason not in allowed:
+                    errors.append(f"[{slug}] records.json: pmid {pmid} exclusion_reason '{reason}' not in protocol list")
+
+
+def main():
+    slugs = [sys.argv[1]] if len(sys.argv) > 1 else [p.name for p in REVIEWS.iterdir() if p.is_dir()] if REVIEWS.exists() else []
+    if not slugs:
+        print("no reviews found")
+        return
+    errors = []
+    for slug in slugs:
+        validate_review(slug, errors)
+    if errors:
+        print(f"FAIL — {len(errors)} problem(s):")
+        for e in errors:
+            print("  " + e)
+        sys.exit(1)
+    print(f"OK — validated {len(slugs)} review(s): {', '.join(slugs)}")
+
+
+if __name__ == "__main__":
+    main()

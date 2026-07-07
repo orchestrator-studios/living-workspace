@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "records.schema.json",
+  "title": "Records file",
+  "description": "All candidate records for one review, each with screening decision and (if included) extraction.",
+  "type": "array",
+  "items": { "$ref": "#/definitions/record" },
+  "definitions": {
+    "record": {
+      "type": "object",
+      "required": ["pmid", "title", "status", "found_by"],
+      "additionalProperties": false,
+      "properties": {
+        "pmid": { "type": "string", "pattern": "^[0-9]+$" },
+        "doi": { "type": "string" },
+        "title": { "type": "string", "minLength": 1 },
+        "abstract": { "type": "string" },
+        "authors": { "type": "array", "items": { "type": "string" } },
+        "year": { "type": "integer", "minimum": 1900, "maximum": 2100 },
+        "journal": { "type": "string" },
+        "found_by": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Which search queries surfaced this record (traceability rule).",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["unscreened", "included", "excluded"]
+        },
+        "screening_stage": {
+          "type": "string",
+          "enum": ["title-abstract", "full-text"]
+        },
+        "exclusion_reason": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "screening_note": { "type": "string" },
+        "extraction": { "$ref": "#/definitions/extraction" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "excluded" } } },
+          "then": { "required": ["exclusion_reason", "screening_stage"] }
+        },
+        {
+          "if": { "properties": { "status": { "const": "included" } } },
+          "then": { "required": ["extraction"] }
+        }
+      ]
+    },
+    "extraction": {
+      "type": "object",
+      "description": "Structured fields pulled from an included study. A study may report multiple gene/model arms.",
+      "required": ["arms"],
+      "additionalProperties": false,
+      "properties": {
+        "arms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["gene", "modification", "mouse_model", "asbestos_type", "route", "effect_direction"],
+            "additionalProperties": false,
+            "properties": {
+              "gene": { "type": "string", "minLength": 1 },
+              "modification": { "type": "string", "description": "e.g. heterozygous knockout, conditional deletion, transgenic" },
+              "mouse_model": { "type": "string", "description": "strain / background / allele detail" },
+              "asbestos_type": { "type": "string", "description": "crocidolite, amosite, chrysotile, or other fibre" },
+              "route": { "type": "string", "description": "intraperitoneal, intrapleural, inhalation, etc." },
+              "comparator": { "type": "string", "description": "the control group compared against" },
+              "incidence": { "type": "string", "description": "mesothelioma incidence in mutant vs comparator" },
+              "latency": { "type": "string", "description": "time to tumor / survival difference" },
+              "effect_direction": {
+                "type": "string",
+                "enum": ["increased-susceptibility", "decreased-susceptibility", "no-effect", "mixed", "unclear"]
+              },
+              "notes": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
