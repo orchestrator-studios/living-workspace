@@ -1,339 +1,312 @@
 # JOURNEY — how this workspace was built, step by step
 
-This file records how this workspace went from empty folders to a delivered report, in
-eight milestones (m0–m7). Each milestone states exactly what the user typed, what Claude
-did, and what appeared — with links to the actual files in this repo.
+This file is the execution trace of [the move rule](../canon/the-move-rule.md) on one real
+project: a client-commissioned literature review, from empty folders to the delivered
+report. Each step records what was wanted, what was missing, what got built to close the
+gap, and what was deposited on disk. The gaps are called out inline, in prose — when a
+step needed a schema, a tool, or a skill that didn't exist yet, that's where it got made,
+and not before.
 
-**How to read the blocks:**
+**How to read each step:** the **Ask** is what the user typed, verbatim. The prose after
+it is what actually happened — including any capability that had to be created first.
+**New on disk** is what the workspace permanently gained.
 
-- **You type** — a message the user sends to Claude, in the Claude Code chat. Verbatim.
-- **Claude does** — the concrete actions Claude takes: files it reads, questions it asks,
-  files it writes, commands it runs.
-- **Terminal** — real command output. Every output quoted in this file was produced by
-  actually running the tools (early-milestone outputs were reproduced against that
-  milestone's data state).
-- **Files changed** — what is different on disk after the milestone, with links.
-
-Each milestone header carries a tag: **DO IT** means the request was completed with
-capabilities that already existed; **GROW** means a missing capability had to be added
-first (access, understanding, or presentation — see
-[the move rule](../canon/the-move-rule.md)).
+*(Draft note: terminal output in this version is illustrative. It will be replaced with
+real captured output once the workspace's artifacts are regenerated to match this journey.)*
 
 *(Client, correspondence, and papers are fictional throughout.)*
 
 ---
 
-<a id="m0"></a>
-## m0 · Setup — before any request
+## Before the first request
 
-What the user did, before talking to Claude at all:
-
-1. Copied the [template](../template/) — `CLAUDE.md`, the blank `OVERVIEW.md`, and five
-   empty folders — into a new project folder.
-2. Created a `seed/` folder and put the client's material in it: the two emails saved as
-   [`seed/client-email-thread.md`](seed/client-email-thread.md), the attached brief as
-   [`seed/brief.md`](seed/brief.md), and the medical director's list of five papers as
-   [`seed/flagged-papers.csv`](seed/flagged-papers.csv). (`seed/` is not part of the
-   template — it's just a folder for source material.)
-3. Opened a terminal in the project folder and started Claude Code.
-
-**State of the workspace:** `OVERVIEW.md` is the unfilled skeleton. `data/`, `schemas/`,
-`tools/`, `skills/`, `views/` are empty. `seed/` holds the three client files.
+What the user did before talking to Claude at all: copied [the template](../template/) —
+`CLAUDE.md`, the blank `OVERVIEW.md`, and five empty folders — into a new project folder;
+created a `seed/` folder holding the client's material — the
+[email thread](seed/client-email-thread.md), the [brief](seed/brief.md), and
+[`flagged-papers.csv`](seed/flagged-papers.csv), the five papers the client's medical
+director considers the starting point; then opened a terminal there and started Claude Code.
 
 ---
 
-<a id="m1"></a>
-## m1 · The Intake — GROW: understanding
+## 1 · Intake
 
-**You type:**
+**Ask:** "Read everything in seed/ and set up the project. Fill in OVERVIEW.md."
 
-> Read everything in seed/ and set up the project. Fill in OVERVIEW.md.
+Claude reads the three seed files and drafts the overview: the review question, the
+secondary outcomes, the inclusion/exclusion criteria, the deadline. Three things the
+client file doesn't answer, it asks — do systematic reviews count as primary research
+(yes); do adherence studies count without readmission data (yes); should every decision
+record the criterion it was made on (yes, always) — and writes the answers into
+[`OVERVIEW.md`](OVERVIEW.md).
 
-**Claude does:**
-
-1. Reads the three files in `seed/`.
-2. Drafts the overview from them: the review question, the secondary outcomes, the
-   inclusion/exclusion criteria, the deadline — all of which are stated in the brief.
-3. Asks the user three questions the client file does not answer:
-   - *"Do systematic reviews and meta-analyses count as primary research for inclusion?"*
-     — User: yes.
-   - *"Should adherence and engagement studies be included even if they report no
-     readmission data?"* — User: yes; adherence is a secondary outcome.
-   - *"The brief says decisions must be defensible to Dr. Reyes. Do you want every
-     screening decision to record which criterion it was made on?"* — User: yes, always.
-4. Writes the answers into [`OVERVIEW.md`](OVERVIEW.md).
-
-**Files changed:** `OVERVIEW.md` — from skeleton to filled. Nothing else.
-
-The overview now contains: the purpose, the four kinds of record this work will need
-(source, finding, theme, search), the rules (including "a finding may only cite an
-included source"), where the data lives today (`seed/`), and the requests the user
-expects to make.
+**New on disk:** `OVERVIEW.md` — from skeleton to filled.
 
 ---
 
-<a id="m2"></a>
-## m2 · The Agreement — GROW: understanding
+## 2 · The deliverable, described before any work
 
-**You type:**
+**Ask:** "Before we search for anything: write one document that describes the finished
+deliverable. What exactly does the client get, and what must be true of it?"
 
-> Propose the data structures we need to run this review.
+Claude drafts the spec from the brief and the email: the report's contents (question,
+method, findings by theme, included-sources list, exclusions appendix with reasons) and
+its acceptance criteria — every claim cites a paper that passed screening; every search
+is logged; and the search strategy itself is **validated against the client's five flagged
+papers**: a strategy that can't find the papers the medical director already knows about
+can't be trusted to find the ones he doesn't.
 
-**Claude does:**
+The spec also lays out the plan those criteria imply:
 
-1. Replies in chat with a proposal derived from the overview — four record types and the
-   fields of each:
-   - **source** — citation fields, how it was found, and a screening block (status,
-     criterion, reason, date);
-   - **finding** — one claim from one source: outcome, direction, evidence, theme;
-   - **theme** — a named synthesis bucket;
-   - **search** — a logged sweep: query, database, date, hits, which sources it added.
-2. Waits for approval.
+1. Write the search queries.
+2. Run them; keep the raw results.
+3. Build a semantic filter for each query — the brief's criteria as a per-paper judgment.
+4. Run every result through the filters; the survivors are the pool.
+5. Check: are the five flagged papers accounted for?
+6. Decide — if the check fails, fix the strategy and rerun; if it holds, proceed.
+7. Extract and compile the learnings from the pool.
+8. Generate the report from the data.
 
-**You type:**
+Then a question with no obvious answer: **where does this document live?** It isn't data,
+a schema, a tool, a skill, or a view — none of the five folders fit a document *about the
+work itself*. For now it sits at the workspace root, next to `OVERVIEW.md`, as
+`DELIVERABLE.md`. (Open question, flagged and parked: the right home for spec-like
+documents — the report will pose the same question at the end.)
 
-> Yes. Go ahead.
-
-**Claude does:** writes the four schema files:
-[`schemas/source.schema.json`](schemas/source.schema.json) ·
-[`schemas/finding.schema.json`](schemas/finding.schema.json) ·
-[`schemas/theme.schema.json`](schemas/theme.schema.json) ·
-[`schemas/search.schema.json`](schemas/search.schema.json)
-
-The rules from m1 are now field definitions. For example, in `source.schema.json` the
-screening block has `status`, `criterion`, `reason`, `date` — so a decision *without* its
-criterion is invalid data, not just bad practice.
-
-**Files changed:** `schemas/` — four files. `data/`, `tools/`, `skills/`, `views/` are
-still empty.
+**New on disk:** `DELIVERABLE.md` — the spec and the plan.
 
 ---
 
-<a id="m3"></a>
-## m3 · The Move-In — DO IT
+## 3 · Write the queries
 
-Nothing new is built in this milestone. The request is completed with what already exists:
-the papers are in `seed/`, and the schemas define what a source record looks like.
+**Ask:** "Draft the search queries. I want to see them before anything runs."
 
-**You type:**
+Claude drafts four queries from the brief — telemonitoring × readmission, home devices ×
+mortality, wearables for HF management, RPM × cost — each with the database it targets
+and a one-line rationale tying it to a brief criterion.
 
-> Add the five flagged papers from seed/flagged-papers.csv as sources.
+Then the first gap: the queries need to be *kept*, not just shown in chat — they'll be
+run, revised, and cited by the report's method section. There is nowhere to put them. So
+Claude proposes a query record — id, query text, database, rationale, status — the user
+approves it, and it becomes the workspace's first schema. The four queries are written as
+records.
 
-**Claude does:** reads the CSV and writes five records —
-[`data/sources/S-001.json`](data/sources/S-001.json) through `S-005.json` — each with
-`"found_via": "seeded"` and `"screening": {"status": "unscreened"}`.
-
-**You type:**
-
-> Now screen them against the brief's criteria. Walk me through each one.
-
-**Claude does:** goes paper by paper in chat, proposing a decision and the criterion for
-each; the user confirms each one. The result:
-
-| Source | Decision | On what basis |
-|---|---|---|
-| S-001 (telemonitoring cohort, 30-day readmissions) | **included** | HF population; RPM intervention; readmission outcome; primary research |
-| S-002 (telephone support + device data RCT) | **included** | HF population; RPM intervention; readmission + mortality outcomes; RCT |
-| S-003 (adherence in older adults) | **included** | HF population; RPM intervention; adherence outcome; cohort |
-| S-004 (wearables in **atrial fibrillation**) | **excluded** | different patient population |
-| S-005 (an **editorial**) | **excluded** | not primary research |
-
-Claude records each decision in the source's file (there is no screening tool yet — Claude
-edits the records directly, conforming to the schema), then checks its own work is valid.
-At this point there is no validator either, so Claude re-reads each file against the
-schema in chat.
-
-**Files changed:** `data/sources/` — five files created, then updated with decisions.
+**New on disk:** `schemas/query.schema.json` · `data/queries/Q-01.json` … `Q-04.json`.
 
 ---
 
-<a id="m4"></a>
-## m4 · The Mirror — GROW: presentation
+## 4 · Run the queries
 
-**You type:**
+**Ask:** "Run them. Keep everything that comes back — I want the raw results, not your
+summary of them."
 
-> How do I know the data is right? I don't want to ask you record by record — give me
-> something I can open in my browser that shows every source and where it stands.
-
-This is not reachable with what exists — there is no way of *seeing* the data yet. So a
-view gets built.
-
-**Claude does:**
-
-1. Writes [`views/build_screening_board.py`](views/build_screening_board.py) — a script
-   that reads `data/` and generates a static HTML page: three columns (unscreened /
-   included / excluded), one card per source showing its title, how it was found, and the
-   basis for its decision.
-2. Runs it.
-
-**Terminal:**
+Two gaps at once. There's no path to the database — that's a tool. And raw results need a
+home of their own, separate from the queries that produced them — that's a second schema.
+Claude writes [`tools/run_query.py`](tools/run_query.py) (in this fictional example,
+against a stand-in database) and `schemas/result.schema.json`: one result record per query
+run — query id, date, hit count, and the hits themselves with title, authors, year, venue,
+DOI, abstract.
 
 ```
-$ python views/build_screening_board.py
-Wrote views/screening_board.html — 0 unscreened · 3 included · 2 excluded.
+$ python tools/run_query.py --query Q-01
+Q-01 ran against fictdb — 41 hits → data/results/R-01.json
+
+$ python tools/run_query.py --query Q-02
+Q-02 ran against fictdb — 17 hits → data/results/R-02.json
 ```
 
-**What you see:** you open `views/screening_board.html` in a browser. Five cards in three
-columns. The two excluded cards show their reasons on the card. The user checks the board
-against the CSV and the brief — this is the moment the seeded data gets verified by eye.
+Four runs, 96 raw hits, untouched and unjudged. Overlap between queries is expected and
+preserved — deduplication is a judgment about *papers*, and papers don't exist as records
+yet.
 
-The page is regenerated by re-running the script after any data change. It is never edited
-by hand. (The copy checked into this repo shows the *current* data — 12 sources — because
-it has been regenerated since; the output above is what it printed at this milestone,
-reproduced against this milestone's five-source state.)
-
-**Files changed:** `views/` — the script and the generated HTML.
+**New on disk:** `tools/run_query.py` · `schemas/result.schema.json` ·
+`data/results/R-01.json` … `R-04.json`.
 
 ---
 
-<a id="m5"></a>
-## m5 · The Routine — GROW: access
+## 5 · Build the semantic filters
 
-**You type:**
+**Ask:** "Keyword hits aren't inclusion decisions. For each query, write the filter that
+decides whether a hit actually belongs in this review — the brief's criteria, applied
+paper by paper."
 
-> Time to search. Run sweeps for: heart failure, remote monitoring or telemonitoring or
-> telephone support, with readmission, mortality, adherence, or cost outcomes. Log every
-> search. And one thing — I keep seeing the same papers come up in different searches.
-> It must be impossible to add the same paper twice.
+A query retrieves; a filter judges. Each filter states, for the hits of one query, the
+criteria a paper must pass — population is heart failure, intervention is remote
+monitoring, at least one outcome of interest, primary research or systematic evidence —
+each criterion with its pass rule in plain language, lifted from the brief, not improvised
+per paper. The filters share the brief's core but each carries its query's specifics (the
+cost query's filter, for instance, spells out what counts as a cost outcome).
 
-Adding sources is about to become a repeated operation with a rule attached ("same DOI
-never enters twice"). That path doesn't exist yet, so one tool gets built — and only that.
+Filters are records too — they'll be applied, cited, and possibly revised — so they get a
+schema and a folder.
 
-**Claude does:**
-
-1. Writes [`tools/add_source.py`](tools/add_source.py). The tool assigns the next `S-` id,
-   records how the source was found, sets it unscreened — and **refuses any DOI that is
-   already in the review**.
-2. Runs the first sweep (in this fictional example, against a stand-in database), judges
-   the 41 hits against the brief, and adds the relevant ones **through the tool** — one
-   command per paper. Five are new; three are papers already seeded by the client.
-
-**Terminal (one success and one refusal, verbatim):**
-
-```
-$ python tools/add_source.py --title "Home telemonitoring and 30-day readmission after acute decompensated heart failure: a pragmatic randomized trial" --authors "Ijeoma N; Kaplan S; Verhoeven D" --year 2023 --venue "Annals of Digital Medicine" --doi 10.9999/fict.2023.0790 --found-via search:Q-01
-Added S-006: Home telemonitoring and 30-day readmission after acute decom… (unscreened)
-
-$ python tools/add_source.py --doi 10.9999/fict.2024.0117 ...
-REFUSED: DOI already in the review (S-003, added from the client's flagged list).
-```
-
-3. Logs the sweep as [`data/searches/Q-01.json`](data/searches/Q-01.json): the query, the
-   date, 41 hits, the five sources added, and a note that three duplicates were refused.
-4. Repeats for a second sweep ([`Q-02.json`](data/searches/Q-02.json): 17 hits, 2 added,
-   1 duplicate refused).
-5. Screens the seven new sources the same way as m3 — decision plus criterion, confirmed
-   in chat, recorded in the files — and re-runs the board script.
-
-**Files changed:** `tools/` — one file (`add_source.py`). `data/sources/` — seven new
-records (S-006 … S-012), then their screening decisions. `data/searches/` — two records.
-`views/screening_board.html` — regenerated.
-
-**State of the review:** 12 sources — 8 included, 4 excluded, 0 unscreened.
+**New on disk:** `schemas/filter.schema.json` · `data/filters/F-01.json` … `F-04.json` —
+one per query.
 
 ---
 
-<a id="m6"></a>
-## m6 · The Guarantee — GROW: understanding (enforced)
+## 6 · Run the results through the filters
 
-**You type:**
+**Ask:** "Now run every hit through its filter. I want a verdict per paper per criterion —
+and show me the pool somewhere I can look at it."
 
-> Before we extract anything: nothing in the client's report may cite a paper we excluded.
-> And I don't want to rely on you or me remembering what got excluded — make it impossible.
-
-"Make it impossible" cannot be satisfied by conversation. Until now the rules have lived
-in `OVERVIEW.md` (prose) and `schemas/` (shape). This milestone adds the third form:
-enforcement in code, plus written procedures for the agent to follow.
-
-**Claude does:**
-
-1. Writes two skills — the procedures in plain language:
-   [`skills/screening.md`](skills/screening.md) (decisions record their criterion;
-   exclusions record a reason; a decided source is frozen) and
-   [`skills/findings-and-citations.md`](skills/findings-and-citations.md) (a finding may
-   only cite an included source; the report is assembled by tool, never written by hand).
-2. Writes four tools — the same rules in code:
-   - [`tools/screen.py`](tools/screen.py) — records a decision; refuses to re-screen a
-     decided source.
-   - [`tools/add_finding.py`](tools/add_finding.py) — creates a finding; **refuses any
-     source that is not included**.
-   - [`tools/validate.py`](tools/validate.py) — checks every record against its schema,
-     plus the cross-record rules: no duplicate DOIs, decisions carry criteria, and no
-     finding cites anything but an included source.
-   - [`tools/assemble_report.py`](tools/assemble_report.py) — generates the report from
-     the data (used in m7); refuses to run if any source is still unscreened.
-3. Extracts the findings. The user and Claude go through the eight included papers in
-   chat; each agreed claim is added **through the tool** — nine findings
-   ([`data/findings/`](data/findings/)) organized under four themes
-   ([`data/themes/`](data/themes/)) — 30-day readmissions, mortality and long-term
-   outcomes, adherence and engagement, cost.
-4. Demonstrates that the guarantee holds, by trying to break it:
-
-**Terminal (all three verbatim):**
+This is where hits become *papers*. Claude writes `schemas/paper.schema.json` — one record
+per unique paper: citation, which queries retrieved it (the 96 hits collapse to 71 unique
+papers), and a verdict block: per-criterion pass/fail with a reason, and the overall call.
+Applying a filter is a judgment, but *recording* it is an operation with rules — same DOI
+never judged twice, a verdict once recorded is frozen — so the recording goes through a
+tool, [`tools/apply_filter.py`](tools/apply_filter.py), which enforces both.
 
 ```
-$ python tools/add_finding.py --source S-004 ...
-REFUSED: source S-004 is excluded (Atrial fibrillation cohort, not heart failure).
-Findings may only cite included sources.
+$ python tools/apply_filter.py --paper P-054 --filter F-03 --verdict fail \
+    --criterion population --reason "Atrial fibrillation cohort, not heart failure"
+P-054: FAIL on population — recorded, frozen.
 
-$ python tools/screen.py --source S-004 --decision included ...
-REFUSED: S-004 is already excluded — screening decisions are frozen.
+$ python tools/apply_filter.py --paper P-054 --filter F-03 --verdict pass ...
+REFUSED: P-054 already has a verdict. Verdicts are frozen.
+```
+
+And the seeing: [`views/build_pool_board.py`](views/build_pool_board.py) generates a
+static HTML page — every paper as a card, pass/fail columns, the failing criterion on the
+card. 71 papers judged; **9 pass**. The board is regenerated after any data change, never
+edited by hand.
+
+**New on disk:** `schemas/paper.schema.json` · `data/papers/P-001.json` … `P-071.json` ·
+`tools/apply_filter.py` · `views/build_pool_board.py` · `views/pool_board.html`.
+
+---
+
+## 7 · Check the flagged five
+
+**Ask:** "Moment of truth. Dr. Reyes's five papers — are they in that pool? Check it
+properly, don't eyeball it."
+
+"Properly" means deterministically: Claude writes [`tools/check_flagged.py`](tools/check_flagged.py),
+which reads the client's CSV and reports, for each flagged paper, whether any query
+retrieved it and what verdict it got.
+
+```
+$ python tools/check_flagged.py
+Hartwell 2023 (telemonitoring cohort)       retrieved by Q-01 · verdict: PASS
+Mbeki 2022 (structured telephone support)   NOT RETRIEVED by any query
+Solano 2024 (adherence, older adults)       retrieved by Q-01, Q-04 · verdict: PASS
+Chen 2023 (wearables in AF)                 retrieved by Q-03 · verdict: FAIL (population)
+Vance 2021 (editorial)                      retrieved by Q-01 · verdict: FAIL (study type)
+
+CAPTURE: 4/5 retrieved — 1 MISSED. Strategy not validated.
+```
+
+Two different signals here. Chen and Vance failing is the *filters working* — one is the
+wrong population, the other isn't primary research; the brief itself excludes both. But
+Mbeki never being retrieved at all is a **query gap**: every query says telemonitoring,
+remote monitoring, wearables — none says *structured telephone support*, which the brief
+explicitly includes as an intervention.
+
+**New on disk:** `tools/check_flagged.py`.
+
+---
+
+## 8 · The decision
+
+**Ask:** "So the strategy has a hole. Fix the queries, not the check — and rerun."
+
+The gap is repaired at its source. Claude writes `Q-05` (structured telephone support ×
+HF outcomes) with its filter `F-05`, runs it, and filters its hits — 9 more hits, 2 new
+papers, one of which is Mbeki 2022: retrieved, judged, **pass**. The pool is now 11.
+
+```
+$ python tools/check_flagged.py
+...
+CAPTURE: 5/5 retrieved — 3 in the pool, 2 correctly excluded by the brief's own criteria.
+Strategy validated.
+```
+
+The decision: **proceed to extraction.** The validation is recorded in `DELIVERABLE.md` —
+which queries, which filters, what the check found on each pass, and the basis for the two
+exclusions the client will see in the appendix. Dr. Reyes's question — "why did anything
+get ruled in or out?" — now has a mechanical answer for all five of his papers.
+
+**New on disk:** `data/queries/Q-05.json` · `data/filters/F-05.json` ·
+`data/results/R-05.json` · two paper records · `DELIVERABLE.md` — validation section.
+
+---
+
+## 9 · Extract the learnings
+
+**Ask:** "Extract the learnings from the pool. And the client's rule holds absolutely:
+nothing may ever cite a paper that isn't in the pool. Make that impossible, not just
+agreed."
+
+Extraction is judgment — Claude and the user go through the 11 pool papers in chat, one
+claim at a time. But the rule attached to it is enforcement, so before any learning is
+recorded, the capability is built in all three forms: a schema
+(`schemas/learning.schema.json` — one claim, one paper, outcome, direction, evidence,
+theme), a skill ([`skills/learnings.md`](skills/learnings.md) — how a claim is extracted
+and worded, one claim per record, recorded only through the tool), and two tools —
+[`tools/add_learning.py`](tools/add_learning.py), which **refuses any paper not in the
+pool**, and [`tools/validate.py`](tools/validate.py), which checks every record in the
+workspace against its schema plus the cross-record rules: no duplicate DOIs, every verdict
+carries its criterion and reason, and no learning cites anything outside the pool.
+
+```
+$ python tools/add_learning.py --paper P-054 ...
+REFUSED: P-054 failed its filter (population: atrial fibrillation, not heart failure).
+Learnings may only cite papers in the pool.
 
 $ python tools/validate.py
-OK — 27 records valid; citation closure holds (no finding cites anything but an included source).
+OK — 94 records valid; citation closure holds (no learning cites outside the pool).
 ```
 
-**Files changed:** `skills/` — two files. `tools/` — four files. `data/findings/` — nine
-records. `data/themes/` — four records.
+Twelve learnings, compiled under four themes: 30-day readmissions, mortality and
+long-term outcomes, adherence and engagement, cost.
+
+**New on disk:** `schemas/learning.schema.json` · `skills/learnings.md` ·
+`tools/add_learning.py` · `tools/validate.py` · `data/learnings/L-001.json` … `L-012.json`.
 
 ---
 
-<a id="m7"></a>
-## m7 · The Handoff — DO IT
+## 10 · Generate the report
 
-Nothing new is built in this milestone. Every capability the request needs was deposited
-earlier: the sources are in and screened (m3, m5), the findings exist and can only cite
-included sources (m6), and the assembler was built as part of the integrity tooling (m6).
+**Ask:** "Generate the client's report."
 
-**You type:**
-
-> Assemble the client's report.
-
-**Claude does:** runs the assembler.
-
-**Terminal:**
+One sentence, because everything it needs already exists. Claude writes
+[`tools/assemble_report.py`](tools/assemble_report.py) — the report is *generated from
+the data*, never written by hand: the question; the method (five queries with their
+filters, logged runs and counts, the flagged-five validation including the strategy
+revision — the client sees that the check failed once and why); the learnings by theme,
+every claim cited to a pool paper; the pool as the included-sources list; and the
+appendix of excluded papers with the criterion each failed. The tool refuses to run if
+`validate.py` doesn't pass.
 
 ```
 $ python tools/assemble_report.py --date 2026-07-06
-Wrote report.md — 4 themes, 9 findings, 8 included sources; every claim cites an included source.
+validate: OK — citation closure holds.
+Wrote report.md — 4 themes, 12 learnings, 11 pool papers, 5/5 flagged papers accounted for.
 ```
 
-**What you see:** [`report.md`](report.md) — the question, the method (both searches
-logged with queries and counts; 12 screened → 8 included, 4 excluded), the findings
-grouped by theme with citations, the included-sources list, and the appendix of excluded
-sources with reasons — the exact ground rules the client set in
-[the original email](seed/client-email-thread.md). The user reads it and sends it.
+And the same placement question as step 2, with the same provisional answer: the report
+is a document about the work, not data or machinery — it lands at the workspace root,
+[`report.md`](report.md), next to the spec it fulfills. The user reads it and sends it.
 
-The report is generated, not written: re-running the assembler after any data change
-produces a report that says whatever the data says then. If a source were still
-unscreened, the tool would refuse to produce a report at all.
-
-**Files changed:** `report.md`.
+**New on disk:** `tools/assemble_report.py` · `report.md`.
 
 ---
 
 ## Notes
 
-- **What got built, and when:** understanding first (m1 overview, m2 schemas), data second
-  (m3), a view before any tool (m4), the first tool when an operation became repetitive
-  and rule-bound (m5), enforcement when a rule had to hold without anyone remembering it
-  (m6). Each thing was added at the moment its absence blocked a request — not before.
-- **Two milestones added nothing** (m3, m7). They were completable entirely with what
-  earlier milestones had deposited. m7 — the deliverable itself — was a one-line request
-  because everything it needed already existed.
-- **Every rule ends up in two or three forms:** stated in `OVERVIEW.md`, encoded in
-  `schemas/` or `skills/`, and — where it must hold unconditionally — enforced by a tool.
-  The three `REFUSED` outputs above are the enforced form doing its job.
+- **The deliverable was described before any work and generated after all of it** — the
+  spec (step 2) and the report (step 10) bracket the journey, and both live at the root:
+  the workspace's one unresolved placement question.
+- **Everything stored, at every stage:** queries, raw results, filters, verdicts,
+  learnings — each became records the moment it needed to outlive the conversation, and
+  each got its schema at that moment, not in an up-front design phase.
+- **The check earned its keep.** Validating the strategy against the flagged five caught
+  a real hole (no query covered structured telephone support) *before* extraction, when
+  fixing it cost one query — not after delivery, when it would have cost the client's trust.
+- **Every rule ends up in two or three forms:** stated in `OVERVIEW.md` and
+  `DELIVERABLE.md`, encoded in `schemas/` and `skills/`, and — where it must hold
+  unconditionally — enforced by a tool. The `REFUSED` outputs above are the enforced form
+  doing its job.
 
 *To start your own workspace: copy [the template](../template/) to a new folder, open
 Claude Code there, and point it at whatever source material your project already has.*
