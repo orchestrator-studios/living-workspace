@@ -18,7 +18,8 @@ heart-failure patients after discharge reduce hospital readmissions?** Secondary
 in mortality, patient adherence, and cost if the evidence covers them.
 
 Brief attached. Dr. Reyes (our medical director) has five papers he considers the
-starting point — list also attached. He'll want to see exactly why anything gets ruled
+starting point — list also attached, with their PubMed IDs. Our clinical team works out
+of PubMed, so run your searches there. He'll want to see exactly why anything gets ruled
 in or out; we've been burned before by consultants' reviews citing things nobody screened.
 
 Can you have a structured review to us ahead of the September board cycle?
@@ -34,4 +35,4 @@ Can you have a structured review to us ahead of the September board cycle?
 
 Confirmed — structured review, documented screening criteria, every claim traceable to an
 included source, exclusions listed with reasons. We'll seed from Dr. Reyes's five papers
-and run our own sweeps on top. Kickoff on our side tomorrow.
+and run our own PubMed sweeps on top, every query logged. Kickoff on our side tomorrow.

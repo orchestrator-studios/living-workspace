@@ -21,8 +21,10 @@ after, split along the two axes state evolves on:
 A dash means that axis didn't move. Watching which column fills, step by step, is half
 the story of this journey.
 
-*(Draft note: terminal output in this version is illustrative. It will be replaced with
-real captured output once the workspace's artifacts are regenerated to match this journey.)*
+*(Draft note: terminal output in this version is illustrative — the client and the papers
+are fictional. The tooling is real, though: `tools/search_pubmed.py` already runs against
+the live PubMed API. Outputs will be replaced with real captured runs once the workspace's
+artifacts are regenerated to match this journey.)*
 
 *(Client, correspondence, and papers are fictional throughout.)*
 
@@ -97,9 +99,17 @@ documents — the report will pose the same question at the end.)
 
 **Ask:** "Draft the search queries. I want to see them before anything runs."
 
-Claude drafts four queries from the brief — telemonitoring × readmission, home devices ×
-mortality, wearables for HF management, RPM × cost — each with the database it targets
-and a one-line rationale tying it to a brief criterion.
+The brief names the venue: everything runs on PubMed. So Claude drafts four PubMed
+queries — telemonitoring × readmission, home devices × mortality, wearables for HF
+management, RPM × cost — each written in PubMed's own syntax, MeSH terms plus
+title/abstract terms, with a one-line rationale tying it to a brief criterion. Q-01, for
+instance:
+
+```
+"heart failure"[MeSH Terms]
+  AND (telemonitoring[Title/Abstract] OR "remote patient monitoring"[Title/Abstract])
+  AND ("patient readmission"[MeSH Terms] OR readmission[Title/Abstract])
+```
 
 Then the first gap: the queries need to be *kept*, not just shown in chat — they'll be
 run, revised, and cited by the report's method section. There is nowhere to put them. So
@@ -118,19 +128,20 @@ records.
 **Ask:** "Run them. Keep everything that comes back — I want the raw results, not your
 summary of them."
 
-Two gaps at once. There's no path to the database — that's a tool. And raw results need a
-home of their own, separate from the queries that produced them — that's a second schema.
-Claude writes [`tools/run_query.py`](tools/run_query.py) (in this fictional example,
-against a stand-in database) and `schemas/result.schema.json`: one result record per query
-run — query id, date, hit count, and the hits themselves with title, authors, year, venue,
-DOI, abstract.
+Two gaps at once. There's no path to PubMed — that's a tool. And raw results need a home
+of their own, separate from the queries that produced them — that's a second schema.
+Claude writes [`tools/search_pubmed.py`](tools/search_pubmed.py) — a wrapper around
+NCBI's E-utilities: `esearch` turns the query into PMIDs, `efetch` pulls each record —
+and `schemas/result.schema.json`: one result record per query run — query id, date, hit
+count, and the hits themselves, verbatim: title, authors, year, venue, PMID, DOI,
+abstract, and PubMed's publication types.
 
 ```
-$ python tools/run_query.py --query Q-01
-Q-01 ran against fictdb — 41 hits → data/results/R-01.json
+$ python tools/search_pubmed.py --query Q-01
+Q-01 → esearch: 41 PMIDs · efetch: 41 records → data/results/R-01.json
 
-$ python tools/run_query.py --query Q-02
-Q-02 ran against fictdb — 17 hits → data/results/R-02.json
+$ python tools/search_pubmed.py --query Q-02
+Q-02 → esearch: 17 PMIDs · efetch: 17 records → data/results/R-02.json
 ```
 
 Four runs, 96 raw hits, untouched and unjudged. Overlap between queries is expected and
@@ -139,7 +150,7 @@ yet.
 
 | Content & data | Capability |
 |---|---|
-| `data/results/R-01…R-04.json` — 96 raw hits, kept verbatim | `tools/run_query.py` — the path to the database · `schemas/result.schema.json` |
+| `data/results/R-01…R-04.json` — 96 raw hits, kept verbatim | `tools/search_pubmed.py` — the path to PubMed (NCBI E-utilities) · `schemas/result.schema.json` |
 
 ---
 
@@ -154,7 +165,9 @@ criteria a paper must pass — population is heart failure, intervention is remo
 monitoring, at least one outcome of interest, primary research or systematic evidence —
 each criterion with its pass rule in plain language, lifted from the brief, not improvised
 per paper. The filters share the brief's core but each carries its query's specifics (the
-cost query's filter, for instance, spells out what counts as a cost outcome).
+cost query's filter, for instance, spells out what counts as a cost outcome). Where PubMed
+already knows the answer, the filter says so: the study-type criterion keys off the
+publication types that came back with each hit — an editorial declares itself.
 
 Filters are records too — they'll be applied, cited, and possibly revised — so they get a
 schema and a folder.
@@ -171,11 +184,11 @@ schema and a folder.
 and show me the pool somewhere I can look at it."
 
 This is where hits become *papers*. Claude writes `schemas/paper.schema.json` — one record
-per unique paper: citation, which queries retrieved it (the 96 hits collapse to 71 unique
-papers), and a verdict block: per-criterion pass/fail with a reason, and the overall call.
-Applying a filter is a judgment, but *recording* it is an operation with rules — same DOI
-never judged twice, a verdict once recorded is frozen — so the recording goes through a
-tool, [`tools/apply_filter.py`](tools/apply_filter.py), which enforces both.
+per unique paper: citation, which queries retrieved it (matched on PMID, the 96 hits
+collapse to 71 unique papers), and a verdict block: per-criterion pass/fail with a reason,
+and the overall call. Applying a filter is a judgment, but *recording* it is an operation
+with rules — the same PMID never judged twice, a verdict once recorded is frozen — so the
+recording goes through a tool, [`tools/apply_filter.py`](tools/apply_filter.py), which enforces both.
 
 ```
 $ python tools/apply_filter.py --paper P-054 --filter F-03 --verdict fail \
@@ -203,8 +216,8 @@ edited by hand.
 properly, don't eyeball it."
 
 "Properly" means deterministically: Claude writes [`tools/check_flagged.py`](tools/check_flagged.py),
-which reads the client's CSV and reports, for each flagged paper, whether any query
-retrieved it and what verdict it got.
+which reads the client's CSV and reports, for each flagged paper — matched by its PubMed
+ID — whether any query retrieved it and what verdict it got.
 
 ```
 $ python tools/check_flagged.py
@@ -269,7 +282,7 @@ theme), a skill ([`skills/learnings.md`](skills/learnings.md) — how a claim is
 and worded, one claim per record, recorded only through the tool), and two tools —
 [`tools/add_learning.py`](tools/add_learning.py), which **refuses any paper not in the
 pool**, and [`tools/validate.py`](tools/validate.py), which checks every record in the
-workspace against its schema plus the cross-record rules: no duplicate DOIs, every verdict
+workspace against its schema plus the cross-record rules: no duplicate PMIDs, every verdict
 carries its criterion and reason, and no learning cites anything outside the pool.
 
 ```
@@ -296,8 +309,8 @@ long-term outcomes, adherence and engagement, cost.
 
 One sentence, because everything it needs already exists. Claude writes
 [`tools/assemble_report.py`](tools/assemble_report.py) — the report is *generated from
-the data*, never written by hand: the question; the method (five queries with their
-filters, logged runs and counts, the flagged-five validation including the strategy
+the data*, never written by hand: the question; the method (five PubMed queries with
+their filters, logged runs and counts, the flagged-five validation including the strategy
 revision — the client sees that the check failed once and why); the learnings by theme,
 every claim cited to a pool paper; the pool as the included-sources list; and the
 appendix of excluded papers with the criterion each failed. The tool refuses to run if
