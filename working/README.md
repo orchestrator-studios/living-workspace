@@ -110,11 +110,17 @@ Under the conversation there is a simple, explicit process, and the dashboard pu
 A review moves through one **linear sweep** of phases:
 
 ```
-Protocol → Queries written → Queries run → De-duplicated → Title/abstract → Full text → Extraction → Evaluation
+Protocol → Queries written → Queries run → De-duplicated → Title/abstract screen → Full-text screen → Extraction → Evaluation
 ```
 
-The dashboard renders this as a pronounced stepper: filled nodes are done, the highlighted node is where the
-review is *now*, and one plain sentence states the single next action. None of this is a stored status that
+**Title/abstract screen** and **Full-text screen** are *filters*: each judges records against the criteria
+and drops the ones that fail. Those exclusions are not lost — they accumulate under **Excluded** in the
+corpus account, which always reconciles: *retrieved − duplicates = unique*, and every unique record is
+Included (green), Excluded (red), or still In-screening. The **Evaluation** at the end is a different thing —
+a quality gate on the whole review, not a per-record filter.
+
+The dashboard renders the sweep as a pronounced stepper: filled nodes are done, the highlighted node is where
+the review is *now*, and one plain sentence states the single next action. None of this is a stored status that
 could drift — it is **derived from the data on every read**, exactly like the counts. The furthest-along
 incomplete phase *is* where you are; there is nothing else to trust.
 

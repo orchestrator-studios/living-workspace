@@ -251,10 +251,12 @@ def workflow_state(protocol, records, *, retrieved, included, ta_excluded, ft_ex
          f"{retrieved} retrievals" if retrieved else (f"{n} records" if n else "not run")),
         ("dedup", "De-duplicated", p_dedup,
          f"{n} unique" if p_dedup else "—"),
-        ("title-abstract", "Title / abstract", p_ta,
-         f"{len(awaiting_ta)} to screen" if awaiting_ta else f"{len(ta_excluded)} excluded"),
-        ("full-text", "Full text", p_ft,
-         f"{len(awaiting_ft)} to assess" if awaiting_ft else f"{len(ft_excluded)} excluded"),
+        ("title-abstract", "Title/abstract screen", p_ta,
+         f"{len(ta_excluded)} excluded · {len(awaiting_ta)} to screen" if awaiting_ta
+         else f"{len(ta_excluded)} excluded"),
+        ("full-text", "Full-text screen", p_ft,
+         f"{len(ft_excluded)} excluded · {len(awaiting_ft)} to assess" if awaiting_ft
+         else f"{len(ft_excluded)} excluded"),
         ("extraction", "Extraction", p_ext,
          f"{len(awaiting_ext)} to extract" if awaiting_ext
          else (f"{n_arms} arms" if n_inc else "no studies")),
@@ -388,12 +390,35 @@ def pipeline_from(protocol, records, slug=None):
                         ta_excluded=ta_excluded, ft_excluded=ft_excluded,
                         needs_adj=needs_adj, n_arms=n_arms)
 
+    # accounting: every retrieved record placed in exactly one bucket, and the buckets
+    # reconcile — retrieved - duplicates = unique, and unique = included + excluded + in-screening.
+    # Defined here so the dashboard renders one authoritative breakdown, not two.
+    st = wf["state"]
+    in_screening = st["awaiting_title_abstract"] + st["awaiting_full_text"] + st["awaiting_adjudication"]
+    accounting = {
+        "retrieved": raw_retrievals,
+        "duplicates": max(0, raw_retrievals - N),
+        "unique": N,
+        "segments": [
+            {"key": "included", "label": "Included", "tone": "pos", "n": len(included), "split": []},
+            {"key": "excluded", "label": "Excluded", "tone": "neg",
+             "n": len(ta_excluded) + len(ft_excluded),
+             "split": [{"label": "at title/abstract", "n": len(ta_excluded)},
+                       {"label": "at full text", "n": len(ft_excluded)}]},
+            {"key": "in-screening", "label": "In screening", "tone": "neutral", "n": in_screening,
+             "split": [{"label": "awaiting title/abstract", "n": st["awaiting_title_abstract"]},
+                       {"label": "awaiting full text", "n": st["awaiting_full_text"]},
+                       {"label": "awaiting adjudication", "n": st["awaiting_adjudication"]}]},
+        ],
+    }
+
     return {
         "slug": slug,
         "title": protocol.get("title", slug),
         "question": protocol.get("question", ""),
         "source": f"data/reviews/{slug}" if slug else None,
         "workflow": wf,
+        "accounting": accounting,
         "totals": {
             "retrieved": raw_retrievals,
             "unique": N,

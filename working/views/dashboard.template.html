@@ -53,16 +53,32 @@
   .sh{font-family:var(--serif);font-size:17px;font-weight:600;margin:18px 0 3px;}
   .ss{color:var(--ink-2);font-size:13px;margin:0 0 14px;}
 
-  /* funnel */
-  .funnel{display:flex;gap:0;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow);}
-  .fn{flex:1;min-width:140px;padding:16px 18px;border-right:1px solid var(--line-2);position:relative;}
-  .fn:last-child{border-right:0;}
-  .fn .k{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
-  .fn .v{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1;margin-top:5px;transition:color .3s;}
-  .fn .s{font-size:11.5px;color:var(--ink-2);margin-top:5px;}
-  .fn.final .v{color:var(--pos);}
-  .fn .v.flash{animation:flash .9s ease-out;}
   @keyframes flash{0%{color:var(--accent);}100%{}}
+
+  /* corpus accounting — one reconciling, colour-coded breakdown */
+  .acct{border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);padding:18px 20px;}
+  .eqn{display:flex;align-items:center;flex-wrap:wrap;gap:6px 4px;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line-2);}
+  .eqterm{display:flex;flex-direction:column;gap:3px;padding:2px 6px;}
+  .eqterm .ev{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;transition:color .3s;}
+  .eqterm .ek{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+  .eqterm.dup .ev{color:var(--warn);}
+  .eqop{font-family:var(--serif);font-size:22px;color:var(--ink-3);padding:0 12px;}
+  .bl{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:9px;}
+  .stack{display:flex;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--line-2);background:var(--surface-2);}
+  .seg{height:100%;transition:width .45s ease;min-width:0;}
+  .seg.pos{background:var(--pos);} .seg.neg{background:var(--neg);} .seg.neutral{background:var(--neutral);}
+  .legend{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:15px;}
+  .lg{border-left:3px solid var(--line);padding:2px 0 2px 12px;min-width:158px;}
+  .lg.pos{border-color:var(--pos);} .lg.neg{border-color:var(--neg);} .lg.neutral{border-color:var(--neutral);}
+  .lg .lh{display:flex;align-items:baseline;gap:8px;}
+  .lg .ln{font-family:var(--serif);font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .3s;}
+  .lg.pos .ln{color:var(--pos);} .lg.neg .ln{color:var(--neg);} .lg.neutral .ln{color:var(--ink);}
+  .lg .ll{font-size:12.5px;font-weight:600;color:var(--ink-2);}
+  .lg .lsplit{font-size:11.5px;color:var(--ink-3);line-height:1.55;margin-top:3px;}
+  .recon{margin-top:16px;font-size:12px;color:var(--ink-2);border-top:1px solid var(--line-2);padding-top:11px;font-family:var(--mono);}
+  .recon b{color:var(--ink);}
+  .recon .ok{color:var(--pos);font-weight:700;}
+  .num.flash{animation:flash .9s ease-out;}
 
   /* state machine — where we are */
   .statebar{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-bottom:14px;}
@@ -105,24 +121,8 @@
   .chk .cl{color:var(--ink);font-weight:600;} .chk .cd{color:var(--ink-2);font-weight:400;}
   .eval .muted{color:var(--ink-2);font-size:12.5px;}
 
-  .statetiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-  @media (max-width:760px){.statetiles{grid-template-columns:repeat(2,1fr);}}
-  .tile{border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);padding:13px 15px;}
-  .tile .tv{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1;transition:color .3s;}
-  .tile .tk{font-size:11.5px;color:var(--ink-2);margin-top:6px;}
-  .tile.zero{opacity:.5;} .tile.zero .tv{color:var(--ink-3);}
-  .tile.act .tv{color:var(--accent);}
-  .tile.block{border-color:var(--warn);background:var(--warn-soft);} .tile.block .tv{color:var(--warn);} .tile.block .tk{color:var(--warn);}
-  .tile .tv.flash{animation:flash .9s ease-out;}
-
-  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-  .badge{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--ink-2);box-shadow:var(--shadow);}
-  .badge b{color:var(--ink);font-variant-numeric:tabular-nums;}
-  .badge.warn{border-color:var(--warn);background:var(--warn-soft);color:var(--warn);}
-  .badge.warn b{color:var(--warn);}
-
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-  @media (max-width:760px){.grid{grid-template-columns:1fr;}.fn{min-width:45%;}}
+  @media (max-width:760px){.grid{grid-template-columns:1fr;}.eqterm .ev{font-size:24px;}}
   .card{border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);padding:16px 18px;}
   table{width:100%;border-collapse:collapse;font-size:12.5px;}
   th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:600;padding:7px 8px;border-bottom:1px solid var(--line);}
@@ -159,18 +159,16 @@
 
   <section>
     <div class="sh">Where we are</div>
-    <p class="ss">The review as a state machine — a single linear sweep from protocol to a passed evaluation. The stepper is the sweep; the highlighted node is where we are now, the one thing to do next is spelled out, and the run ends at an evaluation that either passes or pauses for you with reasons.</p>
+    <p class="ss"><b>Title/abstract screen</b> and <b>Full-text screen</b> are filters — each judges records against the criteria and drops the ones that fail (they collect under <b>Excluded</b> in the corpus below). The final <b>Evaluation</b> is a different thing: a quality gate on the whole review, not a per-record filter. The highlighted node is where we are now; the one thing to do next is spelled out.</p>
     <div class="card statebar" id="statebar"></div>
     <div class="stepper" id="stepper"></div>
     <div id="evalpanel"></div>
-    <div class="statetiles" id="statetiles"></div>
   </section>
 
   <section>
     <div class="sh">The corpus</div>
-    <p class="ss">How many records sit at each point of the funnel, read live from <code id="src">records.json</code>. Numbers animate when they move.</p>
-    <div class="funnel" id="funnel"></div>
-    <div class="chips" id="chips"></div>
+    <p class="ss">Every retrieved record accounted for, live from <code id="src">records.json</code>: <b>Retrieved − Duplicates = Unique</b>, and every unique record is <b>Included</b>, <b>Excluded</b>, or still <b>In screening</b>. The buckets always sum back to unique.</p>
+    <div id="accounting"></div>
   </section>
 
   <section class="grid">
@@ -213,7 +211,6 @@ function el(tag, props, ...kids){
   return n;
 }
 const $=id=>document.getElementById(id);
-let prev={};           // last totals, to detect changes
 let lastOk=null;       // Date of last good poll
 
 function setLive(state, txt){
@@ -223,7 +220,6 @@ function setLive(state, txt){
 }
 
 // ---------- state machine (the primary view) ----------
-let prevState={};
 function renderStatebar(wf){
   const sb=$("statebar"); sb.className="card statebar"+(wf.blocked?" blocked":(wf.complete?" done":""));
   sb.replaceChildren(
@@ -264,47 +260,47 @@ function renderEvaluation(ev){
   });
   card.append(checks); box.append(card);
 }
-const TILES=[
-  ["awaiting_title_abstract","Awaiting title / abstract"],
-  ["awaiting_full_text","Awaiting full text"],
-  ["awaiting_adjudication","Awaiting adjudication"],
-  ["awaiting_extraction","Awaiting extraction"],
-];
-function renderStateTiles(st){
-  const box=$("statetiles"); box.replaceChildren();
-  TILES.forEach(([key,label])=>{
-    const v=st[key]??0, changed=prevState[key]!=null&&prevState[key]!==v;
-    const block = key==="awaiting_adjudication" && v>0;
-    const cls="tile"+(v===0?" zero":(block?" block":" act"));
-    box.append(el("div",{class:cls},
-      el("div",{class:"tv num"+(changed?" flash":""),text:v}), el("div",{class:"tk",text:label})));
+// ---------- corpus accounting (one reconciling breakdown) ----------
+let prevAcct={};
+function renderAccounting(a){
+  const box=$("accounting"); box.replaceChildren();
+  if(!a) return;
+  const card=el("div",{class:"acct"});
+  const term=(cls,label,val,key)=>{
+    const changed=prevAcct[key]!=null&&prevAcct[key]!==val;
+    return el("div",{class:"eqterm "+cls},
+      el("div",{class:"ev num"+(changed?" flash":""),text:val}), el("div",{class:"ek",text:label}));
+  };
+  // Retrieved − Duplicates = Unique
+  card.append(el("div",{class:"eqn"},
+    term("ret","Retrieved",a.retrieved,"retrieved"),
+    el("div",{class:"eqop",text:"−"}),
+    term("dup","Duplicates",a.duplicates,"duplicates"),
+    el("div",{class:"eqop",text:"="}),
+    term("uniq","Unique",a.unique,"unique")));
+  // Unique → stacked bar + colour-coded legend with per-stage splits
+  card.append(el("div",{class:"bl",text:"The "+a.unique+" unique records, fully broken down"}));
+  const U=a.unique||1, stack=el("div",{class:"stack"});
+  a.segments.forEach(s=>{ if(s.n>0) stack.append(el("div",{class:"seg "+s.tone,style:"width:"+(100*s.n/U)+"%",title:s.label+": "+s.n})); });
+  card.append(stack);
+  const legend=el("div",{class:"legend"});
+  a.segments.forEach(s=>{
+    const changed=prevAcct[s.key]!=null&&prevAcct[s.key]!==s.n;
+    const split=(s.split||[]).map(x=>x.label+" "+x.n).join(" · ");
+    legend.append(el("div",{class:"lg "+s.tone},
+      el("div",{class:"lh"}, el("span",{class:"ln num"+(changed?" flash":""),text:s.n}), el("span",{class:"ll",text:s.label})),
+      split?el("div",{class:"lsplit",text:split}):null));
   });
-  prevState=st;
-}
-
-// funnel stages: [key in totals, label, sublabel, isFinal]
-const STAGES=[
-  ["retrieved","Retrieved","raw, with overlap",false],
-  ["unique","Unique","after de-duplication",false],
-  ["passed_ta","Full-text","passed title/abstract",false],
-  ["included","Included","met all criteria",true],
-];
-function renderFunnel(t){
-  const f=$("funnel"); f.replaceChildren();
-  STAGES.forEach(([key,label,sub,final])=>{
-    const v=t[key]??0, changed=prev[key]!=null && prev[key]!==v;
-    const vEl=el("div",{class:"v num"+(changed?" flash":"")},v);
-    f.append(el("div",{class:"fn"+(final?" final":"")},
-      el("div",{class:"k",text:label}), vEl, el("div",{class:"s",text:sub})));
-  });
-}
-function renderChips(t){
-  const c=$("chips"); c.replaceChildren();
-  const add=(label,val,warn)=>{ if(val) c.append(el("span",{class:"badge"+(warn?" warn":"")}, label+" ", el("b",{text:val}))); };
-  add("Excluded · title/abstract",t.ta_excluded);
-  add("Excluded · full-text",t.ft_excluded);
-  add("Extraction arms",t.extraction_arms);
-  add("Duplicate retrievals removed",t.duplicates_removed);
+  card.append(legend);
+  // explicit reconciliation
+  const parts=a.segments.map(s=>s.n).join(" + "), sum=a.segments.reduce((t,s)=>t+s.n,0);
+  card.append(el("div",{class:"recon"},
+    el("b",{text:a.retrieved})," − ",el("b",{text:a.duplicates})," = ",el("b",{text:a.unique}),
+    "  |  ",el("b",{text:a.unique})," = "+parts+" = ",el("b",{text:sum})," ",
+    el("span",{class:"ok",text:sum===a.unique?"✓":"⚠"})));
+  box.append(card);
+  prevAcct={retrieved:a.retrieved,duplicates:a.duplicates,unique:a.unique};
+  a.segments.forEach(s=>prevAcct[s.key]=s.n);
 }
 function renderExclusions(ex){
   const box=$("exclusions"); box.replaceChildren();
@@ -344,16 +340,15 @@ function renderStudies(list){
 }
 
 function apply(p){
-  const t=p.totals, wf=p.workflow||{};
+  const wf=p.workflow||{};
   $("eyebrow").textContent=(p.screening_methods||[]).includes("dual-independent")?"Systematic review · dual-independent screening":"Systematic review";
   $("title").textContent=p.title||SLUG;
   $("question").textContent=p.question||"";
   if(p.source) $("src").textContent=p.source+"/records.json";
-  renderStatebar(wf); renderStepper(wf.phases||[]); renderEvaluation(wf.evaluation); renderStateTiles(wf.state||{});
-  renderFunnel(t); renderChips(t);
+  renderStatebar(wf); renderStepper(wf.phases||[]); renderEvaluation(wf.evaluation);
+  renderAccounting(p.accounting);
   renderExclusions(p.exclusions||{}); renderQueries(p.queries||[]);
   renderStudies(p.included_studies||[]);
-  prev=t;
 }
 
 async function poll(){
