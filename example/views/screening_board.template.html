@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screening Board</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --track: #f0efec; --accent: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --track: #2c2c2a; --accent: #3987e5;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 28px 22px; }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 22px; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+              background: #2e9e5b; margin-right: 4px; }
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .col { background: var(--track); border-radius: 10px; padding: 12px; }
+  .col h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+             color: var(--ink-2); margin: 2px 4px 10px; }
+  .count { float: right; background: var(--card); border: 1px solid var(--border);
+            border-radius: 999px; padding: 0 8px; font-size: 0.75rem; color: var(--ink); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+           padding: 10px 12px; margin-bottom: 8px; }
+  .sid { font-family: ui-monospace, Consolas, monospace; font-size: 0.7rem;
+          color: var(--accent); font-weight: 700; }
+  .ttl { font-size: 0.84rem; font-weight: 600; line-height: 1.35; margin: 2px 0 4px; }
+  .meta { font-size: 0.72rem; color: var(--ink-2); }
+  .why { font-size: 0.72rem; color: var(--ink-2); border-top: 1px solid var(--border);
+          margin-top: 6px; padding-top: 5px; font-style: italic; }
+  .empty { color: var(--ink-2); font-size: 0.8rem; padding: 4px; }
+  @media (max-width: 760px) { .board { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Screening Board</h1>
+  <p class="sub" id="sub"></p>
+  <div class="board" id="board"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+let data = __DATA__;
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+function card(c) {
+  const why = c.detail ? `<div class="why">${esc(c.detail)}</div>` : "";
+  return `<div class="card"><div class="sid">${esc(c.id)}</div>` +
+         `<div class="ttl">${esc(c.title)}</div>` +
+         `<div class="meta">${esc(c.meta)}</div>${why}</div>`;
+}
+
+function render(d) {
+  const t = d.totals;
+  document.getElementById("sub").innerHTML =
+    (LIVE ? '<span class="live-dot"></span>live — updates as decisions land · ' : "") +
+    `${t.sources} sources · ${t.findings} findings extracted · ` +
+    `one projection, from <code>tools/repo.py</code>`;
+  document.getElementById("board").innerHTML = d.columns.map(col =>
+    `<section class="col"><h2>${esc(col.status)} <span class="count">${col.count}</span></h2>` +
+    (col.cards.map(card).join("\n") || '<p class="empty">none</p>') + `</section>`
+  ).join("\n");
+}
+
+render(data);
+
+if (LIVE) {
+  let last = JSON.stringify(data);
+  setInterval(async () => {
+    try {
+      const r = await fetch("/api/board", {cache: "no-store"});
+      if (!r.ok) return;
+      const fresh = await r.json();
+      const s = JSON.stringify(fresh);
+      if (s !== last) { last = s; render(fresh); }
+    } catch (e) { /* server briefly away — keep the last good render */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

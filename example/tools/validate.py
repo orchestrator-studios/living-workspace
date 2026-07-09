@@ -13,9 +13,9 @@ Usage:  python tools/validate.py        (exit 0 = clean; exit 1 = violations, pr
 import json
 import re
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+import repo
+
 SCHEMA_FOR_DIR = {
     "sources": "source.schema.json",
     "findings": "finding.schema.json",
@@ -81,9 +81,11 @@ def load(path):
 
 
 def integrity_checks(errors):
-    sources = {p.stem: load(p) for p in (ROOT / "data/sources").glob("*.json")}
-    themes = {p.stem for p in (ROOT / "data/themes").glob("*.json")}
-    searches = {p.stem for p in (ROOT / "data/searches").glob("*.json")}
+    # validation reads the raw files on purpose — it checks the substrate itself,
+    # not a projection of it — but the paths still come from the data-access layer
+    sources = {p.stem: load(p) for p in (repo.DATA / "sources").glob("*.json")}
+    themes = {p.stem for p in (repo.DATA / "themes").glob("*.json")}
+    searches = {p.stem for p in (repo.DATA / "searches").glob("*.json")}
 
     seen_dois = {}
     for sid, s in sources.items():
@@ -100,7 +102,7 @@ def integrity_checks(errors):
         if fv.startswith("search:") and fv.split(":")[1] not in searches:
             errors.append(f"{sid}: found_via references unknown {fv}")
 
-    for p in (ROOT / "data/findings").glob("*.json"):
+    for p in (repo.DATA / "findings").glob("*.json"):
         f = load(p)
         src = sources.get(f["source_id"])
         if src is None:
@@ -111,7 +113,7 @@ def integrity_checks(errors):
         if f["theme_id"] and f["theme_id"] not in themes:
             errors.append(f"{f['id']}: theme {f['theme_id']} does not exist")
 
-    for p in (ROOT / "data/searches").glob("*.json"):
+    for p in (repo.DATA / "searches").glob("*.json"):
         q = load(p)
         for sid in q["added"]:
             if sid not in sources:
@@ -122,8 +124,8 @@ def main() -> int:
     errors: list[str] = []
     total = 0
     for subdir, schema_file in SCHEMA_FOR_DIR.items():
-        schema = load(ROOT / "schemas" / schema_file)
-        folder = ROOT / "data" / subdir
+        schema = load(repo.SCHEMAS / schema_file)
+        folder = repo.DATA / subdir
         if not folder.exists():
             continue
         for record_path in sorted(folder.glob("*.json")):

@@ -332,6 +332,44 @@ is a document about the work, not data or machinery — it lands at the workspac
 
 ---
 
+## 11 · After delivery: the board goes live
+
+**Ask:** "We'll run a second pass before the September board cycle. Before that — I'm done
+regenerating the pool board and reopening it every time we decide something. Put it on a
+page that updates itself while we work."
+
+The journey delivered; the workspace keeps living. The board exists (step 6) — but as a
+file: look, regenerate, reopen. *Watching* means a page that re-reads the data itself — a
+live view, served, not written. The move rule prices the gaps, and there are three.
+
+First: a server would need the board's numbers, and those numbers are computed inside
+`views/build_pool_board.py`, where nothing else can reach them. The same numbers, about to
+be derived in two places — the signal for a **data-access layer**. So the first move is
+`tools/repo.py`: where the data lives, how it is read and written, and the canonical
+projections, defined once. Every tool is re-routed through it; nothing else opens a record
+or re-derives a count.
+
+Second: the board's markup is tangled in its build script. The **template** splits out to
+`views/pool_board.template.html` — from here on, `views/` holds view *logic*, not rendered
+output.
+
+Third: the server itself — `tools/server.py`, stdlib only, read-only: the board at `/`,
+the projection at `/api/board`, polled by the page every couple of seconds. Because it
+reads through `repo.py` on every request, the live board is real-time *by construction* —
+the same projection every other surface renders, served fresh. The old rendered board file
+is deleted, superseded; the one static projection this workspace keeps is the report itself.
+
+And the practice that makes it stick lands in both forms: a skill
+(`skills/live-board.md` — probe the health endpoint, launch in the background, hand over
+the link once) and a new rule in this workspace's own `CLAUDE.md` — the manual is part of
+the workspace, and it just grew.
+
+| Content & data | Capability |
+|---|---|
+| — | `tools/repo.py` — the data-access layer: one definition of every number · `tools/server.py` + `views/pool_board.template.html` — the live board · `skills/live-board.md` · `CLAUDE.md` grows a rule |
+
+---
+
 ## Notes
 
 - **The journey ran the canonical shape** ([the journey](../canon/the-journey.md)): the
@@ -355,6 +393,12 @@ is a document about the work, not data or machinery — it lands at the workspac
 - **The check earned its keep.** Validating the strategy against the flagged five caught
   a real hole (no query covered structured telephone support) *before* extraction, when
   fixing it cost one query — not after delivery, when it would have cost the client's trust.
+- **Delivery didn't end the workspace** — step 11 is the "living" property doing its
+  ordinary work after the deliverable shipped: a friction ("regenerate and reopen")
+  became permanent capability (a data-access layer and a live view), by the same move
+  rule as every step before it. Views mature the way
+  [the anatomy describes](../canon/anatomy.md#the-anatomy-of-a-view--and-how-views-mature):
+  rendered file → split parts → served live, each step paid for by a blocked want.
 - **Every rule ends up in two or three forms:** stated in `OVERVIEW.md` and
   `DELIVERABLE.md`, encoded in `schemas/` and `skills/`, and — where it must hold
   unconditionally — enforced by a tool. The `REFUSED` outputs above are the enforced form

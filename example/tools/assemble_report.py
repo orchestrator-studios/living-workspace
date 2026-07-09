@@ -10,22 +10,10 @@ their reasons.
 Usage:  python tools/assemble_report.py --date 2026-07-06     (writes report.md)
 """
 import argparse
-import json
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-
-
-def load_all(subdir):
-    return [json.loads(p.read_text(encoding="utf-8"))
-            for p in sorted((ROOT / "data" / subdir).glob("*.json"))]
-
-
-def cite(source):
-    first = source["authors"][0].split()[0]
-    return f"{first} et al. ({source['year']})" if len(source["authors"]) > 1 \
-        else f"{first} ({source['year']})"
+import repo
+from repo import ROOT, cite
 
 
 def main() -> int:
@@ -33,10 +21,10 @@ def main() -> int:
     ap.add_argument("--date", required=True, help="YYYY-MM-DD (report date)")
     args = ap.parse_args()
 
-    sources = {s["id"]: s for s in load_all("sources")}
-    findings = load_all("findings")
-    themes = load_all("themes")
-    searches = load_all("searches")
+    sources = {s["id"]: s for s in repo.load_all("sources")}
+    findings = repo.load_all("findings")
+    themes = repo.load_all("themes")
+    searches = repo.load_all("searches")
 
     included = {sid: s for sid, s in sources.items()
                 if s["screening"]["status"] == "included"}

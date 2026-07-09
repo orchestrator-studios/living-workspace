@@ -13,11 +13,9 @@ Enforces (see skills/screening.md): decisions record the criterion; exclusions r
 reason; a decided source is frozen — re-screening is refused.
 """
 import argparse
-import json
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+import repo
 
 
 def main() -> int:
@@ -29,11 +27,10 @@ def main() -> int:
     ap.add_argument("--date", required=True, help="YYYY-MM-DD")
     args = ap.parse_args()
 
-    path = ROOT / "data/sources" / f"{args.source}.json"
-    if not path.exists():
+    if not repo.exists("sources", args.source):
         print(f"REFUSED: source {args.source} does not exist.")
         return 1
-    record = json.loads(path.read_text(encoding="utf-8"))
+    record = repo.load("sources", args.source)
     if record["screening"]["status"] != "unscreened":
         print(f"REFUSED: {args.source} is already {record['screening']['status']} — "
               "screening decisions are frozen. Revisions happen as a new versioned pass.")
@@ -46,7 +43,7 @@ def main() -> int:
                            "date": args.date}
     if args.reason:
         record["screening"]["reason"] = args.reason
-    path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    repo.save("sources", record)
     print(f"{args.source} {args.decision} ({args.criterion}).")
     return 0
 

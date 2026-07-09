@@ -30,7 +30,8 @@ capability that remains.
   enforced by small deterministic tools — so they hold even when nobody (human or model)
   is paying attention.
 - **Views appear when you need to see.** A screening board, an evidence table, a report —
-  generated from the data the day you first need them, regenerated whenever it changes.
+  generated from the data the day you first need them, regenerated whenever it changes —
+  or served live, so they can't go stale.
 - **Every obstacle makes the system stronger.** Hit something the workspace can't do, and
   the fix is added permanently. The workspace you have next month is more capable than the
   one you have today, as a side effect of using it.
@@ -49,7 +50,7 @@ A consulting firm's client commissions a structured evidence review (*remote pat
 monitoring for heart failure — does it reduce readmissions?*). The project bootstraps from
 the client's own file — an email thread, a brief, five flagged papers — and runs to a
 delivered report. **The whole timeline is one document,
-[`example/JOURNEY.md`](example/JOURNEY.md):** eight milestones, each linking to the live
+[`example/JOURNEY.md`](example/JOURNEY.md):** eleven milestones, each linking to the live
 files it produced, with the real tool outputs — including the refusals:
 
 ```
@@ -64,7 +65,7 @@ Try it (Python 3.10+, no dependencies):
 ```bash
 cd example
 python tools/validate.py
-python views/build_screening_board.py     # then open views/screening_board.html
+python tools/server.py                    # → http://127.0.0.1:8765 — the live screening board
 python tools/assemble_report.py --date 2026-07-06
 ```
 

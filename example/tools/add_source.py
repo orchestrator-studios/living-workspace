@@ -10,11 +10,9 @@ review, and creates the record unscreened. Screening is a separate, recorded dec
 (tools/screen.py).
 """
 import argparse
-import json
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+import repo
 
 
 def main() -> int:
@@ -28,19 +26,14 @@ def main() -> int:
                     help="seeded | search:Q-NN | citation:S-NNN")
     args = ap.parse_args()
 
-    src_dir = ROOT / "data/sources"
-    src_dir.mkdir(parents=True, exist_ok=True)
-    for p in sorted(src_dir.glob("S-*.json")):
-        existing = json.loads(p.read_text(encoding="utf-8"))
+    for existing in repo.load_all("sources"):
         if existing["doi"].lower() == args.doi.lower():
             origin = existing["found_via"]
             origin = "the client's flagged list" if origin == "seeded" else origin
             print(f"REFUSED: DOI already in the review ({existing['id']}, added from {origin}).")
             return 1
 
-    existing_ids = sorted(src_dir.glob("S-*.json"))
-    next_n = (int(existing_ids[-1].stem.split("-")[1]) + 1) if existing_ids else 1
-    new_id = f"S-{next_n:03d}"
+    new_id = repo.next_id("sources")
     record = {
         "id": new_id,
         "title": args.title,
@@ -51,7 +44,7 @@ def main() -> int:
         "found_via": args.found_via,
         "screening": {"status": "unscreened"},
     }
-    (src_dir / f"{new_id}.json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    repo.save("sources", record)
     print(f"Added {new_id}: {args.title[:60]}… (unscreened)")
     return 0
 

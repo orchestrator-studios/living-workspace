@@ -27,5 +27,5 @@ python tools/screen.py --source S-009 --decision excluded \
     --reason "Device accuracy only; no outcome of interest" --date 2026-07-04
 ```
 
-After a screening pass: `python tools/validate.py`, then regenerate the board
-(`python views/build_screening_board.py`).
+After a screening pass: `python tools/validate.py`. The board needs no regeneration — it
+is live (`skills/live-board.md`); decisions appear on it as they land.
