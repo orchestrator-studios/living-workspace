@@ -28,4 +28,4 @@ python tools/screen.py --source S-009 --decision excluded \
 ```
 
 After a screening pass: `python tools/validate.py`. The board needs no regeneration — it
-is live (`skills/live-board.md`); decisions appear on it as they land.
+is live (`skills/dashboard.md`); decisions appear on it as they land.

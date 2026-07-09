@@ -33,7 +33,9 @@ artifacts are regenerated to match this journey.)*
 ## Before the first request
 
 What the user did before talking to Claude at all: copied [the template](../template/) —
-`CLAUDE.md`, the blank `OVERVIEW.md`, and five empty folders — into a new project folder;
+`CLAUDE.md`, the blank `OVERVIEW.md`, the standard kit (the data-access skeleton, the
+dashboard server, the validator, the dashboard skill and index page), and the empty
+`data/` and `schemas/` folders — into a new project folder;
 created a `seed/` folder holding the client's material — the
 [email thread](seed/client-email-thread.md), the [brief](seed/brief.md), and
 [`flagged-papers.csv`](seed/flagged-papers.csv), the five papers the client's medical
@@ -199,14 +201,18 @@ $ python tools/apply_filter.py --paper P-054 --filter F-03 --verdict pass ...
 REFUSED: P-054 already has a verdict. Verdicts are frozen.
 ```
 
-And the seeing: [`views/build_pool_board.py`](views/build_pool_board.py) generates a
-static HTML page — every paper as a card, pass/fail columns, the failing criterion on the
-card. 71 papers judged; **9 pass**. The board is regenerated after any data change, never
-edited by hand.
+And the seeing: the workspace's first view, grown as exactly the two pieces a view costs —
+a `pool_board` projection in the kit's `tools/repo.py` (every paper as a card, pass/fail
+columns, the failing criterion on the card — the numbers defined once, where every surface
+can reach them) and [`views/pool_board.template.html`](views/pool_board.template.html).
+The kit's server binds the two with no wiring: the board appears on the dashboard's index
+the moment the template exists, and the user — who has had the page open since the first
+search ran (rule 9) — watches the columns fill as the 71 papers are judged. **9 pass.**
+Nothing to regenerate, ever: the board reads the data live and cannot go stale.
 
 | Content & data | Capability |
 |---|---|
-| `data/papers/P-001…P-071.json` — 71 papers judged, verdicts frozen, 9 in the pool | `schemas/paper.schema.json` · `tools/apply_filter.py` — carries the dedup and frozen-verdict rules · `views/build_pool_board.py` and its generated board |
+| `data/papers/P-001…P-071.json` — 71 papers judged, verdicts frozen, 9 in the pool | `schemas/paper.schema.json` · `tools/apply_filter.py` — carries the dedup and frozen-verdict rules · the `pool_board` projection in `tools/repo.py` + `views/pool_board.template.html` — the workspace's first live view |
 
 ---
 
@@ -279,11 +285,11 @@ claim at a time. But the rule attached to it is enforcement, so before any learn
 recorded, the capability is built in all three forms: a schema
 (`schemas/learning.schema.json` — one claim, one paper, outcome, direction, evidence,
 theme), a skill ([`skills/learnings.md`](skills/learnings.md) — how a claim is extracted
-and worded, one claim per record, recorded only through the tool), and two tools —
+and worded, one claim per record, recorded only through the tool), and two enforcements —
 [`tools/add_learning.py`](tools/add_learning.py), which **refuses any paper not in the
-pool**, and [`tools/validate.py`](tools/validate.py), which checks every record in the
-workspace against its schema plus the cross-record rules: no duplicate PMIDs, every verdict
-carries its criterion and reason, and no learning cites anything outside the pool.
+pool**, and the cross-record rules grown into the kit's
+[`tools/validate.py`](tools/validate.py): no duplicate PMIDs, every verdict carries its
+criterion and reason, and no learning cites anything outside the pool.
 
 ```
 $ python tools/add_learning.py --paper P-054 ...
@@ -299,7 +305,7 @@ long-term outcomes, adherence and engagement, cost.
 
 | Content & data | Capability |
 |---|---|
-| `data/learnings/L-001…L-012.json` — twelve claims under four themes | `schemas/learning.schema.json` · `skills/learnings.md` · `tools/add_learning.py` — the pool-only citation gate · `tools/validate.py` — the global closure check |
+| `data/learnings/L-001…L-012.json` — twelve claims under four themes | `schemas/learning.schema.json` · `skills/learnings.md` · `tools/add_learning.py` — the pool-only citation gate · the global closure check, grown into the kit's `tools/validate.py` |
 
 ---
 
@@ -332,44 +338,6 @@ is a document about the work, not data or machinery — it lands at the workspac
 
 ---
 
-## 11 · After delivery: the board goes live
-
-**Ask:** "We'll run a second pass before the September board cycle. Before that — I'm done
-regenerating the pool board and reopening it every time we decide something. Put it on a
-page that updates itself while we work."
-
-The journey delivered; the workspace keeps living. The board exists (step 6) — but as a
-file: look, regenerate, reopen. *Watching* means a page that re-reads the data itself — a
-live view, served, not written. The move rule prices the gaps, and there are three.
-
-First: a server would need the board's numbers, and those numbers are computed inside
-`views/build_pool_board.py`, where nothing else can reach them. The same numbers, about to
-be derived in two places — the signal for a **data-access layer**. So the first move is
-`tools/repo.py`: where the data lives, how it is read and written, and the canonical
-projections, defined once. Every tool is re-routed through it; nothing else opens a record
-or re-derives a count.
-
-Second: the board's markup is tangled in its build script. The **template** splits out to
-`views/pool_board.template.html` — from here on, `views/` holds view *logic*, not rendered
-output.
-
-Third: the server itself — `tools/server.py`, stdlib only, read-only: the board at `/`,
-the projection at `/api/board`, polled by the page every couple of seconds. Because it
-reads through `repo.py` on every request, the live board is real-time *by construction* —
-the same projection every other surface renders, served fresh. The old rendered board file
-is deleted, superseded; the one static projection this workspace keeps is the report itself.
-
-And the practice that makes it stick lands in both forms: a skill
-(`skills/live-board.md` — probe the health endpoint, launch in the background, hand over
-the link once) and a new rule in this workspace's own `CLAUDE.md` — the manual is part of
-the workspace, and it just grew.
-
-| Content & data | Capability |
-|---|---|
-| — | `tools/repo.py` — the data-access layer: one definition of every number · `tools/server.py` + `views/pool_board.template.html` — the live board · `skills/live-board.md` · `CLAUDE.md` grows a rule |
-
----
-
 ## Notes
 
 - **The journey ran the canonical shape** ([the journey](../canon/the-journey.md)): the
@@ -393,12 +361,12 @@ the workspace, and it just grew.
 - **The check earned its keep.** Validating the strategy against the flagged five caught
   a real hole (no query covered structured telephone support) *before* extraction, when
   fixing it cost one query — not after delivery, when it would have cost the client's trust.
-- **Delivery didn't end the workspace** — step 11 is the "living" property doing its
-  ordinary work after the deliverable shipped: a friction ("regenerate and reopen")
-  became permanent capability (a data-access layer and a live view), by the same move
-  rule as every step before it. Views mature the way
-  [the anatomy describes](../canon/anatomy.md#the-anatomy-of-a-view--and-how-views-mature):
-  rendered file → split parts → served live, each step paid for by a blocked want.
+- **The kit never appears in the delta tables** — the data-access layer, the dashboard
+  server, the validator's generic checker, and the dashboard skill were all there before
+  step 1, because they're the same in every workspace. What the journey grew *into* them
+  is visible everywhere: the projections in `repo.py` (step 6), the integrity checks in
+  `validate.py` (step 9). The seam between shipped and grown is exactly the seam between
+  [the system and the domain](../canon/anatomy.md#the-standard-kit).
 - **Every rule ends up in two or three forms:** stated in `OVERVIEW.md` and
   `DELIVERABLE.md`, encoded in `schemas/` and `skills/`, and — where it must hold
   unconditionally — enforced by a tool. The `REFUSED` outputs above are the enforced form

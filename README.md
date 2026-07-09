@@ -7,9 +7,10 @@ landscape. The long tail of serious knowledge work — too structured to live in
 thread, too particular for any off-the-shelf app. So it ends up where it always ends up:
 a folder of files, a spreadsheet, six browser tabs, and your head.
 
-A living workspace is a different way to do that work. **You start with five empty folders
-and an agent. You describe the project in conversation. The system assembles itself around
-the work** — and keeps assembling for as long as you use it.
+A living workspace is a different way to do that work. **You start with a small standard
+kit, empty data folders, and an agent. You describe the project in conversation. The
+system assembles itself around the work** — and you watch it happen: the kit includes a
+live dashboard that shows the workspace filling in as you talk.
 
 > A work environment on a shared file substrate, operated by an agent in conversation with
 > its user, that grows its own capabilities as a side effect of the work — never deployed,
@@ -42,7 +43,7 @@ capability that remains.
 |---|---|---|
 | **[`canon/`](canon/)** | How it all works: the definition, the move rule, the anatomy, the operating manual. General — nothing project-specific. | [canon/README.md](canon/README.md) |
 | **[`example/`](example/)** | A complete worked example: a client-commissioned literature review, from empty folders to the delivered report. Fully runnable. | [example/JOURNEY.md](example/JOURNEY.md) |
-| **[`template/`](template/)** | A fresh start: the two documents and five empty folders. Copy it, open Claude Code, begin. | [template/](template/) |
+| **[`template/`](template/)** | A fresh start: the two documents, the standard kit (data-access layer, dashboard server, validator), and empty data folders. Copy it, open Claude Code, begin. | [template/](template/) |
 
 ## The worked example, at a glance
 
@@ -50,7 +51,7 @@ A consulting firm's client commissions a structured evidence review (*remote pat
 monitoring for heart failure — does it reduce readmissions?*). The project bootstraps from
 the client's own file — an email thread, a brief, five flagged papers — and runs to a
 delivered report. **The whole timeline is one document,
-[`example/JOURNEY.md`](example/JOURNEY.md):** eleven milestones, each linking to the live
+[`example/JOURNEY.md`](example/JOURNEY.md):** ten milestones, each linking to the live
 files it produced, with the real tool outputs — including the refusals:
 
 ```
@@ -79,7 +80,8 @@ python tools/assemble_report.py --date 2026-07-06
    and start talking. The intake fills the overview; everything else follows
    [the rule](canon/the-move-rule.md).
 
-The folders start empty on purpose.
+The data folders start empty on purpose; the kit keeps the workspace visible from minute
+one — start `python tools/server.py` and watch it assemble itself on screen.
 
 ## What this is not
 

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Validate every record in data/ against its schema, plus the review's integrity rules.
+"""validate.py — check every record in data/ against its schema. Part of the standard kit.
 
-The generic checker is the kit's; SCHEMA_FOR_DIR and integrity_checks() are this
-workspace's own, grown in place. Dependency-free: implements the subset of JSON Schema
-the schemas use, then checks the rules no per-record schema can express:
-  - DOI uniqueness (a paper enters the review once)
-  - screening consistency (decisions carry criterion; exclusions carry reason)
-  - citation closure: every finding cites a source that exists AND is included
-  - referential integrity for themes and searches
+The kit ships the generic checker: a dependency-free implementation of the JSON Schema
+subset workspace schemas use, run over every record in each mapped data/ folder. Two
+things are the workspace's own, grown in place:
+
+  - SCHEMA_FOR_DIR — which schema governs which folder; add a line as each schema lands
+  - integrity_checks() — the cross-record rules no per-record schema can express
+    (dedup, referential integrity, closure guarantees); grow them as the rules are stated
 
 Usage:  python tools/validate.py        (exit 0 = clean; exit 1 = violations, printed)
 """
@@ -17,12 +17,9 @@ import sys
 
 import repo
 
-SCHEMA_FOR_DIR = {
-    "sources": "source.schema.json",
-    "findings": "finding.schema.json",
-    "themes": "theme.schema.json",
-    "searches": "search.schema.json",
-}
+# data/<dir> → schemas/<file>. Grown as the workspace's schemas land.
+SCHEMA_FOR_DIR = {}
+
 TYPES = {"object": dict, "array": list, "string": str, "boolean": bool, "null": type(None)}
 
 
@@ -82,43 +79,10 @@ def load(path):
 
 
 def integrity_checks(errors):
-    # validation reads the raw files on purpose — it checks the substrate itself,
-    # not a projection of it — but the paths still come from the data-access layer
-    sources = {p.stem: load(p) for p in (repo.DATA / "sources").glob("*.json")}
-    themes = {p.stem for p in (repo.DATA / "themes").glob("*.json")}
-    searches = {p.stem for p in (repo.DATA / "searches").glob("*.json")}
-
-    seen_dois = {}
-    for sid, s in sources.items():
-        doi = s["doi"].lower()
-        if doi in seen_dois:
-            errors.append(f"{sid}: duplicate DOI (already on {seen_dois[doi]})")
-        seen_dois[doi] = sid
-        st = s["screening"]
-        if st["status"] in ("included", "excluded") and not st.get("criterion"):
-            errors.append(f"{sid}: {st['status']} without recording the criterion")
-        if st["status"] == "excluded" and not st.get("reason"):
-            errors.append(f"{sid}: excluded without a reason")
-        fv = s["found_via"]
-        if fv.startswith("search:") and fv.split(":")[1] not in searches:
-            errors.append(f"{sid}: found_via references unknown {fv}")
-
-    for p in (repo.DATA / "findings").glob("*.json"):
-        f = load(p)
-        src = sources.get(f["source_id"])
-        if src is None:
-            errors.append(f"{f['id']}: cites {f['source_id']}, which does not exist")
-        elif src["screening"]["status"] != "included":
-            errors.append(f"{f['id']}: cites {f['source_id']}, which is "
-                          f"{src['screening']['status']} — findings may only cite included sources")
-        if f["theme_id"] and f["theme_id"] not in themes:
-            errors.append(f"{f['id']}: theme {f['theme_id']} does not exist")
-
-    for p in (repo.DATA / "searches").glob("*.json"):
-        q = load(p)
-        for sid in q["added"]:
-            if sid not in sources:
-                errors.append(f"{q['id']}: added source {sid} does not exist")
+    # (grown: the workspace's cross-record rules — dedup, referential integrity,
+    #  closure guarantees. Validation reads the raw files on purpose — it checks the
+    #  substrate itself, not a projection — but paths still come from repo.)
+    pass
 
 
 def main() -> int:
@@ -138,8 +102,7 @@ def main() -> int:
         for e in errors:
             print("  -", e)
         return 1
-    print(f"OK — {total} records valid; citation closure holds "
-          f"(no finding cites anything but an included source).")
+    print(f"OK — {total} records valid.")
     return 0
 
 

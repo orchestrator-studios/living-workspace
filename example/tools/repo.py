@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""repo.py — the data-access layer for the review.
+"""repo.py — the data-access layer. The kit's skeleton, plus this review's own growth.
 
 Single source of truth for *where* the data lives, *how* it is read and written, and
 *what the canonical projections are*. Every tool (add_source, screen, add_finding,
-validate, assemble_report) and the board server go through here. Nothing else opens a
-record in data/, hardcodes a data path, or re-derives a count — if two surfaces need
+validate, assemble_report) and the dashboard server go through here. Nothing else opens
+a record in data/, hardcodes a data path, or re-derives a count — if two surfaces need
 the same number, it is defined once, here.
 
 Three layers, low to high:
-  1. paths + raw json   — load, load_all, save, next_id
-  2. shared helpers     — cite
-  3. projections        — board(): the screening board the live server renders
+  1. paths + raw json — load, load_all, save, next_id (the kit ships these)
+  2. shared helpers   — cite (grown: the report and the board both format citations)
+  3. projections      — screening_board (grown), registered in PROJECTIONS so the
+                        server serves it at /api/screening_board
 
-The projection reads from disk on every call, so a page that polls board() sees
-screening decisions the moment they land — one projection, read live.
+Projections read from disk on every call, so a page that polls sees screening decisions
+the moment they land — one projection, read live.
 """
 import json
 from pathlib import Path
@@ -21,8 +22,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 SCHEMAS = ROOT / "schemas"
+VIEWS = ROOT / "views"
 
-# record kinds → id prefix and pad width (S-001 but T-01, matching the existing records)
+# record kinds → (id prefix, pad width), e.g. S-001 but T-01 — matching the records
 KINDS = {"sources": ("S", 3), "findings": ("F", 3), "themes": ("T", 2), "searches": ("Q", 2)}
 
 
@@ -74,9 +76,9 @@ def cite(source):
 
 
 # ----------------------------------------------------------------------------
-# 3. projections — defined once, rendered anywhere
+# 3. projections — the canonical derived shapes, defined once, rendered anywhere
 # ----------------------------------------------------------------------------
-def board():
+def screening_board():
     """The screening board: every source as a card in its status column.
 
     The one definition of "what's unscreened / included / excluded" — the live board
@@ -103,3 +105,8 @@ def board():
         "columns": [{"status": st, "count": len(cards), "cards": cards}
                     for st, cards in cols.items()],
     }
+
+
+# every projection registered here is served at /api/<name>, and a template named
+# views/<name>.template.html is bound to it automatically by tools/server.py
+PROJECTIONS = {"screening_board": screening_board}

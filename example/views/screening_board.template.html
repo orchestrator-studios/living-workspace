@@ -80,7 +80,7 @@ if (LIVE) {
   let last = JSON.stringify(data);
   setInterval(async () => {
     try {
-      const r = await fetch("/api/board", {cache: "no-store"});
+      const r = await fetch("/api/screening_board", {cache: "no-store"});
       if (!r.ok) return;
       const fresh = await r.json();
       const s = JSON.stringify(fresh);
