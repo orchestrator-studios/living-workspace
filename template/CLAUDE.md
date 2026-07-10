@@ -61,7 +61,12 @@ work demands it.
    down once, recomputed from the files on every ask. New queries are defined there and
    published in `QUERIES`; nothing else opens `data/` or re-derives a number. A query
    belongs to a question, never to a consumer — the dashboard and the report render the
-   same one. Two derivations of one number will eventually disagree.
+   same one. Two derivations of one number will eventually disagree. A query may take
+   **parameters**, filled from the URL's query string on `/api/<name>` and `/view/<name>`
+   alike, for questions only well-posed about one thing (`?table_id=T-001`); give each a
+   default, answer a bare ask helpfully, and have the live page poll with its own
+   `location.search`. A parameter narrows a question — if it switches the answer's shape,
+   that's two questions wearing one name.
 9. **Keep the dashboard up for the user.** The live dashboard is how the user watches the
    workspace move; they won't start the server themselves. At the first data-touching
    action of a session, make sure `tools/server.py` is running — probe `/health` first,

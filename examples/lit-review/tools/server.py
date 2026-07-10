@@ -20,6 +20,22 @@ gets __DATA__ replaced by repo.QUERIES[<name>]() when a query of that name is pu
 (else null), and __LIVE__ replaced by true. Grow a view by growing exactly two things:
 a query in repo.py and a template in views/. The server needs no changes.
 
+Parameters — some questions are only well-posed about one thing: not "every table" but
+"table T-001". So a named query may take keyword arguments, and the URL's query string
+supplies them, identically on both surfaces:
+
+    /api/table?table_id=T-001      → repo.QUERIES["table"](table_id="T-001")
+    /view/table?table_id=T-001     → the same answer, bound into the template
+
+Values arrive as strings — a query wanting an int coerces its own. A query taking no
+parameters is unaffected, and an unknown parameter is a 400, not a silent ignore. Two
+obligations follow for whoever grows one. A parameterized query gives every parameter a
+default and answers helpfully when asked bare (`/api/table` should say which tables
+exist, not raise) — the index page links every published query without arguments. And a
+live page whose identity includes its query string must poll with it:
+`fetch("/api/table" + location.search)`, not a bare path, or it will repaint itself with
+another thing's data.
+
 Liveness is polling, on purpose: pages re-ask their query every couple of seconds and
 repaint on change. Queries recompute from the record on every ask, so change detection
 is free at read time; pushing would make it a duty of every writer instead.
@@ -32,7 +48,7 @@ Stdlib only — no framework, no build step.
 import argparse
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import repo
 
@@ -51,14 +67,16 @@ def index_payload():
             "queries": sorted(repo.QUERIES)}
 
 
-def render(name):
-    """Bind views/<name>.template.html to its query and return the page."""
+def render(name, params=None):
+    """Bind views/<name>.template.html to its query and return the page. Any URL
+    parameters reach the query as keyword arguments, so a view and its api answer the
+    same question when asked the same way."""
     template = (repo.VIEWS / f"{name}.template.html").read_text(encoding="utf-8")
     if name == "index":
         data = index_payload()
     else:
         query = repo.QUERIES.get(name)
-        data = query() if query else None
+        data = query(**(params or {})) if query else None
     return (template.replace("__DATA__", json.dumps(data))
                     .replace("__LIVE__", "true"))
 
@@ -83,8 +101,11 @@ class Handler(BaseHTTPRequestHandler):
         self.do_GET()
 
     def do_GET(self):
-        path = urlparse(self.path).path.rstrip("/") or "/"
+        url = urlparse(self.path)
+        path = url.path.rstrip("/") or "/"
         parts = [p for p in path.split("/") if p]
+        # the query string becomes the named query's keyword arguments (last value wins)
+        params = {k: v[-1] for k, v in parse_qs(url.query).items()}
         try:
             if path == "/":
                 return self._send(200, render("index"), "text/html; charset=utf-8")
@@ -94,7 +115,7 @@ class Handler(BaseHTTPRequestHandler):
                 name = parts[1]
                 if name == "index" or not (repo.VIEWS / f"{name}.template.html").exists():
                     return self._send(404, {"error": f"no view '{name}'"})
-                return self._send(200, render(name), "text/html; charset=utf-8")
+                return self._send(200, render(name, params), "text/html; charset=utf-8")
             if parts[0] == "api" and len(parts) == 2:
                 name = parts[1]
                 if name == "_index":
@@ -102,7 +123,10 @@ class Handler(BaseHTTPRequestHandler):
                 query = repo.QUERIES.get(name)
                 if query is None:
                     return self._send(404, {"error": f"no query '{name}'"})
-                return self._send(200, query())
+                try:
+                    return self._send(200, query(**params))
+                except TypeError as e:  # a parameter this query doesn't take
+                    return self._send(400, {"error": f"bad parameters: {e}"})
             return self._send(404, {"error": f"no route for {path}"})
         except Exception as e:  # never leak a stack trace to the client
             return self._send(500, {"error": f"{type(e).__name__}: {e}"})

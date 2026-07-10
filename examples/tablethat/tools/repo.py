@@ -11,11 +11,27 @@ Three layers, low to high:
   2. shared helpers — grown here the moment two tools start repeating themselves
   3. named queries  — each a question about the record, written down once and recomputed
                       from the files on every ask; publishing one in QUERIES serves it
-                      live at /api/<name> by tools/server.py
+                      live at /api/<name> by tools/server.py. A query may take keyword
+                      arguments — see "parameterized queries" below
 
 A query belongs to a question, never to a consumer — if two surfaces need the same
 number, it is defined once, here, and both ask it. The kit ships layer 1 and the empty
 registry. Everything else is the workspace's own — grown, in place, as the work demands it.
+
+Parameterized queries. Some questions are only well-posed about one thing — "table T-001",
+not "every table" — and a workspace that answers only the whole-record question ends up
+shipping the whole record to every page. So a query may take keyword arguments, which the
+server fills from the URL's query string (`/api/table?table_id=T-001` and
+`/view/table?table_id=T-001` alike). Three rules keep them honest:
+
+  - Every parameter has a default, and a bare ask answers helpfully rather than raising —
+    the dashboard's index links every published query with no arguments at all.
+  - Values arrive as strings. A query that wants an int coerces it, and says so when it
+    can't.
+  - A parameter narrows a question; it never changes which question is being asked.
+    `table(table_id=...)` is one question asked of one table. If you find yourself
+    passing a parameter that switches the answer's *shape* — a `mode=` or a `format=` —
+    that is two questions wearing one name, and it wants two queries.
 """
 import json
 import re
@@ -130,9 +146,11 @@ def column_violation(value, column):
 # ----------------------------------------------------------------------------
 # 3. named queries — each question about the record, answered here, once
 # ----------------------------------------------------------------------------
-# Queries may take keyword parameters (with defaults): the server passes URL
-# query-string values straight through, so /api/table?table_id=T-001 answers
-# table(table_id="T-001"). Parameters arrive as strings.
+# This workspace is where the kit's parameterized queries earn their keep: a table's
+# rows are only a well-posed question about *one* table. Note the division — `tables`
+# answers "what tables exist?" and never carries row data; `table` answers "what does
+# this one say?" and takes the id. Two questions, two queries, neither a mode of the
+# other. See the "Parameterized queries" note in the module docstring.
 
 def tables():
     """The catalog: every table, with its shape and row count — never the row data."""
@@ -146,8 +164,9 @@ def tables():
 
 
 def table(table_id=None):
-    """One table, whole: its definition and its rows. Parameterized — asks for exactly
-    one table, never all of them."""
+    """One table, whole: its definition and its rows. Parameterized — asks about exactly
+    one table, never all of them. Asked bare (as the dashboard index links it), it names
+    the tables that exist rather than raising."""
     if not table_id:
         return {"error": "which table? pass ?table_id=T-001",
                 "tables": [t["id"] for t in load_all("table")]}
@@ -158,5 +177,6 @@ def table(table_id=None):
 
 
 # Publishing: every query registered here is served at /api/<name> by tools/server.py,
-# and a template named views/<name>.template.html is bound to it automatically.
+# and a template named views/<name>.template.html is bound to it automatically. A
+# parameterized query's live page must poll with its own location.search.
 QUERIES = {"tables": tables, "table": table}

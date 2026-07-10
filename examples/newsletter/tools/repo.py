@@ -11,11 +11,27 @@ Three layers, low to high:
   2. shared helpers — grown here the moment two tools start repeating themselves
   3. named queries  — each a question about the record, written down once and recomputed
                       from the files on every ask; publishing one in QUERIES serves it
-                      live at /api/<name> by tools/server.py
+                      live at /api/<name> by tools/server.py. A query may take keyword
+                      arguments — see "parameterized queries" below
 
 A query belongs to a question, never to a consumer — if two surfaces need the same
 number, it is defined once, here, and both ask it. The kit ships layer 1 and the empty
 registry. Everything else is the workspace's own — grown, in place, as the work demands it.
+
+Parameterized queries. Some questions are only well-posed about one thing — "table T-001",
+not "every table" — and a workspace that answers only the whole-record question ends up
+shipping the whole record to every page. So a query may take keyword arguments, which the
+server fills from the URL's query string (`/api/table?table_id=T-001` and
+`/view/table?table_id=T-001` alike). Three rules keep them honest:
+
+  - Every parameter has a default, and a bare ask answers helpfully rather than raising —
+    the dashboard's index links every published query with no arguments at all.
+  - Values arrive as strings. A query that wants an int coerces it, and says so when it
+    can't.
+  - A parameter narrows a question; it never changes which question is being asked.
+    `table(table_id=...)` is one question asked of one table. If you find yourself
+    passing a parameter that switches the answer's *shape* — a `mode=` or a `format=` —
+    that is two questions wearing one name, and it wants two queries.
 """
 import json
 import re
@@ -126,5 +142,6 @@ def pipeline():
 
 
 # Publishing: every query registered here is served at /api/<name> by tools/server.py,
-# and a template named views/<name>.template.html is bound to it automatically.
+# and a template named views/<name>.template.html is bound to it automatically. A
+# parameterized query's live page must poll with its own location.search.
 QUERIES = {"pipeline": pipeline}

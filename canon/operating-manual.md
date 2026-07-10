@@ -45,7 +45,9 @@ template) that ships in every workspace rather than being grown per project.
    count will eventually disagree, and every surface that renders it becomes a suspect.
    The kit ships the data-access layer
    (see [anatomy](anatomy.md#one-definition-of-every-number)); the rule is the discipline
-   of routing everything through it, so every surface renders the same truth.
+   of routing everything through it, so every surface renders the same truth. A query may
+   take parameters, because some questions are only well-posed about one thing — but a
+   parameter narrows a question, never switches which one is asked.
 9. **Keep the dashboard up for the user** — because the dashboard is the user's window
    into the workspace, and a user driving everything through one conversation won't
    launch a second process themselves. A running dashboard is a precondition for data
@@ -118,7 +120,12 @@ work demands it.
    down once, recomputed from the files on every ask. New queries are defined there and
    published in `QUERIES`; nothing else opens `data/` or re-derives a number. A query
    belongs to a question, never to a consumer — the dashboard and the report render the
-   same one. Two derivations of one number will eventually disagree.
+   same one. Two derivations of one number will eventually disagree. A query may take
+   **parameters**, filled from the URL's query string on `/api/<name>` and `/view/<name>`
+   alike, for questions only well-posed about one thing (`?table_id=T-001`); give each a
+   default, answer a bare ask helpfully, and have the live page poll with its own
+   `location.search`. A parameter narrows a question — if it switches the answer's shape,
+   that's two questions wearing one name.
 9. **Keep the dashboard up for the user.** The live dashboard is how the user watches the
    workspace move; they won't start the server themselves. At the first data-touching
    action of a session, make sure `tools/server.py` is running — probe `/health` first,

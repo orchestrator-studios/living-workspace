@@ -29,7 +29,7 @@ nothing and costs the user real time. That set ships with the template:
 | Ships | What it is |
 |---|---|
 | `tools/repo.py` | The data-access layer, as a skeleton: paths, the CRUD primitives (load/save/next-id conventions), the kind table derived from `schemas/` at import, and an empty query registry. |
-| `tools/server.py` | The dashboard server: the index at `/`, any template at `/view/<name>`, any published query at `/api/<name>`, `/health`. Stdlib only, read-only, holds no state. |
+| `tools/server.py` | The dashboard server: the index at `/`, any template at `/view/<name>`, any published query at `/api/<name>`, `/health`. URL parameters reach the query as keyword arguments. Stdlib only, read-only, holds no state. |
 | `tools/validate.py` | The generic schema checker plus the alignment backstop (every schema declares its kind; every `data/` folder is governed by a schema); the workspace grows its cross-record integrity rules into it, in place. |
 | `capabilities/dashboard.md` | The keep-the-server-up recipe: probe, background-launch, hand over the link once. |
 | `views/index.template.html` | The dashboard's index page — views and queries appear on it as they come into existence. |
@@ -106,6 +106,24 @@ written down once, where everything that needs it can reach it. Two independent
 derivations of one number will eventually disagree — and an answer that disagrees with
 the substrate is a confident lie.
 
+**Queries take parameters**, because some questions are only well-posed about one thing:
+not "every table" but "table T-001". A query may declare keyword arguments, and the URL's
+query string fills them — `/api/table?table_id=T-001` and `/view/table?table_id=T-001`
+ask the same question of the same query, one as data and one as a page. Without this, a
+workspace can only ask whole-record questions, and every page carries the whole record.
+
+A parameter **narrows a question; it never changes which question is asked.** If a
+parameter would switch the shape of the answer — a `mode=`, a `format=` — that is two
+questions wearing one name, and it wants two queries. The [worked
+example](../examples/tablethat/) draws the line where it belongs: `tables` answers *what
+tables exist* and never carries a row; `table(table_id=…)` answers *what this one says*.
+Neither is a mode of the other.
+
+Two obligations come with a parameterized query. It gives every parameter a default and
+answers a bare ask helpfully, because the dashboard's index links every published query
+with no arguments. And its live page must poll with its own query string, or it will
+repaint itself with another thing's data.
+
 The same discipline applies to the system's own registries. A record kind is declared
 **once, in its schema**: `x-kind` names the `data/` folder, and the id pattern carries
 the id prefix and width. `repo.py` derives its kind table from `schemas/` at import —
@@ -130,7 +148,10 @@ Two kinds of view fall out of the instance row:
 - **Live views** are the default: grow a named query in `repo.py` and a template in
   `views/` with the same name, and the shipped server binds them with no wiring — the
   page at `/view/<name>`, the answer it polls at `/api/<name>`, and a card on the index
-  the moment the template exists. A live view **cannot go stale** — every ask recomputes
+  the moment the template exists. If the query takes parameters, the page takes them too,
+  from its own URL — so **one template serves a whole class of pages** (the example's
+  table viewer renders every table the workspace will ever hold; new tables cost no new
+  view). A live view **cannot go stale** — every ask recomputes
   the answer from the files; it is the logical endpoint of "regenerate views after data
   changes", not an exception to it. And the page adds nothing to the truth: the server
   holds no state of its own, writes nothing, and creates no second source — the files
