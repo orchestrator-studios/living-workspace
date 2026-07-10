@@ -1,25 +1,73 @@
 # Living Workspace
 
-Some work needs more structure than chat and less than software.
+**A new kind of application: self-growing and agent-operated, rather than built and
+installed.**
 
-A literature review for a client. A due-diligence file. A grant pipeline. A competitive
-landscape. The long tail of serious knowledge work — too structured to live in a chat
-thread, too particular for any off-the-shelf app. So it ends up where it always ends up:
-a folder of files, a spreadsheet, six browser tabs, and your head.
+Every application you've ever used was built the same way:
 
-A living workspace is a different way to do that work. **You start with a small standard
-kit, empty data folders, and an agent. You describe the project in conversation. The
-system assembles itself around the work** — and you watch it happen: the kit includes a
-live dashboard that shows the workspace filling in as you talk.
+```
+repo  →  app  →  user
+```
 
-> A work environment on a shared file substrate, operated by an agent in conversation with
-> its user, that grows its own capabilities as a side effect of the work — never deployed,
-> never finished, always in use.
+Developers write code in a repo. The repo builds into an app. The app ships, and users
+operate it by hand — clicking through whatever interface the developers froze at release.
 
-It runs on one rule: state what you want; **if it's reachable with what exists, it just
-gets done — if not, the next move grows the missing capability** (access → understanding →
-presentation), permanently, in place. Every move pays twice: the task done, and the
-capability that remains.
+A living workspace is a different shape:
+
+```
+repo  →  living workspace  →  agent  →  user
+```
+
+The repo never builds into anything, and no one ships it. **The repo becomes an
+environment that an agent works inside, on behalf of the user.** You state what you want
+in conversation; the agent operates the system for you.
+
+## Same substrate, three differences
+
+Under the hood, a living workspace has everything a regular application has: entities
+defined in schemas, records stored in a system of record, rules that must hold,
+deterministic operations, views over the data. The substrate is the same. What's different
+is what surrounds it:
+
+1. **The repo carries its own operating instructions.** Alongside the data sit the
+   schemas that say what it means, the skills that say how to work with it correctly, and
+   the tools that enforce its rules — all laid out in files any agent can read, understand,
+   and then navigate on the user's behalf. A file here is simultaneously something to
+   read, an instruction to follow, and a program to run. There is no interface layer to
+   learn, because the conversation *is* the interface.
+
+2. **The agent is half of the application.** In a normal app, the user is the operator.
+   Here the agent is: it reads the manual the repo contains, runs the tools, respects the
+   rules, and hands back answers, boards, and reports. The repo alone does nothing — an
+   agent reading its instructions completes the system. Every other interface — a live
+   dashboard, an assembled document, an export — is a projection the agent generates from
+   the substrate on demand.
+
+3. **There is no separate building and using.** A normal app is built, then used; wanting
+   a new capability means waiting for the next release. Here, capability is built *as part
+   of* using the system. It runs on [one rule](canon/the-move-rule.md): state what you
+   want; **if it's reachable with what exists, it just gets done — if not, the next move
+   grows the missing capability** (access → understanding → presentation), permanently, in
+   place. Every move pays twice: the task done, and the capability that remains. The
+   workspace you have next month is more capable than the one you have today, as a side
+   effect of using it.
+
+> A living workspace is a work environment on a shared file substrate, operated by an
+> agent in conversation with its user, that grows its own capabilities as a side effect
+> of the work — never deployed, never finished, always in use.
+
+## What kind of work this is for
+
+Some work needs more structure than chat and less than software. A literature review for
+a client. A due-diligence file. A grant pipeline. A competitive landscape. The long tail
+of serious knowledge work — too structured to live in a chat thread, too particular for
+any off-the-shelf app — so it ends up in a folder of files, a spreadsheet, six browser
+tabs, and your head.
+
+That's the gap this shape of application fills. You start with a small standard kit,
+empty data folders, and an agent. You describe the project in conversation. The
+application assembles itself around the work — and you watch it happen: the kit includes
+a live dashboard that shows the workspace filling in as you talk.
 
 ## What you get
 
@@ -34,8 +82,28 @@ capability that remains.
   generated from the data the day you first need them, regenerated whenever it changes —
   or served live, so they can't go stale.
 - **Every obstacle makes the system stronger.** Hit something the workspace can't do, and
-  the fix is added permanently. The workspace you have next month is more capable than the
-  one you have today, as a side effect of using it.
+  the fix is added permanently — no release cycle, no feature request, no waiting.
+
+## Where this sits
+
+A living workspace is an application written in two languages. The parts that must be
+exact — validation, id assignment, the rules that must hold — are compiled down into
+deterministic code in `tools/`. The parts that need judgment — how to work the data, what
+to watch for — stay as English in `skills/`. The agent is the runtime that binds the two,
+and the operating manual (`CLAUDE.md`) is effectively its `main()`. This is the
+"natural language as programming language, model as runtime" idea taken literally — with
+the boundary drawn honestly: English where judgment lives, code where exactness lives.
+
+Its learning lives in artifacts, not weights. The workspace gets more capable the way a
+skill-library agent does: every gap the agent fills is deposited as a permanent file —
+a tool, a schema, a skill — that every future move lands on. Nothing is retrained;
+everything is readable, diffable, and yours.
+
+And it delivers something software has promised for decades and never managed: **malleable
+software** — tools their users reshape through use. That dream always failed on the same
+step: reshaping required programming skill. An agent removes that step. Say what's
+missing, and the workspace grows it — which is why the deploy boundary can collapse
+entirely, and building and using become the same activity in the same conversation.
 
 ## This repo is three things
 
@@ -87,7 +155,12 @@ one — start `python tools/server.py` and watch it assemble itself on screen.
 
 - **Not a framework.** Nothing to install, no API to learn — a folder convention plus an
   operating manual the agent reads.
+- **Not a chatbot bolted onto a backend.** The agent doesn't sit in front of an app that
+  someone else built and froze; the repo it operates *contains* the app — data,
+  understanding, capability, and presentation — and the agent grows all four as it works.
 - **Not model magic.** Everything exact — validation, id assignment, the rules — is
   deterministic code the model never freehands. The model handles conversation, judgment,
   and growth.
-- **Not finished.** By design. "Finished" isn't a state capability systems have.
+- **Not finished.** By design. "Finished" isn't a state this kind of application has —
+  there is never a launch, and the attention split between building and using starts near
+  all-building, drifts toward all-using, and never arrives.
