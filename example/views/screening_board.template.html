@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<!--
+  screening_board.template.html — the live screening board (a grown view).
+
+  A view is a named query plus this presentation. The serving contract
+  (tools/server.py) stamps two placeholders into the script below at serve time:
+  the initial answer of repo.QUERIES["screening_board"](), and the live flag
+  (true when served by the dashboard; a static build tool could bind the same
+  template with false, leaving the polling inert). When live, the page re-asks
+  the query at /api/screening_board every 2 seconds and repaints on change.
+
+  This file owns markup and rendering only. Every number shown is computed by
+  the query in tools/repo.py — never derived here (one definition of every number).
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -48,44 +61,57 @@
   <div class="board" id="board"></div>
 </div>
 <script>
-const LIVE = __LIVE__;
-let data = __DATA__;
+// Both constants below are placeholders stamped in by the server at serve time
+// (see "Template binding" in tools/server.py).
+const LIVE = __LIVE__;              // true when served live; false in a static instance
+const initialAnswer = __DATA__;     // the query's answer at the moment the page was served
 
-function esc(s) {
-  return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Escape a value for safe interpolation into HTML.
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 }
 
-function card(c) {
-  const why = c.detail ? `<div class="why">${esc(c.detail)}</div>` : "";
-  return `<div class="card"><div class="sid">${esc(c.id)}</div>` +
-         `<div class="ttl">${esc(c.title)}</div>` +
-         `<div class="meta">${esc(c.meta)}</div>${why}</div>`;
+// One source as a card: id, title, meta line, and — when the query supplied it —
+// the deciding criterion (included) or the exclusion reason (excluded).
+function cardHtml(card) {
+  const why = card.detail ? `<div class="why">${esc(card.detail)}</div>` : "";
+  return `<div class="card"><div class="sid">${esc(card.id)}</div>` +
+         `<div class="ttl">${esc(card.title)}</div>` +
+         `<div class="meta">${esc(card.meta)}</div>${why}</div>`;
 }
 
-function render(d) {
-  const t = d.totals;
+// Repaint the whole board from one query answer: the totals line, then one
+// column per screening status. No number is computed here — all come from the answer.
+function render(answer) {
+  const totals = answer.totals;
   document.getElementById("sub").innerHTML =
     (LIVE ? '<span class="live-dot"></span>live — updates as decisions land · ' : "") +
-    `${t.sources} sources · ${t.findings} findings extracted · ` +
+    `${totals.sources} sources · ${totals.findings} findings extracted · ` +
     `one query, from <code>tools/repo.py</code>`;
-  document.getElementById("board").innerHTML = d.columns.map(col =>
-    `<section class="col"><h2>${esc(col.status)} <span class="count">${col.count}</span></h2>` +
-    (col.cards.map(card).join("\n") || '<p class="empty">none</p>') + `</section>`
+  document.getElementById("board").innerHTML = answer.columns.map(column =>
+    `<section class="col"><h2>${esc(column.status)} <span class="count">${column.count}</span></h2>` +
+    (column.cards.map(cardHtml).join("\n") || '<p class="empty">none</p>') + `</section>`
   ).join("\n");
 }
 
-render(data);
+render(initialAnswer);
 
+// Liveness: re-ask the query every 2 seconds and repaint only when the answer
+// actually changed (compared in serialized form, so an unchanged answer costs
+// nothing). Polling on purpose: the query recomputes from the record on every
+// ask, so freshness is structural — see canon/anatomy.md, "Why the live page polls".
 if (LIVE) {
-  let last = JSON.stringify(data);
+  let lastRendered = JSON.stringify(initialAnswer);
   setInterval(async () => {
     try {
-      const r = await fetch("/api/screening_board", {cache: "no-store"});
-      if (!r.ok) return;
-      const fresh = await r.json();
-      const s = JSON.stringify(fresh);
-      if (s !== last) { last = s; render(fresh); }
-    } catch (e) { /* server briefly away — keep the last good render */ }
+      const response = await fetch("/api/screening_board", {cache: "no-store"});
+      if (!response.ok) return;
+      const freshAnswer = await response.json();
+      const serialized = JSON.stringify(freshAnswer);
+      if (serialized === lastRendered) return;
+      lastRendered = serialized;
+      render(freshAnswer);
+    } catch (err) { /* server briefly away — keep the last good render */ }
   }, 2000);
 }
 </script>

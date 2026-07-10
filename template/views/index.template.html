@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<!--
+  index.template.html — the dashboard's index page. Part of the standard kit.
+
+  The user's front door: one card per view (/view/<name>) and one per published
+  query (/api/<name>). Nothing is listed by hand — the server enumerates the
+  templates in views/ and the registry in tools/repo.py on every ask, so a new
+  view or query appears here the moment it is grown.
+
+  Binding works like any view (see "Template binding" in tools/server.py): the
+  server stamps the two placeholders in the script below at serve time — the
+  index payload {workspace, views, queries}, and the live flag. When live, the
+  page re-asks /api/_index every 2 seconds and repaints on change.
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -44,26 +57,31 @@
   <div id="content"></div>
 </div>
 <script>
-const LIVE = __LIVE__;
-let data = __DATA__;
+// Both constants below are placeholders stamped in by the server at serve time
+// (see "Template binding" in tools/server.py).
+const LIVE = __LIVE__;              // true when served live; false in a static instance
+const initialPayload = __DATA__;    // {workspace, views, queries} at serve time
 
-function esc(s) {
-  return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Escape a value for safe interpolation into HTML.
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 }
 
-function render(d) {
-  document.getElementById("title").textContent = d.workspace;
-  document.title = d.workspace;
+// Repaint the index from one payload: a card per view, a card per published
+// query, or the empty-workspace note when neither exists yet.
+function render(payload) {
+  document.getElementById("title").textContent = payload.workspace;
+  document.title = payload.workspace;
   let html = "";
-  if (d.views.length) {
-    html += "<h2>Views</h2>" + d.views.map(v =>
-      `<a class="item" href="/view/${esc(v)}"><span class="kind">live</span>` +
-      `<span class="name">${esc(v)}</span></a>`).join("");
+  if (payload.views.length) {
+    html += "<h2>Views</h2>" + payload.views.map(view =>
+      `<a class="item" href="/view/${esc(view)}"><span class="kind">live</span>` +
+      `<span class="name">${esc(view)}</span></a>`).join("");
   }
-  if (d.queries.length) {
-    html += "<h2>Queries</h2>" + d.queries.map(q =>
-      `<a class="item" href="/api/${esc(q)}"><span class="kind">/api/${esc(q)}</span>` +
-      `<span class="name">${esc(q)}</span></a>`).join("");
+  if (payload.queries.length) {
+    html += "<h2>Queries</h2>" + payload.queries.map(query =>
+      `<a class="item" href="/api/${esc(query)}"><span class="kind">/api/${esc(query)}</span>` +
+      `<span class="name">${esc(query)}</span></a>`).join("");
   }
   if (!html) {
     html = '<div class="empty">Nothing to show yet — this workspace hasn\'t grown a view. ' +
@@ -72,18 +90,24 @@ function render(d) {
   document.getElementById("content").innerHTML = html;
 }
 
-render(data);
+render(initialPayload);
 
+// Liveness: re-ask /api/_index every 2 seconds and repaint only when the payload
+// actually changed (compared in serialized form, so an unchanged payload costs
+// nothing). Polling on purpose: the server enumerates views and queries fresh on
+// every ask, so freshness is structural.
 if (LIVE) {
-  let last = JSON.stringify(data);
+  let lastRendered = JSON.stringify(initialPayload);
   setInterval(async () => {
     try {
-      const r = await fetch("/api/_index", {cache: "no-store"});
-      if (!r.ok) return;
-      const fresh = await r.json();
-      const s = JSON.stringify(fresh);
-      if (s !== last) { last = s; render(fresh); }
-    } catch (e) { /* server briefly away — keep the last good render */ }
+      const response = await fetch("/api/_index", {cache: "no-store"});
+      if (!response.ok) return;
+      const freshPayload = await response.json();
+      const serialized = JSON.stringify(freshPayload);
+      if (serialized === lastRendered) return;
+      lastRendered = serialized;
+      render(freshPayload);
+    } catch (err) { /* server briefly away — keep the last good render */ }
   }, 2000);
 }
 </script>
