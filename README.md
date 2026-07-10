@@ -2,7 +2,7 @@
 
 Software 3.0 is slowly emerging to fully unleash AI. No one is quite sure yet what it
 will look like — but one cornerstone seems increasingly settled: **a well-behaved agent
-between users and their systems and data, as the primary interface.**
+between users and their systems and data, as the primary interface.** 
 
 **Living workspace is a new architecture built on that cornerstone** — an application
 that is self-growing and agent-operated, rather than built and installed.
@@ -44,7 +44,7 @@ is what surrounds it:
    Here the agent is: it reads the manual the repo contains, runs the tools, respects the
    rules, and hands back answers, boards, and reports. The repo alone does nothing — an
    agent reading its instructions completes the system. Every other interface — a live
-   dashboard, an assembled document, an export — is a projection the agent generates from
+   dashboard, an assembled document, an export — is an answer the agent computes from
    the substrate on demand.
 
 3. **There is no separate building and using.** A normal app is built, then used; wanting

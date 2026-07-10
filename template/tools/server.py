@@ -2,23 +2,27 @@
 """server.py — the dashboard server. Part of the standard kit.
 
 A small read-only HTTP server that makes the workspace visible while it works. It never
-touches data/ directly: every response is built from tools/repo.py, the same data-access
-layer every tool uses — so the dashboard shows, by construction, the same numbers every
-other surface renders. One definition, served fresh on each request. The server holds no
-state and writes nothing; the files stay the ground truth under it.
+touches data/ directly: every response is answered fresh through tools/repo.py — the
+same named queries every other surface renders — so the dashboard shows, by
+construction, the same numbers as everything else. The server holds no state and writes
+nothing; the files stay the ground truth under it.
 
 Routes
-    GET /               → the index: every view and projection the workspace has,
+    GET /               → the index: every view and published query the workspace has,
                           live — new ones appear on the page as they are grown
-    GET /view/<name>    → views/<name>.template.html, bound to its projection, served live
-    GET /api/<name>     → the projection registered as <name> in repo.PROJECTIONS
-    GET /api/_index     → {workspace, views, projections} (the index page polls this)
+    GET /view/<name>    → views/<name>.template.html, bound to its query, served live
+    GET /api/<name>     → the query published as <name> in repo.QUERIES, asked fresh
+    GET /api/_index     → {workspace, views, queries} (the index page polls this)
     GET /health         → {ok: true}
 
 Template binding — the whole wiring convention: a template named <name>.template.html
-gets __DATA__ replaced by repo.PROJECTIONS[<name>]() when a projection of that name
-exists (else null), and __LIVE__ replaced by true. Grow a view by growing exactly two
-things: a projection in repo.py and a template in views/. The server needs no changes.
+gets __DATA__ replaced by repo.QUERIES[<name>]() when a query of that name is published
+(else null), and __LIVE__ replaced by true. Grow a view by growing exactly two things:
+a query in repo.py and a template in views/. The server needs no changes.
+
+Liveness is polling, on purpose: pages re-ask their query every couple of seconds and
+repaint on change. Queries recompute from the record on every ask, so change detection
+is free at read time; pushing would make it a duty of every writer instead.
 
 Usage
     python tools/server.py [--host 127.0.0.1] [--port 8765]
@@ -44,17 +48,17 @@ def view_names():
 def index_payload():
     return {"workspace": repo.ROOT.name,
             "views": view_names(),
-            "projections": sorted(repo.PROJECTIONS)}
+            "queries": sorted(repo.QUERIES)}
 
 
 def render(name):
-    """Bind views/<name>.template.html to its projection and return the page."""
+    """Bind views/<name>.template.html to its query and return the page."""
     template = (repo.VIEWS / f"{name}.template.html").read_text(encoding="utf-8")
     if name == "index":
         data = index_payload()
     else:
-        fn = repo.PROJECTIONS.get(name)
-        data = fn() if fn else None
+        query = repo.QUERIES.get(name)
+        data = query() if query else None
     return (template.replace("__DATA__", json.dumps(data))
                     .replace("__LIVE__", "true"))
 
@@ -95,10 +99,10 @@ class Handler(BaseHTTPRequestHandler):
                 name = parts[1]
                 if name == "_index":
                     return self._send(200, index_payload())
-                fn = repo.PROJECTIONS.get(name)
-                if fn is None:
-                    return self._send(404, {"error": f"no projection '{name}'"})
-                return self._send(200, fn())
+                query = repo.QUERIES.get(name)
+                if query is None:
+                    return self._send(404, {"error": f"no query '{name}'"})
+                return self._send(200, query())
             return self._send(404, {"error": f"no route for {path}"})
         except Exception as e:  # never leak a stack trace to the client
             return self._send(500, {"error": f"{type(e).__name__}: {e}"})

@@ -81,7 +81,7 @@ def load(path):
 def integrity_checks(errors):
     # (grown: the workspace's cross-record rules — dedup, referential integrity,
     #  closure guarantees. Validation reads the raw files on purpose — it checks the
-    #  substrate itself, not a projection — but paths still come from repo.)
+    #  substrate itself, not a query's answer — but paths still come from repo.)
     pass
 
 

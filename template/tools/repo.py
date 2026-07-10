@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """repo.py — the data-access layer. Part of the standard kit.
 
-Single source of truth for *where* data lives, *how* it is read and written, and *what
-the canonical projections are*. Every tool and every view goes through here; nothing
-else opens a record in data/, hardcodes a data path, or re-derives a count. If two
-surfaces need the same number, it is defined once, here.
+The only door to the record. The truth lives as plain files in data/; every read and
+write goes through here. Every tool and every view is a client — nothing else opens a
+record, hardcodes a data path, or re-derives a count.
 
 Three layers, low to high:
-  1. paths + raw json — load, load_all, save, next_id (the kit ships these)
-  2. shared helpers   — grown here the moment two tools start repeating themselves
-  3. projections      — the derived shapes views render; each one registered in
-                        PROJECTIONS is served live at /api/<name> by tools/server.py
+  1. primitives     — load, load_all, save, next_id: domain-blind CRUD (the kit ships these)
+  2. shared helpers — grown here the moment two tools start repeating themselves
+  3. named queries  — each a question about the record, written down once and recomputed
+                      from the files on every ask; publishing one in QUERIES serves it
+                      live at /api/<name> by tools/server.py
 
-The kit ships layer 1 and the empty registry. Everything else is the workspace's own —
-grown, in place, as the work demands it.
+A query belongs to a question, never to a consumer — if two surfaces need the same
+number, it is defined once, here, and both ask it. The kit ships layer 1 and the empty
+registry. Everything else is the workspace's own — grown, in place, as the work demands it.
 """
 import json
 from pathlib import Path
@@ -29,7 +30,7 @@ KINDS = {}
 
 
 # ----------------------------------------------------------------------------
-# 1. paths + raw json
+# 1. primitives — paths + raw json
 # ----------------------------------------------------------------------------
 def path_for(kind, rid):
     return DATA / kind / f"{rid}.json"
@@ -73,10 +74,10 @@ def next_id(kind):
 
 
 # ----------------------------------------------------------------------------
-# 3. projections — the canonical derived shapes, defined once, rendered anywhere
+# 3. named queries — each question about the record, answered here, once
 # ----------------------------------------------------------------------------
-# (grown: e.g.  def screening_board(): ...  — the shape a view renders)
+# (grown: e.g.  def screening_board(): ...  — the answer a view renders)
 
-# Every projection registered here is served at /api/<name>, and a template named
-# views/<name>.template.html is bound to it automatically by tools/server.py.
-PROJECTIONS = {}
+# Publishing: every query registered here is served at /api/<name> by tools/server.py,
+# and a template named views/<name>.template.html is bound to it automatically.
+QUERIES = {}

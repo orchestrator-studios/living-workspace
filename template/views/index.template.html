@@ -60,10 +60,10 @@ function render(d) {
       `<a class="item" href="/view/${esc(v)}"><span class="kind">live</span>` +
       `<span class="name">${esc(v)}</span></a>`).join("");
   }
-  if (d.projections.length) {
-    html += "<h2>Projections</h2>" + d.projections.map(p =>
-      `<a class="item" href="/api/${esc(p)}"><span class="kind">/api/${esc(p)}</span>` +
-      `<span class="name">${esc(p)}</span></a>`).join("");
+  if (d.queries.length) {
+    html += "<h2>Queries</h2>" + d.queries.map(q =>
+      `<a class="item" href="/api/${esc(q)}"><span class="kind">/api/${esc(q)}</span>` +
+      `<span class="name">${esc(q)}</span></a>`).join("");
   }
   if (!html) {
     html = '<div class="empty">Nothing to show yet — this workspace hasn\'t grown a view. ' +

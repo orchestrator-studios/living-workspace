@@ -83,7 +83,7 @@ def load(path):
 
 def integrity_checks(errors):
     # validation reads the raw files on purpose — it checks the substrate itself,
-    # not a projection of it — but the paths still come from the data-access layer
+    # not a query's answer over it — but the paths still come from the data-access layer
     sources = {p.stem: load(p) for p in (repo.DATA / "sources").glob("*.json")}
     themes = {p.stem for p in (repo.DATA / "themes").glob("*.json")}
     searches = {p.stem for p in (repo.DATA / "searches").glob("*.json")}

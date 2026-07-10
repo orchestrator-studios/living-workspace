@@ -202,7 +202,7 @@ REFUSED: P-054 already has a verdict. Verdicts are frozen.
 ```
 
 And the seeing: the workspace's first view, grown as exactly the two pieces a view costs —
-a `pool_board` projection in the kit's `tools/repo.py` (every paper as a card, pass/fail
+a `pool_board` query in the kit's `tools/repo.py` (every paper as a card, pass/fail
 columns, the failing criterion on the card — the numbers defined once, where every surface
 can reach them) and [`views/pool_board.template.html`](views/pool_board.template.html).
 The kit's server binds the two with no wiring: the board appears on the dashboard's index
@@ -212,7 +212,7 @@ Nothing to regenerate, ever: the board reads the data live and cannot go stale.
 
 | Content & data | Capability |
 |---|---|
-| `data/papers/P-001…P-071.json` — 71 papers judged, verdicts frozen, 9 in the pool | `schemas/paper.schema.json` · `tools/apply_filter.py` — carries the dedup and frozen-verdict rules · the `pool_board` projection in `tools/repo.py` + `views/pool_board.template.html` — the workspace's first live view |
+| `data/papers/P-001…P-071.json` — 71 papers judged, verdicts frozen, 9 in the pool | `schemas/paper.schema.json` · `tools/apply_filter.py` — carries the dedup and frozen-verdict rules · the `pool_board` query in `tools/repo.py` + `views/pool_board.template.html` — the workspace's first live view |
 
 ---
 
@@ -364,7 +364,7 @@ is a document about the work, not data or machinery — it lands at the workspac
 - **The kit never appears in the delta tables** — the data-access layer, the dashboard
   server, the validator's generic checker, and the dashboard skill were all there before
   step 1, because they're the same in every workspace. What the journey grew *into* them
-  is visible everywhere: the projections in `repo.py` (step 6), the integrity checks in
+  is visible everywhere: the named queries in `repo.py` (step 6), the integrity checks in
   `validate.py` (step 9). The seam between shipped and grown is exactly the seam between
   [the system and the domain](../canon/anatomy.md#the-standard-kit).
 - **Every rule ends up in two or three forms:** stated in `OVERVIEW.md` and

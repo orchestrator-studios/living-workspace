@@ -67,7 +67,7 @@ function render(d) {
   document.getElementById("sub").innerHTML =
     (LIVE ? '<span class="live-dot"></span>live — updates as decisions land · ' : "") +
     `${t.sources} sources · ${t.findings} findings extracted · ` +
-    `one projection, from <code>tools/repo.py</code>`;
+    `one query, from <code>tools/repo.py</code>`;
   document.getElementById("board").innerHTML = d.columns.map(col =>
     `<section class="col"><h2>${esc(col.status)} <span class="count">${col.count}</span></h2>` +
     (col.cards.map(card).join("\n") || '<p class="empty">none</p>') + `</section>`

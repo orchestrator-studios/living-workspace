@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Assemble the client report from themes, findings, and included sources.
 
-The report is a projection of the substrate — generated, never hand-written. Citation
+The report is assembled from the record — generated, never hand-written. Citation
 integrity is structural: findings can only exist against included sources (enforced by
 tools/add_finding.py and checked by tools/validate.py), so the report cannot cite
 anything that wasn't screened in. Excluded sources appear only in the appendix, with

@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """repo.py — the data-access layer. The kit's skeleton, plus this review's own growth.
 
-Single source of truth for *where* the data lives, *how* it is read and written, and
-*what the canonical projections are*. Every tool (add_source, screen, add_finding,
-validate, assemble_report) and the dashboard server go through here. Nothing else opens
-a record in data/, hardcodes a data path, or re-derives a count — if two surfaces need
-the same number, it is defined once, here.
+The only door to the record. The truth lives as plain files in data/; every read and
+write goes through here. Every tool (add_source, screen, add_finding, validate,
+assemble_report) and the dashboard server are clients — nothing else opens a record,
+hardcodes a data path, or re-derives a count.
 
 Three layers, low to high:
-  1. paths + raw json — load, load_all, save, next_id (the kit ships these)
-  2. shared helpers   — cite (grown: the report and the board both format citations)
-  3. projections      — screening_board (grown), registered in PROJECTIONS so the
-                        server serves it at /api/screening_board
+  1. primitives     — load, load_all, save, next_id: domain-blind CRUD (the kit ships these)
+  2. shared helpers — cite (grown: the report and the board both format citations)
+  3. named queries  — screening_board (grown): a question about the record, written down
+                      once. Publishing it in QUERIES serves it at /api/screening_board.
 
-Projections read from disk on every call, so a page that polls sees screening decisions
-the moment they land — one projection, read live.
+A query belongs to a question, never to a consumer: the live board and the assembled
+report render the same screening_board(). Queries recompute from the files on every call
+and store nothing — an answer cannot go stale, and every derived number has exactly one
+definition, here.
 """
 import json
 from pathlib import Path
@@ -29,7 +30,7 @@ KINDS = {"sources": ("S", 3), "findings": ("F", 3), "themes": ("T", 2), "searche
 
 
 # ----------------------------------------------------------------------------
-# 1. paths + raw json
+# 1. primitives — paths + raw json
 # ----------------------------------------------------------------------------
 def path_for(kind, rid):
     return DATA / kind / f"{rid}.json"
@@ -76,7 +77,7 @@ def cite(source):
 
 
 # ----------------------------------------------------------------------------
-# 3. projections — the canonical derived shapes, defined once, rendered anywhere
+# 3. named queries — each question about the record, answered here, once
 # ----------------------------------------------------------------------------
 def screening_board():
     """The screening board: every source as a card in its status column.
@@ -94,8 +95,8 @@ def screening_board():
             "id": s["id"],
             "title": s["title"],
             "meta": f"{authors} · {s['year']} · via {s['found_via']}",
-            # included cards show the deciding criterion; excluded cards the reason
-            "detail": (scr.get("reason") or scr.get("criterion") or "") if scr.get("criterion") else "",
+            # excluded cards show the reason; included cards the deciding criterion
+            "detail": scr.get("reason") or scr.get("criterion") or "",
         })
     return {
         "totals": {"sources": len(sources), "findings": len(findings),
@@ -107,6 +108,6 @@ def screening_board():
     }
 
 
-# every projection registered here is served at /api/<name>, and a template named
-# views/<name>.template.html is bound to it automatically by tools/server.py
-PROJECTIONS = {"screening_board": screening_board}
+# publishing: every query registered here is served at /api/<name> by tools/server.py,
+# and a template named views/<name>.template.html is bound to it automatically
+QUERIES = {"screening_board": screening_board}

@@ -31,8 +31,8 @@ sufficient:
    concept, not a boundary of it.
 
 2. **Agent operation.** An agent with tool reach is the primary operator. Conversation is
-   the native interface; every other interface — a board, a report, an export — is a
-   projection of the substrate that the agent can generate and regenerate on demand.
+   the native interface; every other interface — a board, a report, an export — is an
+   answer computed from the substrate that the agent can generate and regenerate on demand.
 
 3. **Capability accretion — the "living" part.** There is no boundary between using the
    system and extending it. Every obstacle asks *"what capability is missing?"*, and every

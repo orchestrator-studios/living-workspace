@@ -49,7 +49,7 @@ and never start a second one when the probe says one is up.
 
 ## Growing what it shows
 
-The server itself never changes. A new live view is exactly two grown pieces: a projection
-in `tools/repo.py` (registered in `PROJECTIONS`) and a template in `views/` with the same
+The server itself never changes. A new live view is exactly two grown pieces: a named
+query in `tools/repo.py` (published in `QUERIES`) and a template in `views/` with the same
 name. The server binds them automatically — `/view/<name>` for the page, `/api/<name>` for
-the data it polls — and the new view appears on the index the moment the template exists.
+the answer it polls — and the new view appears on the index the moment the template exists.

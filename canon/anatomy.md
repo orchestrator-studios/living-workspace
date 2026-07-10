@@ -28,15 +28,15 @@ nothing and costs the user real time. That set ships with the template:
 
 | Ships | What it is |
 |---|---|
-| `tools/repo.py` | The data-access layer, as a skeleton: paths, load/save/next-id conventions, and an empty projection registry. |
-| `tools/server.py` | The dashboard server: the index at `/`, any template at `/view/<name>`, any projection at `/api/<name>`, `/health`. Stdlib only, read-only, holds no state. |
+| `tools/repo.py` | The data-access layer, as a skeleton: paths, the CRUD primitives (load/save/next-id conventions), and an empty query registry. |
+| `tools/server.py` | The dashboard server: the index at `/`, any template at `/view/<name>`, any published query at `/api/<name>`, `/health`. Stdlib only, read-only, holds no state. |
 | `tools/validate.py` | The generic schema checker; the workspace grows its cross-record integrity rules into it, in place. |
 | `skills/dashboard.md` | The keep-the-server-up recipe: probe, background-launch, hand over the link once. |
-| `views/index.template.html` | The dashboard's index page — views and projections appear on it as they come into existence. |
+| `views/index.template.html` | The dashboard's index page — views and queries appear on it as they come into existence. |
 
 The test for shipping is strict, and it is the same line the move rule draws: **the kit is
 the system's machinery; everything the *domain* shapes is grown.** Schemas, records, domain
-tools, projections, and view templates never ship — they are the workspace coming to life.
+tools, named queries, and view templates never ship — they are the workspace coming to life.
 The payoff of the kit is that the workspace is *visible from minute one*: copy the
 template, start the server, and watch the workspace assemble itself on screen as the
 conversation runs.
@@ -51,18 +51,22 @@ globally by `tools/validate.py`.
 
 ## One definition of every number
 
-Every read of the data — every count, every list, every derived status — is defined
-**once**, in the data-access layer the kit ships (`tools/repo.py`): the single source of
-truth for *where* data lives, *how* it is read and written, and *what the canonical
-projections are*. Every tool and every view routes through it; nothing else opens the
-data files or re-derives a number. The kit supplies the layer; the workspace's discipline
-is routing everything through it, and its projections — the canonical derived shapes the
-views render — are grown into it one by one.
+The data-access layer the kit ships (`tools/repo.py`) is the **only door to the record**.
+Writes go through it in conformance with the schemas. Reads come at two altitudes:
+**primitives** — load a record, load them all; domain-blind plumbing, shipped — and
+**named queries** — a question about the record ("how's screening going?"), written down
+once and recomputed from the files on every ask; grown one by one. Every tool and every
+view routes through this layer; nothing else opens the data files or re-derives a number.
+The kit supplies the layer; the workspace's discipline is routing everything through it.
 
-The reason is the same as [two forms of every rule](#two-forms-of-every-rule): what
-matters is written down once, where everything that needs it can reach it. Two
-independent derivations of one number will eventually disagree — and a projection that
-disagrees with the substrate is a confident lie.
+A named query belongs to a *question*, never to a consumer: the live board and the
+assembled report render the same query, and the registry (`QUERIES`) is nothing more than
+the list of queries published to the dashboard. A query may *format* its answer — titles,
+citations, human-shaped cards — but any fact it computes exists nowhere else. The reason
+is the same as [two forms of every rule](#two-forms-of-every-rule): what matters is
+written down once, where everything that needs it can reach it. Two independent
+derivations of one number will eventually disagree — and an answer that disagrees with
+the substrate is a confident lie.
 
 ## The anatomy of a view
 
@@ -70,40 +74,59 @@ Every view separates four parts:
 
 | Part | What it is | Lives in | Ships or grown |
 |---|---|---|---|
-| **Data access** | reads the substrate, defines the canonical projections | `tools/repo.py` | layer ships · projections grown |
-| **Code** | binds a projection into a rendering | `tools/` (the server; build tools) | server ships · build tools grown |
+| **Data access** | reads the record; defines the named queries views render | `tools/repo.py` | layer ships · queries grown |
+| **Code** | binds a query's answer into a rendering | `tools/` (the server; build tools) | server ships · build tools grown |
 | **Template** | the presentation markup | `views/` | index ships · domain templates grown |
-| **Instance** | the rendered result | live: nowhere — served on demand · static: at the root if it *is* the deliverable, else next to the data it projects | — |
+| **Instance** | the rendered result | live: nowhere — served on demand · static: at the root if it *is* the deliverable, else next to the data it renders | — |
 
 Two kinds of view fall out of the instance row:
 
-- **Live views** are the default: grow a projection in `repo.py` and a template in
+- **Live views** are the default: grow a named query in `repo.py` and a template in
   `views/` with the same name, and the shipped server binds them with no wiring — the
-  page at `/view/<name>`, the data it polls at `/api/<name>`, and a card on the index
-  the moment the template exists. A live view **cannot go stale** — it is the logical
-  endpoint of "regenerate views after data changes", not an exception to it. And it is
-  still a projection: the server holds no state of its own, writes nothing, and adds no
-  second source of truth — the files remain the ground truth under it.
+  page at `/view/<name>`, the answer it polls at `/api/<name>`, and a card on the index
+  the moment the template exists. A live view **cannot go stale** — every ask recomputes
+  the answer from the files; it is the logical endpoint of "regenerate views after data
+  changes", not an exception to it. And the page adds nothing to the truth: the server
+  holds no state of its own, writes nothing, and creates no second source — the files
+  remain the ground truth under it.
 - **Static views** are for outputs that must exist as files — the report, the export,
-  the deliverable. A grown build tool renders them from the same projections, and they
-  are regenerated after every data change, never hand-edited.
+  the deliverable. A grown build tool renders them from the same queries, and they are
+  regenerated after every data change, never hand-edited.
 
-So the cost of a new way of seeing is exactly two grown pieces — a projection and a
+So the cost of a new way of seeing is exactly two grown pieces — a query and a
 template — and the [worked example](../example/JOURNEY.md) shows both kinds: a live
 screening board, and a report assembled to a file.
+
+### Why the live page polls
+
+Liveness is polling, and that is a consequence of the design, not a compromise. The
+truth lives in files, and the write side is deliberately open — any tool, or a hand with
+a text editor, may change the record. For a server to *push*, it would have to know the
+moment something changed: either it watches the files on a loop (polling, relocated into
+the server, plus connection state it exists to not have), or every writer takes on a duty
+to notify (liveness stops being structural and becomes something a writer can forget).
+Polling keeps change detection where it is free — at read time, because queries recompute
+from the record on every ask. The server stays stateless and stdlib; watching stays
+harmless.
+
+If a workspace ever outgrows this, the sanctioned escalations, in order: first a
+freshness short-circuit (the server answers "unchanged" from the record's modification
+times without recomputing), then server-sent events — one-directional, plain HTTP. Not
+websockets: their distinguishing feature is a channel *back* from the page, and this
+surface is read-only by design.
 
 ## Contained and bound substrates
 
 `data/` is the *contained* case — the workspace is the system of record. The concept
 equally covers *bound* substrates: the records live in a CRM, a drive, a database, and the
 workspace holds the reach (a tool), the meaning (schemas and skills describing what the
-external data means here), and the projections. Most real workspaces mix both — the worked
+external data means here), and the named queries. Most real workspaces mix both — the worked
 example seeds its contained data *from* a bound source (the client's file in `seed/`).
 
-## Deliverables are projections
+## Deliverables are assembled, never authored
 
 The workspace's outputs — the report, the export, the dashboard — are **assembled from the
 substrate by tools, never hand-written**. That's what makes guarantees structural: the
 example's report *cannot* cite an excluded paper, because findings can't exist against one.
-A dashboard served live is still a projection — the server just re-assembles it on every
-request instead of freezing it to disk.
+A dashboard served live is the same discipline — the server just re-asks the queries on
+every request instead of freezing their answers to disk.
