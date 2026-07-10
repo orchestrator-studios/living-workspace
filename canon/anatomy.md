@@ -17,7 +17,7 @@ Two documents and five folders. That's the whole skeleton, and each piece serves
 | `data/` | The persistent objects — the system of record. One file per record. | substrate |
 | `schemas/` | The structure and validity of everything in `data/`. Each schema is its kind's **single declaration**: `x-kind` names the `data/` folder, the id pattern fixes the id format, and the kit derives everything else from it. | understanding |
 | `tools/` | Deterministic operations: create, update, validate, query, transform, assemble. Three residents: the **data-access layer** (`repo.py`, shipped — see [one definition of every number](#one-definition-of-every-number)), **muscle** (pure operations, grown) and **enforcers** (operations that carry rules — the dedup check, the citation gate; grown). The kit's `server.py` and `validate.py` live here too. | access · enforcement |
-| `skills/` | Workflow rules and know-how in language — how to use the tools correctly, what to watch for. The soft form of the same rules the enforcer tools carry in code. The kit ships one: `dashboard.md`. | understanding |
+| `capabilities/` | Procedure in language — how to use the tools correctly, what to watch for, how to judge. The soft form of the same rules the enforcer tools carry in code. Each declares **how it runs**: in the conversation's context, or delegated to a fresh one (see [in-context and delegated](#in-context-and-delegated)). The kit ships one: `dashboard.md`. | understanding |
 | `views/` | View **logic** — templates, never rendered output, never a second source of truth. The kit ships `index.template.html`; domain views are grown (see [the anatomy of a view](#the-anatomy-of-a-view)). | presentation |
 
 ## The standard kit
@@ -31,7 +31,7 @@ nothing and costs the user real time. That set ships with the template:
 | `tools/repo.py` | The data-access layer, as a skeleton: paths, the CRUD primitives (load/save/next-id conventions), the kind table derived from `schemas/` at import, and an empty query registry. |
 | `tools/server.py` | The dashboard server: the index at `/`, any template at `/view/<name>`, any published query at `/api/<name>`, `/health`. Stdlib only, read-only, holds no state. |
 | `tools/validate.py` | The generic schema checker plus the alignment backstop (every schema declares its kind; every `data/` folder is governed by a schema); the workspace grows its cross-record integrity rules into it, in place. |
-| `skills/dashboard.md` | The keep-the-server-up recipe: probe, background-launch, hand over the link once. |
+| `capabilities/dashboard.md` | The keep-the-server-up recipe: probe, background-launch, hand over the link once. |
 | `views/index.template.html` | The dashboard's index page — views and queries appear on it as they come into existence. |
 
 The test for shipping is strict, and it is the same line the move rule draws: **the kit is
@@ -43,11 +43,49 @@ conversation runs.
 
 ## Two forms of every rule
 
-A rule that matters exists **twice**: once in language (a skill — for the agent to reason
-with) and once in enforcement (a schema constraint or an enforcer tool — for when nobody,
-human or model, is paying attention). The example's citation-closure rule is the pattern:
-stated in `skills/findings-and-citations.md`, enforced by `tools/add_finding.py`, checked
-globally by `tools/validate.py`.
+A rule that matters exists **twice**: once in language (a capability — for the agent to
+reason with) and once in enforcement (a schema constraint or an enforcer tool — for when
+nobody, human or model, is paying attention). The lit-review example's citation-closure
+rule is the pattern: stated in `capabilities/findings-and-citations.md`, enforced by
+`tools/add_finding.py`, checked globally by `tools/validate.py`.
+
+## In-context and delegated
+
+A capability is a unit of procedure written in language. Whether it is read into the
+current conversation or handed to a fresh agent is a property of **how it runs**, not of
+what it is — so both live in `capabilities/`, and each declares its mode in frontmatter:
+
+| `runs:` | Meaning | Use when |
+|---|---|---|
+| `in-context` | The agent reads it and acts, here, in the conversation. | The reasoning *is* the product, or the user is steering it. Judgment the conversation needs to witness. |
+| `delegated` | Handed to a fresh agent with its own context; only its return value comes back. | The byproducts are bulky and disposable — a fan-out over many items, a deep read of one source — and only the conclusion, or the write it makes, matters. |
+| `either` | **Ambidextrous.** The same procedure, run either way; the caller decides. | One item in conversation, forty delegated one-per-item. Screening one paper is a conversation; screening a week's retrieval is a fan-out. |
+
+A capability that can be delegated declares a **contract** — a `returns:` line saying what
+comes back — because the return value is the *only* thing that does. The transcript is
+thrown away.
+
+**Why a workspace can delegate freely.** In an ordinary agent, delegation is a gamble: the
+sub-agent has never read the rules, so it may not respect them. Here it doesn't need to.
+The workspace's memory is the substrate, not the conversation, and the rules that matter
+have their [hard form](#two-forms-of-every-rule) in the tools. A delegated screener writes
+through the screening tool, which *refuses* a verdict with no reason — whether or not the
+agent holding the pen ever read the screening capability. **Delegation is cheap because the
+files remember and the tools refuse.**
+
+Three constraints follow:
+
+1. **A delegated capability deposits to the substrate, not to the conversation.** It writes
+   through the tools. Then its transcript can be discarded without losing anything.
+2. **Delegation may not launder a gate.** If a rule requires the user's approval, a fresh
+   agent cannot supply it on their behalf. Gates are answered in the conversation, always.
+3. **Delegation does not soften a rule.** A delegated capability is still the soft form; the
+   enforcer is still the tool. A capability that can only be trusted when its reader is
+   paying attention is one whose rule hasn't been given its hard form yet.
+
+The context economics are the whole point: the work that would flood a conversation with
+search results, page text, and dead ends is exactly the work whose *conclusions* are small.
+Delegate the flood, keep the conclusion, let the files hold the rest.
 
 ## One definition of every number
 
@@ -102,7 +140,7 @@ Two kinds of view fall out of the instance row:
   regenerated after every data change, never hand-edited.
 
 So the cost of a new way of seeing is exactly two grown pieces — a query and a
-template — and the [worked example](../example/JOURNEY.md) shows both kinds: a live
+template — and the [worked example](../examples/lit-review/JOURNEY.md) shows both kinds: a live
 screening board, and a report assembled to a file.
 
 ### Why the live page polls
@@ -127,7 +165,7 @@ surface is read-only by design.
 
 `data/` is the *contained* case — the workspace is the system of record. The concept
 equally covers *bound* substrates: the records live in a CRM, a drive, a database, and the
-workspace holds the reach (a tool), the meaning (schemas and skills describing what the
+workspace holds the reach (a tool), the meaning (schemas and capabilities describing what the
 external data means here), and the named queries. Most real workspaces mix both — the worked
 example seeds its contained data *from* a bound source (the client's file in `seed/`).
 

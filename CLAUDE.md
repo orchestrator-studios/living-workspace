@@ -1,17 +1,17 @@
 # This repo is three things — route accordingly
 
-This is the **living-workspace** repository: canon (how it works), a worked example, and a
+This is the **living-workspace** repository: canon (how it works), worked examples, and a
 starter template. The root is *not* a workspace; do not create data, schemas, tools, or
 views here.
 
 - **Understanding or explaining the system** → read `canon/` (definition, move rule,
   anatomy, operating manual).
-- **Exploring or operating the worked example** → work inside `example/`. Its own
-  `CLAUDE.md` governs there; treat it as a live workspace (validate after writes, keep
-  the live board up, regenerate the report, use its tools).
-- **Working on TableThat** → work inside `tablethat/`, a live workspace being grown as a
-  second test of the concept (replicating the TableThat app, `C:\code\table-that`). Its
-  own `CLAUDE.md` governs there.
+- **Exploring or operating a worked example** → work inside its folder under `examples/`.
+  Each example's own `CLAUDE.md` governs there; treat it as a live workspace (validate
+  after writes, keep the live board up, regenerate outputs, use its tools). The examples:
+  `lit-review` (client-commissioned literature review), `tablethat` (AI table builder,
+  replicating `C:\code\table-that`), `newsletter` (weekly literature-monitoring
+  newsletter, modeled on Knowledge Horizon's talc/asbestos stream).
 - **The user wants to start their own workspace** → copy `template/` to a new location
   *outside this repo* and begin there with the interview. Don't scaffold workspaces here.
 - **Editing the canon or template** → these are the published doctrine and the published

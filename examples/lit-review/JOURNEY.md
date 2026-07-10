@@ -284,7 +284,7 @@ Extraction is judgment — Claude and the user go through the 11 pool papers in 
 claim at a time. But the rule attached to it is enforcement, so before any learning is
 recorded, the capability is built in all three forms: a schema
 (`schemas/learning.schema.json` — one claim, one paper, outcome, direction, evidence,
-theme), a skill ([`skills/learnings.md`](skills/learnings.md) — how a claim is extracted
+theme), a skill ([`capabilities/learnings.md`](capabilities/learnings.md) — how a claim is extracted
 and worded, one claim per record, recorded only through the tool), and two enforcements —
 [`tools/add_learning.py`](tools/add_learning.py), which **refuses any paper not in the
 pool**, and the cross-record rules grown into the kit's
@@ -305,7 +305,7 @@ long-term outcomes, adherence and engagement, cost.
 
 | Content & data | Capability |
 |---|---|
-| `data/learnings/L-001…L-012.json` — twelve claims under four themes | `schemas/learning.schema.json` · `skills/learnings.md` · `tools/add_learning.py` — the pool-only citation gate · the global closure check, grown into the kit's `tools/validate.py` |
+| `data/learnings/L-001…L-012.json` — twelve claims under four themes | `schemas/learning.schema.json` · `capabilities/learnings.md` · `tools/add_learning.py` — the pool-only citation gate · the global closure check, grown into the kit's `tools/validate.py` |
 
 ---
 
@@ -368,7 +368,7 @@ is a document about the work, not data or machinery — it lands at the workspac
   `validate.py` (step 9). The seam between shipped and grown is exactly the seam between
   [the system and the domain](../canon/anatomy.md#the-standard-kit).
 - **Every rule ends up in two or three forms:** stated in `OVERVIEW.md` and
-  `DELIVERABLE.md`, encoded in `schemas/` and `skills/`, and — where it must hold
+  `DELIVERABLE.md`, encoded in `schemas/` and `capabilities/`, and — where it must hold
   unconditionally — enforced by a tool. The `REFUSED` outputs above are the enforced form
   doing its job.
 

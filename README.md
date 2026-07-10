@@ -70,11 +70,11 @@ deterministic operations, views over the data. The substrate is the same. What's
 is what surrounds it:
 
 1. **The repo carries its own operating instructions.** Alongside the data sit the
-   schemas that say what it means, the skills that say how to work with it correctly, and
-   the tools that enforce its rules — all laid out in files any agent can read, understand,
-   and then navigate on the user's behalf. A file here is simultaneously something to
-   read, an instruction to follow, and a program to run. There is no interface layer to
-   learn, because the conversation *is* the interface.
+   schemas that say what it means, the capabilities that say how to work with it
+   correctly, and the tools that enforce its rules — all laid out in files any agent can
+   read, understand, and then navigate on the user's behalf. A file here is simultaneously
+   something to read, an instruction to follow, and a program to run. There is no
+   interface layer to learn, because the conversation *is* the interface.
 
 2. **The agent is half of the application.** In a normal app, the user is the operator.
    Here the agent is: it reads the manual the repo contains, runs the tools, respects the
@@ -97,15 +97,24 @@ is what surrounds it:
 A living workspace is an application written in two languages. The parts that must be
 exact — validation, id assignment, the rules that must hold — are compiled down into
 deterministic code in `tools/`. The parts that need judgment — how to work the data, what
-to watch for — stay as English in `skills/`. The agent is the runtime that binds the two,
+to watch for — stay as English in `capabilities/`. The agent is the runtime that binds the two,
 and the operating manual (`CLAUDE.md`) is effectively its `main()`. This is software 3.0's
 "natural language as programming language, model as runtime" taken literally — with the
 boundary drawn honestly: English where judgment lives, code where exactness lives.
 
 Its learning lives in artifacts, not weights. The workspace gets more capable the way a
 skill-library agent does: every gap the agent fills is deposited as a permanent file —
-a tool, a schema, a skill — that every future move lands on. Nothing is retrained;
+a tool, a schema, a capability — that every future move lands on. Nothing is retrained;
 everything is readable, diffable, and yours.
+
+Capability and delegation are the same folder. A `capabilities/` file is procedure
+written in language, and it declares whether it runs **in the conversation** or is
+**delegated to a fresh agent** that returns only its conclusion — some are ambidextrous
+and do both. This is what lets a workspace take on work far larger than one context:
+delegate the flood, keep the conclusion. It is safe for a reason peculiar to this
+architecture — the workspace's memory is the substrate, not the conversation, and the
+rules live in the tools. A delegate that never read the rules still cannot break them,
+because the tool refuses.
 
 And it delivers something software has promised for decades and never managed: **malleable
 software** — tools their users reshape through use. That dream always failed on the same
@@ -118,7 +127,7 @@ entirely, and building and using become the same activity in the same conversati
 | Part | What it is | Start here |
 |---|---|---|
 | **[`canon/`](canon/)** | How it all works: the definition, the move rule, the anatomy, the operating manual. General — nothing project-specific. | [canon/README.md](canon/README.md) |
-| **[`example/`](example/)** | A complete worked example: a client-commissioned literature review, from empty folders to the delivered report. Fully runnable. | [example/JOURNEY.md](example/JOURNEY.md) |
+| **[`examples/`](examples/)** | Complete worked examples, fully runnable: **[`lit-review`](examples/lit-review/)** (a client-commissioned literature review, from empty folders to the delivered report), **[`tablethat`](examples/tablethat/)** (an AI table builder — Build → Populate → Enrich — replicated as a workspace), **[`newsletter`](examples/newsletter/)** (a weekly literature-monitoring newsletter: query → filter → summarize → assemble). | [examples/lit-review/JOURNEY.md](examples/lit-review/JOURNEY.md) |
 | **[`template/`](template/)** | A fresh start: the two documents, the standard kit (data-access layer, dashboard server, validator), and empty data folders. Copy it, open Claude Code, begin. | [template/](template/) |
 
 ## The worked example, at a glance
@@ -127,7 +136,7 @@ A consulting firm's client commissions a structured evidence review (*remote pat
 monitoring for heart failure — does it reduce readmissions?*). The project bootstraps from
 the client's own file — an email thread, a brief, five flagged papers — and runs to a
 delivered report. **The whole timeline is one document,
-[`example/JOURNEY.md`](example/JOURNEY.md):** ten milestones, each linking to the live
+[`examples/lit-review/JOURNEY.md`](examples/lit-review/JOURNEY.md):** ten milestones, each linking to the live
 files it produced, with the real tool outputs — including the refusals:
 
 ```
@@ -140,7 +149,7 @@ Wrote report.md — 4 themes, 9 findings, 8 included sources; every claim cites 
 Try it (Python 3.10+, no dependencies):
 
 ```bash
-cd example
+cd examples/lit-review
 python tools/validate.py
 python tools/server.py                    # → http://127.0.0.1:8765 — the live screening board
 python tools/assemble_report.py --date 2026-07-06

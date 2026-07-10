@@ -1,9 +1,14 @@
 ---
+name: dashboard
 description: Keeping the live dashboard up for the user. Use at the first data-touching
   action of a session — before adding, searching, screening, or transforming anything.
+runs: in-context
 ---
 
-# Skill: keeping the dashboard up
+# Capability: keeping the dashboard up
+
+*Runs in-context: it is three commands and a link that must land in this conversation.
+Nothing here is worth a fresh context.*
 
 The dashboard (`tools/server.py` → http://127.0.0.1:8765/) is the user's window into the
 workspace: the index of everything it can show, each view updating live as data lands. A

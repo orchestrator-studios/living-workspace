@@ -9,7 +9,7 @@ Usage:
       --criterion "exclusion: no outcome of interest" \
       --reason "Device accuracy only; no outcome of interest" --date 2026-07-04
 
-Enforces (see skills/screening.md): decisions record the criterion; exclusions record the
+Enforces (see capabilities/screening.md): decisions record the criterion; exclusions record the
 reason; a decided source is frozen — re-screening is refused.
 """
 import argparse

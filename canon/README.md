@@ -2,7 +2,7 @@
 
 This folder is the system's doctrine: what a living workspace *is*, how work moves through
 it — from whole journeys down to single moves — and what it's made of. Everything here is general — nothing about any particular
-project. For the concept in action, see [the worked example](../example/JOURNEY.md); to
+project. For the concept in action, see [the worked example](../examples/lit-review/JOURNEY.md); to
 start your own, copy [the template](../template/).
 
 | Doc | Question it answers |
@@ -24,7 +24,7 @@ sufficient:
 
 1. **A shared, meaning-bearing file substrate.** The durable state lives in files that both
    the person and the agent read and write — and the files carry all four kinds of content:
-   data, understanding (schemas, rules), capability (tools, skills), and presentation
+   data, understanding (schemas, rules), capability (tools, capabilities), and presentation
    (views). A file is simultaneously something to read, an instruction to follow, and a
    program to run. The substrate may be *contained* in the workspace, *bound* from systems
    that live elsewhere (a CRM, a drive, a database), or both — that's a spectrum within the
@@ -56,4 +56,4 @@ Apply the three properties and boundary cases sort themselves:
   but nothing accumulates in a substrate you own.
 - A **Notion workspace** — fails 2 and 3: shared substrate, but the files aren't executors
   and no agent operates it.
-- The [worked example](../example/JOURNEY.md) in this repo — passes all three.
+- The [worked example](../examples/lit-review/JOURNEY.md) in this repo — passes all three.

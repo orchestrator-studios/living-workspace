@@ -17,10 +17,10 @@ the path that's already there.
 missing**, checked in order:
 
 1. **Access** — can we reach the data or operation at all? If not, implement it: a tool, a
-   connection, a skill that reaches.
+   connection, a capability that reaches.
 2. **Understanding** — is the meaning encoded: the shapes of things, the rules that must
-   hold? If not, write it down: a schema, a skill. (Rules that must hold *even when nobody
-   is paying attention* get the hard form — enforcement in a deterministic tool.)
+   hold? If not, write it down: a schema, a capability. (Rules that must hold *even when
+   nobody is paying attention* get the hard form — enforcement in a deterministic tool.)
 3. **Presentation** — does the output form exist: the view, the report design, the export?
    If not, generate it.
 
@@ -36,7 +36,7 @@ powerful over time because they land on everything previous moves deposited.
 ## Consequences
 
 - **A journey's steps are a trace, not a recipe.** Any particular workspace's history —
-  see [the example's journey](../example/JOURNEY.md) — is just the rule's execution trace
+  see [the example's journey](../examples/lit-review/JOURNEY.md) — is just the rule's execution trace
   on that project's wants, inside a route sketched only as coarse chunks
   ([the journey](the-journey.md)). A different project produces a different trace from
   the same rule. There is no fine-grained step list to follow; there is a described

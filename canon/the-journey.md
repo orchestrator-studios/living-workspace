@@ -11,7 +11,7 @@ amount of commitment — deliberately.
 Before anything moves, describe the final state. Not the route — the destination: what
 will exist when the work is done, and what must be true of it for the work to count as
 done. **Write it down as a file**, first, before any other artifact of the journey exists
-(in the worked example: [`DELIVERABLE.md`](../example/DELIVERABLE.md), written before a
+(in the worked example: [`DELIVERABLE.md`](../examples/lit-review/DELIVERABLE.md), written before a
 single query had been drafted).
 
 This is the load-bearing step, for two reasons:
@@ -68,7 +68,7 @@ rest.
 
 ## The example, read through this frame
 
-[The worked example's journey](../example/JOURNEY.md) is this doctrine's trace, and reads
+[The worked example's journey](../examples/lit-review/JOURNEY.md) is this doctrine's trace, and reads
 as obvious once you hold the frame:
 
 - **Final state first** — step 2 writes `DELIVERABLE.md`: the report's contents and its

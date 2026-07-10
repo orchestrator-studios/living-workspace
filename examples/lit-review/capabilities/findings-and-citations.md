@@ -1,9 +1,19 @@
 ---
 name: findings-and-citations
 description: Rules and workflow for extracting findings and keeping the report's citation integrity. Use whenever extracting claims from papers, organizing themes, or assembling the report.
+runs: either
+returns: |
+  For each source mined: {source_id, findings: [{id, claim, theme}]}.
+  Findings are already written via tools/add_finding.py — the return value is the
+  report, not the deposit.
 ---
 
 # Findings and citations
+
+*Ambidextrous. Extraction from one paper's full text is a delegation candidate — the text
+is bulky, the findings are small, and `add_finding.py` refuses a finding against an
+excluded source no matter who holds the pen. Theme organization and report assembly stay
+in-context: they are judgments about the whole review, and the user is steering them.*
 
 ## Rules
 

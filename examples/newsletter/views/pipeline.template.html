@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+  pipeline.template.html — the weekly run's board (grown).
+
+  Counts across the screening states, every article with its verdict and reason,
+  and the issues. Bound to the "pipeline" query; polls /api/pipeline when live.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --track: #f0efec; --accent: #2a78d6;
+    --good: #2e9e5b; --bad: #b4534b; --wait: #a07d2a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --track: #2c2c2a; --accent: #3987e5;
+      --good: #43b573; --bad: #d0736b; --wait: #c9a24a;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 28px 22px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 18px; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+              background: var(--good); margin-right: 4px; }
+  a.back { color: var(--accent); text-decoration: none; font-size: 0.84rem; }
+  .tiles { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tile { flex: 1; min-width: 130px; background: var(--card);
+          border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .tile .n { font-size: 1.5rem; font-weight: 700; }
+  .tile .k { color: var(--ink-2); font-size: 0.78rem; text-transform: uppercase;
+             letter-spacing: 0.05em; }
+  h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+       color: var(--ink-2); margin: 18px 4px 8px; }
+  .row { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+         padding: 10px 12px; margin-bottom: 8px; }
+  .row .title { font-weight: 600; font-size: 0.9rem; }
+  .row .meta { color: var(--ink-2); font-size: 0.78rem; }
+  .row .why { margin-top: 4px; font-size: 0.84rem; }
+  .badge { float: right; font-size: 0.72rem; font-weight: 700; border-radius: 999px;
+           padding: 1px 9px; }
+  .included { color: var(--good); border: 1px solid var(--good); }
+  .excluded { color: var(--bad); border: 1px solid var(--bad); }
+  .candidate { color: var(--wait); border: 1px solid var(--wait); }
+  .empty { background: var(--track); border-radius: 10px; padding: 18px;
+           color: var(--ink-2); font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><a class="back" href="/">&larr; workspace</a></p>
+  <h1>Newsletter pipeline</h1>
+  <p class="sub"><span class="live-dot"></span>live — query &rarr; filter &rarr; summarize &rarr; assemble</p>
+  <div id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+const initialPayload = __DATA__;
+
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+}
+
+function articleRow(a) {
+  return `<div class="row"><span class="badge ${esc(a.status)}">${esc(a.status)}</span>` +
+    `<div class="title">${esc(a.title)}</div>` +
+    `<div class="meta">${esc(a.id)} · <a href="https://pubmed.ncbi.nlm.nih.gov/${esc(a.pmid)}/">PMID ${esc(a.pmid)}</a> · ${esc(a.journal)} · ${esc(a.pub_date)}` +
+    (a.status === "included" ? (a.has_summary ? " · summarized" : " · needs summary") : "") + `</div>` +
+    (a.filter_reason ? `<div class="why">${esc(a.filter_reason)}</div>` : "") +
+    `</div>`;
+}
+
+function render(payload) {
+  if (!payload) return;
+  const c = payload.counts;
+  let html =
+    `<div class="tiles">` +
+    `<div class="tile"><div class="n">${c.candidate}</div><div class="k">candidates</div></div>` +
+    `<div class="tile"><div class="n">${c.included}</div><div class="k">included</div></div>` +
+    `<div class="tile"><div class="n">${c.excluded}</div><div class="k">excluded</div></div>` +
+    `<div class="tile"><div class="n">${payload.issues.length}</div><div class="k">issues</div></div>` +
+    `</div>`;
+  if (payload.issues.length) {
+    html += "<h2>Issues</h2>" + payload.issues.map(i =>
+      `<div class="row"><span class="badge ${i.status === "final" ? "included" : "candidate"}">${esc(i.status)}</span>` +
+      `<div class="title">${esc(i.title)}</div>` +
+      `<div class="meta">${esc(i.id)} · ${esc(i.week_start)} to ${esc(i.week_end)} · ${esc(i.articles)} papers</div></div>`).join("");
+  }
+  const order = {candidate: 0, included: 1, excluded: 2};
+  const articles = [...payload.articles].sort((x, y) => order[x.status] - order[y.status]);
+  html += articles.length
+    ? "<h2>Articles</h2>" + articles.map(articleRow).join("")
+    : '<div class="empty">No articles yet — run tools/fetch_pubmed.py for the week.</div>';
+  document.getElementById("content").innerHTML = html;
+}
+
+render(initialPayload);
+
+if (LIVE) {
+  let lastRendered = JSON.stringify(initialPayload);
+  setInterval(async () => {
+    try {
+      const response = await fetch("/api/pipeline", {cache: "no-store"});
+      if (!response.ok) return;
+      const freshPayload = await response.json();
+      const serialized = JSON.stringify(freshPayload);
+      if (serialized === lastRendered) return;
+      lastRendered = serialized;
+      render(freshPayload);
+    } catch (err) { /* server briefly away — keep the last good render */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>
