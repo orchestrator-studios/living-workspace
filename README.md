@@ -2,10 +2,18 @@
 
 Software 3.0 is slowly emerging to fully unleash AI. No one is quite sure yet what it
 will look like — but one cornerstone seems increasingly settled: **a well-behaved agent
-between users and their systems and data, as the primary interface.** 
+between users and their systems and data, as the primary interface.**
 
-**Living workspace is a new architecture built on that cornerstone** — an application
-that is self-growing and agent-operated, rather than built and installed.
+Living workspace is a new architecture built on that cornerstone:
+
+> A living workspace is a work environment on a shared file substrate, operated by an
+> agent in conversation with its user, that grows its own capabilities as a side effect
+> of the work — never deployed, never finished, always in use.
+
+Not a rigid, pre-built application, but a fluid, agent-operated environment that evolves
+alongside the project it serves. The rest of this page unpacks that sentence.
+
+## The shape
 
 Every application until now was built the same way:
 
@@ -25,6 +33,34 @@ repo  →  living workspace  →  agent  →  user
 The repo never builds into anything, and no one ships it. **The repo becomes an
 environment that an agent works inside, on behalf of the user.** You state what you want
 in conversation; the agent operates the system for you.
+
+## What kind of work this is for
+
+Some work needs more structure than chat and less than software. A literature review for
+a client. A due-diligence file. A grant pipeline. A competitive landscape. The long tail
+of serious knowledge work — too structured to live in a chat thread, too particular for
+any off-the-shelf app — so it ends up in a folder of files, a spreadsheet, six browser
+tabs, and your head.
+
+That's the gap this architecture fills. You start with a small standard kit, empty data
+folders, and an agent. You describe the project in conversation. The application
+assembles itself around the work — and you watch it happen: the kit includes a live
+dashboard that shows the workspace filling in as you talk.
+
+## What you get
+
+- **You talk instead of click.** "Pull in the papers the client already flagged." "What's
+  still unscreened?" "Assemble the report." The conversation is the interface.
+- **Your data lives in plain files you own.** Readable, diffable, portable. No vendor, no
+  export button, no lock-in.
+- **Rules are enforced, not remembered.** The rules you state get captured in files and
+  enforced by small deterministic tools — so they hold even when nobody (human or model)
+  is paying attention.
+- **Views appear when you need to see.** A screening board, an evidence table, a report —
+  generated from the data the day you first need them, regenerated whenever it changes —
+  or served live, so they can't go stale.
+- **Every obstacle makes the system stronger.** Hit something the workspace can't do, and
+  the fix is added permanently — no release cycle, no feature request, no waiting.
 
 ## Same substrate, three differences
 
@@ -55,38 +91,6 @@ is what surrounds it:
    place. Every move pays twice: the task done, and the capability that remains. The
    workspace you have next month is more capable than the one you have today, as a side
    effect of using it.
-
-> A living workspace is a work environment on a shared file substrate, operated by an
-> agent in conversation with its user, that grows its own capabilities as a side effect
-> of the work — never deployed, never finished, always in use.
-
-## What kind of work this is for
-
-Some work needs more structure than chat and less than software. A literature review for
-a client. A due-diligence file. A grant pipeline. A competitive landscape. The long tail
-of serious knowledge work — too structured to live in a chat thread, too particular for
-any off-the-shelf app — so it ends up in a folder of files, a spreadsheet, six browser
-tabs, and your head.
-
-That's the gap this shape of application fills. You start with a small standard kit,
-empty data folders, and an agent. You describe the project in conversation. The
-application assembles itself around the work — and you watch it happen: the kit includes
-a live dashboard that shows the workspace filling in as you talk.
-
-## What you get
-
-- **You talk instead of click.** "Pull in the papers the client already flagged." "What's
-  still unscreened?" "Assemble the report." The conversation is the interface.
-- **Your data lives in plain files you own.** Readable, diffable, portable. No vendor, no
-  export button, no lock-in.
-- **Rules are enforced, not remembered.** The rules you state get captured in files and
-  enforced by small deterministic tools — so they hold even when nobody (human or model)
-  is paying attention.
-- **Views appear when you need to see.** A screening board, an evidence table, a report —
-  generated from the data the day you first need them, regenerated whenever it changes —
-  or served live, so they can't go stale.
-- **Every obstacle makes the system stronger.** Hit something the workspace can't do, and
-  the fix is added permanently — no release cycle, no feature request, no waiting.
 
 ## Where this sits
 
