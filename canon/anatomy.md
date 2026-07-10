@@ -180,7 +180,10 @@ Two kinds of view fall out of the instance row:
   the moment the template exists. If the query takes parameters, the page takes them too,
   from its own URL — so **one template serves a whole class of pages** (the example's
   table viewer renders every table the workspace will ever hold; new tables cost no new
-  view). A live view **cannot go stale** — every ask recomputes
+  view). The binding contract allows a **null** answer (a server whose registry doesn't
+  know the query yet — a process older than the view); a template renders a note for
+  that case and lets its poll recover — it never crashes on it. A live view **cannot go
+  stale** — every ask recomputes
   the answer from the files; it is the logical endpoint of "regenerate views after data
   changes", not an exception to it. And the page adds nothing to the truth: the server
   holds no state of its own, writes nothing, and creates no second source — the files

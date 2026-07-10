@@ -170,6 +170,17 @@ function panelHtml(answer) {
 // retrieval toggle's open state survives the repaint — a live update shouldn't
 // snap it shut under the reader.
 function render(answer) {
+  // The binding contract allows a null answer (a server whose registry doesn't
+  // know this query yet — e.g. a process older than the view). Render a note and
+  // keep going: the poll below re-asks /api/issues and repaints when it answers.
+  if (!answer) {
+    document.getElementById("sub").textContent =
+      "no data bound — the running server predates this view; it will recover on " +
+      "the next poll, or restart tools/server.py";
+    document.getElementById("shelf").innerHTML = "";
+    document.getElementById("panel").innerHTML = "";
+    return;
+  }
   const wasOpen = !!document.querySelector("details.retrieval[open]");
   document.getElementById("sub").innerHTML =
     (LIVE ? '<span class="live-dot"></span>live · ' : "") +

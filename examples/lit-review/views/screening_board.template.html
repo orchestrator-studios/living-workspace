@@ -83,6 +83,15 @@ function cardHtml(card) {
 // Repaint the whole board from one query answer: the totals line, then one
 // column per screening status. No number is computed here — all come from the answer.
 function render(answer) {
+  // The binding contract allows a null answer (a server whose registry doesn't
+  // know this query yet). Render a note; the poll repaints when the server answers.
+  if (!answer) {
+    document.getElementById("sub").textContent =
+      "no data bound — the running server predates this view; it will recover on " +
+      "the next poll, or restart tools/server.py";
+    document.getElementById("board").innerHTML = "";
+    return;
+  }
   const totals = answer.totals;
   document.getElementById("sub").innerHTML =
     (LIVE ? '<span class="live-dot"></span>live — updates as decisions land · ' : "") +

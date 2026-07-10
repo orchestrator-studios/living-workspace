@@ -40,17 +40,54 @@ Liveness is polling, on purpose: pages re-ask their query every couple of second
 repaint on change. Queries recompute from the record on every ask, so change detection
 is free at read time; pushing would make it a duty of every writer instead.
 
+Freshness of code, not just data: the server re-imports the query layer whenever
+repo.py or a schema changes on disk, so a long-lived process serves the workspace's
+*current* definition — a query grown after the server started appears without a
+restart. (The same staleness rule the views obey, applied to the registry itself.)
+/health names the workspace and its queries, so a stale or foreign process is
+diagnosable at a glance.
+
 Usage
     python tools/server.py [--host 127.0.0.1] [--port 8765]
 
 Stdlib only — no framework, no build step.
 """
 import argparse
+import importlib
 import json
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import repo
+
+# --- code freshness -----------------------------------------------------------
+# The registry (repo.QUERIES) and the kind table are derived from code and schemas
+# at import. A server that kept its import-time copy would serve stale definitions
+# forever — so before every request, re-import the query layer if its sources
+# changed. importlib.reload mutates the module in place; every `repo.X` below
+# resolves against the fresh definition.
+_reload_lock = threading.Lock()
+
+
+def _sources_fingerprint():
+    paths = [Path(repo.__file__)]
+    if repo.SCHEMAS.exists():
+        paths += sorted(repo.SCHEMAS.glob("*.schema.json"))
+    return tuple((str(p), p.stat().st_mtime_ns) for p in paths)
+
+
+_fingerprint = _sources_fingerprint()
+
+
+def refresh_repo():
+    global _fingerprint
+    with _reload_lock:
+        current = _sources_fingerprint()
+        if current != _fingerprint:
+            importlib.reload(repo)
+            _fingerprint = _sources_fingerprint()  # schema set may have changed
 
 
 def view_names():
@@ -101,6 +138,7 @@ class Handler(BaseHTTPRequestHandler):
         self.do_GET()
 
     def do_GET(self):
+        refresh_repo()  # serve the workspace's current definition, never a stale one
         url = urlparse(self.path)
         path = url.path.rstrip("/") or "/"
         parts = [p for p in path.split("/") if p]
@@ -110,7 +148,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/":
                 return self._send(200, render("index"), "text/html; charset=utf-8")
             if path == "/health":
-                return self._send(200, {"ok": True})
+                return self._send(200, {"ok": True, "workspace": repo.ROOT.name,
+                                        "queries": sorted(repo.QUERIES)})
             if parts[0] == "view" and len(parts) == 2:
                 name = parts[1]
                 if name == "index" or not (repo.VIEWS / f"{name}.template.html").exists():
