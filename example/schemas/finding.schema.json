@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Finding",
+  "x-kind": "findings",
   "description": "One extracted claim from one INCLUDED source. Lives in data/findings/<id>.json. Created only by tools/add_finding.py, which refuses sources that are not included — see skills/findings-and-citations.md.",
   "type": "object",
   "required": ["id", "source_id", "claim", "outcome", "direction", "evidence", "theme_id"],

@@ -17,7 +17,10 @@ that ships in every workspace rather than being grown per project.
    guesses.
 2. **Schemas are law** — because a substrate the agent (or the user) can silently bend is
    not a substrate; it's a suggestion. Validation after every write keeps the data
-   trustworthy across long sessions and many turns.
+   trustworthy across long sessions and many turns. Making the schema the kind's single
+   declaration is the same principle applied to the system's own registries: the kit
+   derives the folder mapping and id convention from it, so a kind cannot be
+   half-registered, and `validate.py` flags any data folder no schema governs.
 3. **Prefer tools over hand-edits** — because tools carry the rules. A hand-edit is a write
    that skips every guarantee the workspace has accumulated.
 4. **Read the relevant skill before acting** — because the skills are where hard-won
@@ -60,7 +63,7 @@ work demands it.
 |---|---|
 | `OVERVIEW.md` | What this system is: purpose, entities, rules, existing data sources, recurring asks. Filled in first, by interview. |
 | `data/` | The application's persistent objects — the system of record. Starts empty. |
-| `schemas/` | The structure and validity rules for everything in `data/`. Starts empty. |
+| `schemas/` | The structure and validity rules for everything in `data/`. Each schema is its kind's single declaration: `x-kind` names the `data/` folder, the id pattern fixes the id format. Starts empty. |
 | `tools/` | Deterministic operations: create, update, validate, query, transform. Kit: `repo.py` — the data-access layer every read, write, and named query goes through; `server.py` — the dashboard server; `validate.py` — the schema checker. Domain tools are grown. |
 | `skills/` | Operational knowledge: workflow rules, state transitions, how to use the tools correctly. Kit: `dashboard.md`. |
 | `views/` | View logic — templates, never rendered output, never a second source of truth. Kit: `index.template.html`. A domain view is grown as a named query in `repo.py` plus a template here; the server serves it live. |
@@ -72,7 +75,9 @@ work demands it.
    that must hold, where the data lives today, and what will be asked of the system — and
    write the answers into `OVERVIEW.md`. Do not create schemas until the overview is agreed.
 2. **Schemas are law.** Never write to `data/` except in conformance with `schemas/`. After
-   any write, validate: `python tools/validate.py`.
+   any write, validate: `python tools/validate.py`. A schema is also its kind's single
+   declaration — `x-kind` names its `data/` folder, the id pattern fixes the id format,
+   and the kit derives the rest — so growing a kind is one act: writing the schema.
 3. **Prefer tools over hand-edits.** When a tool exists for an operation, use it — tools
    carry the rules that free-form edits would skip.
 4. **Read the relevant skill before acting.** Workflow rules live in `skills/`; consult the

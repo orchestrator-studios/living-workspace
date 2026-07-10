@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Validate every record in data/ against its schema, plus the review's integrity rules.
 
-The generic checker is the kit's; SCHEMA_FOR_DIR and integrity_checks() are this
-workspace's own, grown in place. Dependency-free: implements the subset of JSON Schema
-the schemas use, then checks the rules no per-record schema can express:
+The generic checker and the alignment backstop are the kit's; integrity_checks() is this
+workspace's own, grown in place. Which schema governs which data/ folder is not declared
+here — repo.py derives it from each schema's x-kind (the schema is the kind's single
+declaration), and the backstop flags any data/ folder no schema declares. Dependency-free:
+implements the subset of JSON Schema the schemas use, then checks the rules no per-record
+schema can express:
   - DOI uniqueness (a paper enters the review once)
   - screening consistency (decisions carry criterion; exclusions carry reason)
   - citation closure: every finding cites a source that exists AND is included
@@ -17,12 +20,6 @@ import sys
 
 import repo
 
-SCHEMA_FOR_DIR = {
-    "sources": "source.schema.json",
-    "findings": "finding.schema.json",
-    "themes": "theme.schema.json",
-    "searches": "search.schema.json",
-}
 TYPES = {"object": dict, "array": list, "string": str, "boolean": bool, "null": type(None)}
 
 
@@ -77,8 +74,25 @@ def check(value, schema, path, errors):
 
 
 def load(path):
-    with open(path, encoding="utf-8") as f:
+    # utf-8-sig: tolerate a BOM from hand edits on Windows
+    with open(path, encoding="utf-8-sig") as f:
         return json.load(f)
+
+
+def alignment_checks(errors):
+    """The kit's backstop for "the schema is the kind's single declaration":
+    every schema declares its kind, and every data/ folder is governed by a schema —
+    a folder outside the mapping would otherwise be skipped, silently unvalidated."""
+    declared = set(repo.SCHEMA_FOR_KIND.values())
+    if repo.SCHEMAS.exists():
+        for path in sorted(repo.SCHEMAS.glob("*.schema.json")):
+            if path.name not in declared:
+                errors.append(f"schemas/{path.name}: declares no kind (missing x-kind)")
+    if repo.DATA.exists():
+        for folder in sorted(repo.DATA.iterdir()):
+            if folder.is_dir() and folder.name not in repo.SCHEMA_FOR_KIND:
+                errors.append(f"data/{folder.name}/: no schema declares this kind — "
+                              f"its records would go unvalidated")
 
 
 def integrity_checks(errors):
@@ -124,9 +138,10 @@ def integrity_checks(errors):
 def main() -> int:
     errors: list[str] = []
     total = 0
-    for subdir, schema_file in SCHEMA_FOR_DIR.items():
+    alignment_checks(errors)
+    for kind, schema_file in sorted(repo.SCHEMA_FOR_KIND.items()):
         schema = load(repo.SCHEMAS / schema_file)
-        folder = repo.DATA / subdir
+        folder = repo.DATA / kind
         if not folder.exists():
             continue
         for record_path in sorted(folder.glob("*.json")):

@@ -6,7 +6,8 @@ write goes through here. Every tool and every view is a client — nothing else 
 record, hardcodes a data path, or re-derives a count.
 
 Three layers, low to high:
-  1. primitives     — load, load_all, save, next_id: domain-blind CRUD (the kit ships these)
+  1. primitives     — load, load_all, save, next_id: domain-blind CRUD, plus the kind
+                      table derived from schemas/ (the kit ships these)
   2. shared helpers — grown here the moment two tools start repeating themselves
   3. named queries  — each a question about the record, written down once and recomputed
                       from the files on every ask; publishing one in QUERIES serves it
@@ -17,6 +18,7 @@ number, it is defined once, here, and both ask it. The kit ships layer 1 and the
 registry. Everything else is the workspace's own — grown, in place, as the work demands it.
 """
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -24,9 +26,32 @@ DATA = ROOT / "data"
 SCHEMAS = ROOT / "schemas"
 VIEWS = ROOT / "views"
 
-# record kinds → (id prefix, pad width), e.g. {"sources": ("S", 3)} for S-001.
-# Grown as the workspace's first schemas land.
-KINDS = {}
+# A schema is its kind's single declaration: "x-kind" names the data/ folder, and the
+# id pattern (e.g. ^S-[0-9]{3}$) carries the id prefix and pad width. Everything below
+# is derived from schemas/ — growing a kind is one act: writing the schema.
+_ID_PATTERN = re.compile(r"\^([A-Za-z]+)-\[0-9\]\{(\d+)\}\$")
+
+
+def _scan_schemas():
+    kinds, schema_for_kind = {}, {}
+    if SCHEMAS.exists():
+        for path in sorted(SCHEMAS.glob("*.schema.json")):
+            try:  # utf-8-sig: tolerate a BOM from hand edits on Windows
+                schema = json.loads(path.read_text(encoding="utf-8-sig"))
+            except ValueError as err:
+                raise ValueError(f"schemas/{path.name} is not valid JSON: {err}") from err
+            kind = schema.get("x-kind")
+            if not kind:
+                continue  # declares no kind — tools/validate.py flags it
+            schema_for_kind[kind] = path.name
+            id_pattern = schema.get("properties", {}).get("id", {}).get("pattern", "")
+            match = _ID_PATTERN.fullmatch(id_pattern)
+            if match:
+                kinds[kind] = (match.group(1), int(match.group(2)))
+    return kinds, schema_for_kind
+
+
+KINDS, SCHEMA_FOR_KIND = _scan_schemas()   # kind → (prefix, width) · kind → schema file
 
 
 # ----------------------------------------------------------------------------
@@ -60,6 +85,9 @@ def save(kind, record):
 
 
 def next_id(kind):
+    if kind not in KINDS:
+        raise KeyError(f"no schema in schemas/ declares kind '{kind}' "
+                       f"(an x-kind plus a standard id pattern like ^X-[0-9]{{3}}$)")
     prefix, width = KINDS[kind]
     folder = DATA / kind
     existing = sorted(folder.glob(f"{prefix}-*.json")) if folder.exists() else []

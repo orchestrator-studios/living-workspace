@@ -15,7 +15,7 @@ Two documents and five folders. That's the whole skeleton, and each piece serves
 | Folder | Holds | Serves |
 |---|---|---|
 | `data/` | The persistent objects — the system of record. One file per record. | substrate |
-| `schemas/` | The structure and validity of everything in `data/`. | understanding |
+| `schemas/` | The structure and validity of everything in `data/`. Each schema is its kind's **single declaration**: `x-kind` names the `data/` folder, the id pattern fixes the id format, and the kit derives everything else from it. | understanding |
 | `tools/` | Deterministic operations: create, update, validate, query, transform, assemble. Three residents: the **data-access layer** (`repo.py`, shipped — see [one definition of every number](#one-definition-of-every-number)), **muscle** (pure operations, grown) and **enforcers** (operations that carry rules — the dedup check, the citation gate; grown). The kit's `server.py` and `validate.py` live here too. | access · enforcement |
 | `skills/` | Workflow rules and know-how in language — how to use the tools correctly, what to watch for. The soft form of the same rules the enforcer tools carry in code. The kit ships one: `dashboard.md`. | understanding |
 | `views/` | View **logic** — templates, never rendered output, never a second source of truth. The kit ships `index.template.html`; domain views are grown (see [the anatomy of a view](#the-anatomy-of-a-view)). | presentation |
@@ -28,9 +28,9 @@ nothing and costs the user real time. That set ships with the template:
 
 | Ships | What it is |
 |---|---|
-| `tools/repo.py` | The data-access layer, as a skeleton: paths, the CRUD primitives (load/save/next-id conventions), and an empty query registry. |
+| `tools/repo.py` | The data-access layer, as a skeleton: paths, the CRUD primitives (load/save/next-id conventions), the kind table derived from `schemas/` at import, and an empty query registry. |
 | `tools/server.py` | The dashboard server: the index at `/`, any template at `/view/<name>`, any published query at `/api/<name>`, `/health`. Stdlib only, read-only, holds no state. |
-| `tools/validate.py` | The generic schema checker; the workspace grows its cross-record integrity rules into it, in place. |
+| `tools/validate.py` | The generic schema checker plus the alignment backstop (every schema declares its kind; every `data/` folder is governed by a schema); the workspace grows its cross-record integrity rules into it, in place. |
 | `skills/dashboard.md` | The keep-the-server-up recipe: probe, background-launch, hand over the link once. |
 | `views/index.template.html` | The dashboard's index page — views and queries appear on it as they come into existence. |
 
@@ -67,6 +67,14 @@ is the same as [two forms of every rule](#two-forms-of-every-rule): what matters
 written down once, where everything that needs it can reach it. Two independent
 derivations of one number will eventually disagree — and an answer that disagrees with
 the substrate is a confident lie.
+
+The same discipline applies to the system's own registries. A record kind is declared
+**once, in its schema**: `x-kind` names the `data/` folder, and the id pattern carries
+the id prefix and width. `repo.py` derives its kind table from `schemas/` at import —
+there is no second list to keep aligned — and `validate.py` backstops the seam, flagging
+any schema that declares no kind and any `data/` folder no schema governs (which would
+otherwise sit outside validation, silently). Growing a kind is one act: writing the
+schema.
 
 ## The anatomy of a view
 

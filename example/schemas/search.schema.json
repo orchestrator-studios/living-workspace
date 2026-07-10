@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Search",
+  "x-kind": "searches",
   "description": "A logged sweep — the provenance of coverage. Lives in data/searches/<id>.json.",
   "type": "object",
   "required": ["id", "date", "database", "query", "hits", "added"],
