@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""screen_article.py — record a screening verdict (grown). The only way an article
+"""record_verdict.py — persist a filter verdict (grown). The only way an article
 leaves candidate.
 
-Carries OVERVIEW rule 2: every verdict has its reason — no reason, no move. The
-judgment itself is the agent's (criteria: capabilities/screening.md); this tool makes the
-judgment durable and refuses the moves that would lose the why.
+This tool does not screen. The judgment is the semantic filter's
+(capabilities/semantic-filter.md — a delegated analysis that returns verdicts and
+writes nothing); this is the persistence step its caller runs with that analysis.
+Carries OVERVIEW rule 2 — every verdict has its reason: no reason, no move.
 
-Usage:  python tools/screen_article.py A-001 --status included --reason "..." [--summary "..."]
-        python tools/screen_article.py A-002 --status excluded --reason "..."
+Usage:  python tools/record_verdict.py A-001 --status included --reason "..." [--summary "..."]
+        python tools/record_verdict.py A-002 --status excluded --reason "..."
 """
 import argparse
 import sys
@@ -16,7 +17,7 @@ import repo
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Record a screening verdict.")
+    ap = argparse.ArgumentParser(description="Persist a filter verdict.")
     ap.add_argument("article_id")
     ap.add_argument("--status", required=True, choices=["included", "excluded"])
     ap.add_argument("--reason", required=True)

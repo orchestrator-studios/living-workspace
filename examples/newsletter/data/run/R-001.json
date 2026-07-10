@@ -1,0 +1,18 @@
+{
+  "id": "R-001",
+  "date": "2026-07-09",
+  "config": "C-01",
+  "window_start": "2026-07-02",
+  "window_end": "2026-07-09",
+  "matched": 6,
+  "added": [
+    "A-001",
+    "A-002",
+    "A-003",
+    "A-004",
+    "A-005",
+    "A-006"
+  ],
+  "skipped_pmids": [],
+  "notes": "Backfilled 2026-07-10 ? the first weekly fetch, previously unrecorded."
+}

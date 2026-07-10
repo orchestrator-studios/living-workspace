@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "issue — one weekly newsletter",
-  "description": "The rendered newsletter file is a projection of this record (tools/assemble_issue.py) — never hand-written (OVERVIEW rule 4). May only reference included articles (rule 3, enforced in validate.py and refused at assembly).",
+  "description": "The complete newsletter, as data: the window, the included articles, and the assembled body — written only by tools/assemble_issue.py, never by hand (OVERVIEW rule 4). May only reference included articles (rule 3, enforced in validate.py and refused at assembly). A file copy of the body is an on-demand export, never stored state.",
   "x-kind": "issue",
   "type": "object",
-  "required": ["id", "title", "week_start", "week_end", "created", "articles", "status"],
+  "required": ["id", "title", "week_start", "week_end", "created", "articles", "status", "body"],
   "additionalProperties": false,
   "properties": {
     "id": { "type": "string", "pattern": "^N-[0-9]{3}$" },
@@ -18,6 +18,10 @@
       "description": "The included articles this issue carries, in run order."
     },
     "executive_summary": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
-    "status": { "enum": ["draft", "final"] }
+    "status": { "enum": ["draft", "final"] },
+    "body": {
+      "oneOf": [{ "type": "string" }, { "type": "null" }],
+      "description": "The assembled newsletter markdown — written by tools/assemble_issue.py after its closure checks; regenerate after any change. A final issue must carry one (enforced in validate.py)."
+    }
   }
 }

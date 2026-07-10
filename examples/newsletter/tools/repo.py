@@ -120,28 +120,62 @@ def next_id(kind):
 # ----------------------------------------------------------------------------
 # 3. named queries — each question about the record, answered here, once
 # ----------------------------------------------------------------------------
-def pipeline():
-    """Where is this week's issue? — every article by screening status, plus the
-    issues. The one board the weekly run is watched on."""
-    articles = load_all("article")
-    counts = {"candidate": 0, "included": 0, "excluded": 0}
-    for a in articles:
-        counts[a["status"]] += 1
-    return {
-        "counts": counts,
-        "articles": [{"id": a["id"], "pmid": a["pmid"], "title": a["title"],
-                      "journal": a["journal"], "pub_date": a["pub_date"],
-                      "status": a["status"], "filter_reason": a.get("filter_reason"),
-                      "has_summary": bool(a.get("summary"))}
-                     for a in articles],
-        "issues": [{"id": i["id"], "title": i["title"], "status": i["status"],
-                    "week_start": i["week_start"], "week_end": i["week_end"],
-                    "articles": len(i["articles"])}
-                   for i in load_all("issue")],
-    }
+def issues(issue=None):
+    """The newsletter shelf: every issue for the left rail, and one issue in full for
+    the right panel — its articles, the runs that fed its window, and the retrieval
+    config those runs executed. `issue` narrows which one is open; default: the latest."""
+    records = sorted(load_all("issue"), key=lambda i: i["id"], reverse=True)
+    shelf = [{"id": i["id"], "title": i["title"], "status": i["status"],
+              "week_start": i["week_start"], "week_end": i["week_end"],
+              "article_count": len(i["articles"])} for i in records]
+    target = issue or (records[0]["id"] if records else None)
+    selected = next((i for i in records if i["id"] == target), None)
+    if selected is None:
+        return {"issues": shelf, "selected": None,
+                "error": f"no issue '{target}'" if target else None}
+
+    all_articles = {a["id"]: a for a in load_all("article")}
+    runs = []
+    for r in load_all("run"):
+        # a run feeds this issue if its window overlaps the issue's week
+        if r["window_start"] <= selected["week_end"] and r["window_end"] >= selected["week_start"]:
+            outcome = {"included": 0, "excluded": 0, "candidate": 0}
+            for aid in r["added"]:
+                if aid in all_articles:
+                    outcome[all_articles[aid]["status"]] += 1
+            config = (load("retrieval_config", r["config"])
+                      if exists("retrieval_config", r["config"]) else None)
+            runs.append({"id": r["id"], "date": r["date"],
+                         "window_start": r["window_start"], "window_end": r["window_end"],
+                         "matched": r["matched"], "added": len(r["added"]),
+                         "skipped": len(r["skipped_pmids"]), "outcome": outcome,
+                         "config": config and {"id": config["id"], "name": config["name"],
+                                               "source": config["source"],
+                                               "query": config["query"]}})
+
+    # the working state a draft shows: candidates its window's runs landed that
+    # still await a verdict (0 once the filter+record stages are done)
+    pending = sum(r["outcome"]["candidate"] for r in runs)
+
+    return {"issues": shelf, "error": None,
+            "selected": {"id": selected["id"], "title": selected["title"],
+                         "status": selected["status"], "created": selected["created"],
+                         "pending_candidates": pending,
+                         "week_start": selected["week_start"],
+                         "week_end": selected["week_end"],
+                         "executive_summary": selected.get("executive_summary"),
+                         "has_body": bool(selected.get("body")),
+                         "articles": [{"id": a["id"], "pmid": a["pmid"],
+                                       "title": a["title"], "journal": a["journal"],
+                                       "pub_date": a["pub_date"],
+                                       "authors": a.get("authors", ""),
+                                       "summary": a.get("summary")}
+                                      for a in (all_articles.get(aid) for aid in selected["articles"])
+                                      if a],
+                         "runs": runs}}
 
 
 # Publishing: every query registered here is served at /api/<name> by tools/server.py,
 # and a template named views/<name>.template.html is bound to it automatically. A
 # parameterized query's live page must poll with its own location.search.
-QUERIES = {"pipeline": pipeline}
+QUERIES = {"issues": issues}

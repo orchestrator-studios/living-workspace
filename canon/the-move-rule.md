@@ -19,8 +19,10 @@ missing**, checked in order:
 1. **Access** — can we reach the data or operation at all? If not, implement it: a tool, a
    connection, a capability that reaches.
 2. **Understanding** — is the meaning encoded: the shapes of things, the rules that must
-   hold? If not, write it down: a schema, a capability. (Rules that must hold *even when
-   nobody is paying attention* get the hard form — enforcement in a deterministic tool.)
+   hold? If not, write it down: a schema, a capability. (Whatever part of a rule is
+   checkable *even when nobody is paying attention* gets factored into enforcement — a
+   deterministic tool; the judgment part stays in language. See
+   [where a rule lives](anatomy.md#where-a-rule-lives).)
 3. **Presentation** — does the output form exist: the view, the report design, the export?
    If not, generate it.
 

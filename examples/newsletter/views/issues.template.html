@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<!--
+  issues.template.html — the workspace's main view (grown): the newsletter, whole.
+
+  Two columns, KH's ReportsPage shape: every issue on the left, the selected issue's
+  CONTENTS on the right — the report as a subscriber reads it (executive summary, the
+  filtered papers with their summaries). The retrieval story (runs + the config they
+  executed) sits behind a collapsed toggle, and a draft mid-pipeline shows its
+  screening progress. Bound to the "issues" query; the selection is the URL:
+  /view/issues?issue=N-001. Because the query is parameterized, the page polls
+  /api/issues with its own location.search (see tools/server.py, "Parameters").
+
+  This file owns markup and rendering only — every number and every sentence shown
+  is computed by the query in tools/repo.py.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Newsletters</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --track: #f0efec; --accent: #2a78d6;
+    --good: #2e9e5b; --bad: #b4534b; --wait: #a07d2a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --track: #2c2c2a; --accent: #3987e5;
+      --good: #43b573; --bad: #d0736b; --wait: #c9a24a;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 28px 22px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 18px; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+              background: var(--good); margin-right: 4px; }
+  a.back { color: var(--accent); text-decoration: none; font-size: 0.84rem; }
+  .cols { display: grid; grid-template-columns: 290px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+
+  /* left rail: the shelf */
+  .shelf a { display: block; background: var(--card); border: 1px solid var(--border);
+             border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+             color: var(--ink); text-decoration: none; }
+  .shelf a:hover { border-color: var(--accent); }
+  .shelf a.open { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .shelf .t { font-weight: 600; font-size: 0.86rem; line-height: 1.35; }
+  .shelf .m { color: var(--ink-2); font-size: 0.74rem; margin-top: 2px; }
+
+  /* right panel: the issue */
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+           padding: 18px 20px; }
+  .panel h2 { font-size: 1.05rem; margin-bottom: 2px; }
+  .panel .meta { color: var(--ink-2); font-size: 0.8rem; margin-bottom: 14px; }
+  .badge { font-size: 0.72rem; font-weight: 700; border-radius: 999px; padding: 1px 9px;
+           vertical-align: 2px; margin-left: 6px; }
+  .final { color: var(--good); border: 1px solid var(--good); }
+  .draft { color: var(--wait); border: 1px solid var(--wait); }
+  .panel h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em;
+              color: var(--ink-2); margin: 16px 0 8px; }
+  .exec { font-size: 0.9rem; }
+  .paper { border-top: 1px solid var(--border); padding: 10px 0; }
+  .paper .t { font-weight: 600; font-size: 0.9rem; }
+  .paper .m { color: var(--ink-2); font-size: 0.76rem; margin: 2px 0 4px; }
+  .paper .m a { color: var(--accent); text-decoration: none; }
+  .paper .s { font-size: 0.86rem; }
+  .working { background: var(--track); border: 1px dashed var(--wait); border-radius: 8px;
+             padding: 8px 12px; margin: 10px 0 4px; font-size: 0.84rem; color: var(--wait);
+             font-weight: 600; }
+  details.retrieval { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 10px; }
+  details.retrieval > summary { cursor: pointer; font-size: 0.78rem; text-transform: uppercase;
+                                letter-spacing: 0.06em; color: var(--ink-2); }
+  details.retrieval[open] > summary { margin-bottom: 8px; }
+  .run { background: var(--track); border-radius: 8px; padding: 10px 12px;
+         margin-bottom: 8px; font-size: 0.82rem; }
+  .run .hd { font-weight: 600; }
+  .run .stats { color: var(--ink-2); margin: 2px 0 6px; }
+  .query { font-family: ui-monospace, Consolas, monospace; font-size: 0.74rem;
+           background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+           padding: 8px 10px; overflow-x: auto; white-space: pre-wrap; }
+  .empty { background: var(--track); border-radius: 10px; padding: 18px;
+           color: var(--ink-2); font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><a class="back" href="/">&larr; workspace</a></p>
+  <h1>Newsletters</h1>
+  <p class="sub" id="sub"></p>
+  <div class="cols">
+    <nav class="shelf" id="shelf"></nav>
+    <main id="panel"></main>
+  </div>
+</div>
+<script>
+// Both constants below are placeholders stamped in by the server at serve time
+// (see "Template binding" in tools/server.py).
+const LIVE = __LIVE__;              // true when served live; false in a static instance
+const initialAnswer = __DATA__;     // the issues query's answer at serve time
+
+// Escape a value for safe interpolation into HTML.
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+}
+
+// The left rail: one card per issue; the open one is marked and each card is a
+// plain link, so selection lives in the URL (?issue=N-001), not in page state.
+function shelfHtml(answer) {
+  if (!answer.issues.length)
+    return '<div class="empty">No issues yet — the first weekly run will put one here.</div>';
+  const openId = answer.selected && answer.selected.id;
+  return answer.issues.map(i =>
+    `<a href="/view/issues?issue=${esc(i.id)}" class="${i.id === openId ? "open" : ""}">` +
+    `<div class="t">${esc(i.title)}</div>` +
+    `<div class="m">${esc(i.id)} · ${esc(i.week_start)} → ${esc(i.week_end)} · ` +
+    `${i.article_count} papers · ${esc(i.status)}</div></a>`).join("");
+}
+
+// One retrieval run with the config it executed — the "how was this found" story.
+function runHtml(run) {
+  const o = run.outcome;
+  const config = run.config
+    ? `<div class="stats">config ${esc(run.config.id)} — ${esc(run.config.name)} ` +
+      `(${esc(run.config.source)})</div><div class="query">${esc(run.config.query)}</div>`
+    : '<div class="stats">config missing</div>';
+  return `<div class="run"><div class="hd">${esc(run.id)} · ${esc(run.date)} · ` +
+         `window ${esc(run.window_start)} → ${esc(run.window_end)}</div>` +
+         `<div class="stats">${run.matched} matched · ${run.added} added · ` +
+         `${run.skipped} already known · of the added: ${o.included} included, ` +
+         `${o.excluded} excluded, ${o.candidate} still candidate</div>${config}</div>`;
+}
+
+// The right panel IS the report: what a subscriber reads — executive summary, then
+// the filtered papers with their summaries. A draft mid-pipeline shows its screening
+// progress; the retrieval story sits behind a collapsed toggle at the bottom.
+function panelHtml(answer) {
+  const issue = answer.selected;
+  if (!issue)
+    return `<div class="empty">${esc(answer.error || "Nothing to open yet.")}</div>`;
+  const working = issue.status === "draft" && issue.pending_candidates > 0
+    ? `<div class="working">screening in progress — ${issue.pending_candidates} ` +
+      `candidate(s) in this window still await a verdict</div>` : "";
+  const exec = issue.executive_summary
+    ? `<h3>This week</h3><p class="exec">${esc(issue.executive_summary)}</p>` : "";
+  const papers = issue.articles.map(a =>
+    `<div class="paper"><div class="t">${esc(a.title)}</div>` +
+    `<div class="m">${esc(a.authors)} — ${esc(a.journal)}, ${esc(a.pub_date)} · ` +
+    `<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(a.pmid)}/">PMID ${esc(a.pmid)}</a></div>` +
+    `<div class="s">${esc(a.summary || "(no summary yet)")}</div></div>`).join("");
+  const retrieval = issue.runs.map(runHtml).join("") ||
+    '<p class="exec">no recorded runs cover this window</p>';
+  return `<div class="panel"><h2>${esc(issue.title)}` +
+         `<span class="badge ${esc(issue.status)}">${esc(issue.status)}</span></h2>` +
+         `<div class="meta">${esc(issue.id)} · ${esc(issue.week_start)} → ` +
+         `${esc(issue.week_end)} · created ${esc(issue.created)}` +
+         `${issue.has_body ? "" : " · body not assembled yet"}</div>` +
+         working + exec +
+         `<h3>The papers (${issue.articles.length})</h3>` +
+         (papers || '<p class="exec">none</p>') +
+         `<details class="retrieval"><summary>How it was retrieved</summary>` +
+         retrieval + `</details></div>`;
+}
+
+// Repaint everything from one query answer. No number is computed here. The
+// retrieval toggle's open state survives the repaint — a live update shouldn't
+// snap it shut under the reader.
+function render(answer) {
+  const wasOpen = !!document.querySelector("details.retrieval[open]");
+  document.getElementById("sub").innerHTML =
+    (LIVE ? '<span class="live-dot"></span>live · ' : "") +
+    `${answer.issues.length} issue(s) · one query, from <code>tools/repo.py</code>`;
+  document.getElementById("shelf").innerHTML = shelfHtml(answer);
+  document.getElementById("panel").innerHTML = panelHtml(answer);
+  const retrieval = document.querySelector("details.retrieval");
+  if (retrieval && wasOpen) retrieval.open = true;
+}
+
+render(initialAnswer);
+
+// Liveness: re-ask the query every 2 seconds and repaint only when the answer
+// changed. This page's identity includes its query string (?issue=N-001), so it
+// polls with location.search — a bare /api/issues would repaint it with the latest
+// issue instead of the one the user opened.
+if (LIVE) {
+  let lastRendered = JSON.stringify(initialAnswer);
+  setInterval(async () => {
+    try {
+      const response = await fetch("/api/issues" + location.search, {cache: "no-store"});
+      if (!response.ok) return;
+      const freshAnswer = await response.json();
+      const serialized = JSON.stringify(freshAnswer);
+      if (serialized === lastRendered) return;
+      lastRendered = serialized;
+      render(freshAnswer);
+    } catch (err) { /* server briefly away — keep the last good render */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
-"""assemble_issue.py — render one issue's newsletter file (grown). The deliverable is
-a projection: assembled from the issue record and its article records, never
-hand-written, regenerated after any change (OVERVIEW rule 4).
+"""assemble_issue.py — assemble one issue's newsletter body (grown). The newsletter is
+data: the assembled markdown is written onto the issue record itself, never to a loose
+file (OVERVIEW rule 4). Regenerate after any change to the issue or its articles. A
+file copy is an on-demand export (--export) — an ephemeral copy for sending, never
+stored state.
 
 Carries OVERVIEW rule 3 — the closure guarantee: REFUSED if the issue references an
 article that is missing, not included, or has no summary. The newsletter cannot carry
 an unscreened or unsummarized paper, structurally.
 
-Usage:  python tools/assemble_issue.py N-001         → writes newsletter-N-001.md
+Usage:  python tools/assemble_issue.py N-001                  → body stored on the record
+        python tools/assemble_issue.py N-001 --export out.md  → also write a sendable copy
 """
 import argparse
 import sys
+from pathlib import Path
 
 import repo
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Assemble one issue's newsletter file.")
+    ap = argparse.ArgumentParser(description="Assemble one issue's newsletter body.")
     ap.add_argument("issue_id")
+    ap.add_argument("--export", metavar="PATH",
+                    help="also write the body to PATH — an ephemeral copy for sending")
     args = ap.parse_args()
 
     if not repo.exists("issue", args.issue_id):
@@ -55,9 +61,16 @@ def main() -> int:
               "*Assembled by tools/assemble_issue.py from the workspace record — "
               "regenerate, don't edit.*", ""]
 
-    out = repo.ROOT / f"newsletter-{issue['id']}.md"
-    out.write_text("\n".join(lines), encoding="utf-8")
-    print(f"Wrote {out.name} — {len(articles)} papers, every one included and summarized.")
+    issue["body"] = "\n".join(lines)
+    repo.save("issue", issue)
+    print(f"Assembled {issue['id']} — body stored on the record; "
+          f"{len(articles)} papers, every one included and summarized.")
+
+    if args.export:
+        out = Path(args.export)
+        out.write_text(issue["body"], encoding="utf-8")
+        print(f"Exported a copy to {out} — a snapshot for sending; the record stays "
+              f"the truth.")
     return 0
 
 

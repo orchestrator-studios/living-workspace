@@ -1,0 +1,11 @@
+{
+  "id": "C-01",
+  "name": "Talc & asbestos litigation science (KH stream 10 analog)",
+  "source": "pubmed",
+  "query": "(talc[tiab] OR asbestos[tiab]) AND (mesothelioma[tiab] OR \"ovarian cancer\"[tiab] OR cancer[tiab] OR carcinogen*[tiab] OR exposure[tiab] OR litigation[tiab])",
+  "window_days": 7,
+  "retmax": 40,
+  "active": true,
+  "notes": "Backfilled 2026-07-10 from the query previously hardcoded in tools/fetch_pubmed.py.",
+  "created": "2026-07-09"
+}

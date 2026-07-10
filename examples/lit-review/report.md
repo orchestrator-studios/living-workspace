@@ -10,7 +10,7 @@ Does remote patient monitoring (RPM) of heart-failure patients after discharge r
 
 ## Method
 
-- Seeded from the client's flagged list: 5 papers.
+- Seeded from the client's flagged list: 5 papers.  
 - Search Q-01 (2026-07-04, MedSearch (fict.)): `("heart failure") AND ("remote monitoring" OR telemonitoring OR "telephone support") AND (readmission OR mortality OR adherence OR cost)` — 41 hits, 5 added.
 - Search Q-02 (2026-07-05, MedSearch (fict.)): `("heart failure") AND (app OR wearable OR "patient engagement") AND (adherence OR usage)` — 17 hits, 2 added.
 - Screened: 12 sources → **8 included, 4 excluded** (appendix). Every decision records its criterion.

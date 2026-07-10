@@ -95,28 +95,54 @@ def alignment_checks(errors):
 
 
 def integrity_checks(errors):
-    """The workspace's cross-record rules (grown) — OVERVIEW rules 1–3: one record per
+    """The workspace's cross-record rules (grown) — OVERVIEW rules 1–4: one record per
     PMID; every verdict carries its reason; an issue cites only included, summarized
-    articles. Validation reads the raw files on purpose — it checks the substrate
+    articles; a final issue carries its assembled body. Plus provenance: every article
+    traces to a run, every run to a config, and at most one config is active per
+    source. Validation reads the raw files on purpose — it checks the substrate
     itself, not a query's answer — but paths still come from repo."""
+    def records(kind):
+        folder = repo.DATA / kind
+        return [load(p) for p in sorted(folder.glob("*.json"))] if folder.exists() else []
+
+    configs = {c["id"]: c for c in records("retrieval_config")}
+    active = {}
+    for c in configs.values():
+        if c["active"]:
+            if c["source"] in active:
+                errors.append(f"{c['id']}: second active config for {c['source']} "
+                              f"(already {active[c['source']]}) — at most one per source")
+            active[c["source"]] = c["id"]
+
+    runs = {r["id"]: r for r in records("run")}
+    for r in runs.values():
+        if r["config"] not in configs:
+            errors.append(f"{r['id']}: config {r['config']} does not exist")
+
     articles = {}
     seen_pmids = {}
-    if (repo.DATA / "article").exists():
-        for path in sorted((repo.DATA / "article").glob("*.json")):
-            a = load(path)
-            articles[a["id"]] = a
-            if a["pmid"] in seen_pmids:
-                errors.append(f"{a['id']}: PMID {a['pmid']} already held by "
-                              f"{seen_pmids[a['pmid']]} — one record per PMID, ever")
-            seen_pmids[a["pmid"]] = a["id"]
-            if a["status"] != "candidate" and not (a.get("filter_reason") or "").strip():
-                errors.append(f"{a['id']}: {a['status']} without a filter_reason — "
-                              f"every verdict carries its reason")
+    for a in records("article"):
+        articles[a["id"]] = a
+        if a["pmid"] in seen_pmids:
+            errors.append(f"{a['id']}: PMID {a['pmid']} already held by "
+                          f"{seen_pmids[a['pmid']]} — one record per PMID, ever")
+        seen_pmids[a["pmid"]] = a["id"]
+        if a["status"] != "candidate" and not (a.get("filter_reason") or "").strip():
+            errors.append(f"{a['id']}: {a['status']} without a filter_reason — "
+                          f"every verdict carries its reason")
+        if a["run_id"] not in runs:
+            errors.append(f"{a['id']}: run {a['run_id']} does not exist — "
+                          f"every article traces to the run that landed it")
 
-    if not (repo.DATA / "issue").exists():
-        return
-    for path in sorted((repo.DATA / "issue").glob("*.json")):
-        issue = load(path)
+    for r in runs.values():
+        for aid in r["added"]:
+            if aid not in articles:
+                errors.append(f"{r['id']}: added article {aid} does not exist")
+
+    for issue in records("issue"):
+        if issue["status"] == "final" and not (issue.get("body") or "").strip():
+            errors.append(f"{issue['id']}: final without an assembled body — "
+                          f"run tools/assemble_issue.py {issue['id']}")
         for aid in issue["articles"]:
             a = articles.get(aid)
             if a is None:

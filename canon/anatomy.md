@@ -17,7 +17,7 @@ Two documents and five folders. That's the whole skeleton, and each piece serves
 | `data/` | The persistent objects — the system of record. One file per record. | substrate |
 | `schemas/` | The structure and validity of everything in `data/`. Each schema is its kind's **single declaration**: `x-kind` names the `data/` folder, the id pattern fixes the id format, and the kit derives everything else from it. | understanding |
 | `tools/` | Deterministic operations: create, update, validate, query, transform, assemble. Three residents: the **data-access layer** (`repo.py`, shipped — see [one definition of every number](#one-definition-of-every-number)), **muscle** (pure operations, grown) and **enforcers** (operations that carry rules — the dedup check, the citation gate; grown). The kit's `server.py` and `validate.py` live here too. | access · enforcement |
-| `capabilities/` | Procedure in language — how to use the tools correctly, what to watch for, how to judge. The soft form of the same rules the enforcer tools carry in code. Each declares **how it runs**: in the conversation's context, or delegated to a fresh one (see [in-context and delegated](#in-context-and-delegated)). The kit ships one: `dashboard.md`. | understanding |
+| `capabilities/` | Procedure in language — how to use the tools correctly, what to watch for, how to judge. The judgment part of the workspace's rules: what no enforcer tool can check (see [where a rule lives](#where-a-rule-lives)). Each declares **how it runs**: in the conversation's context, or delegated to a fresh one (see [in-context and delegated](#in-context-and-delegated)). The kit ships one: `dashboard.md`. | understanding |
 | `views/` | View **logic** — templates, never rendered output, never a second source of truth. The kit ships `index.template.html`; domain views are grown (see [the anatomy of a view](#the-anatomy-of-a-view)). | presentation |
 
 ## The standard kit
@@ -41,13 +41,36 @@ The payoff of the kit is that the workspace is *visible from minute one*: copy t
 template, start the server, and watch the workspace assemble itself on screen as the
 conversation runs.
 
-## Two forms of every rule
+## Where a rule lives
 
-A rule that matters exists **twice**: once in language (a capability — for the agent to
-reason with) and once in enforcement (a schema constraint or an enforcer tool — for when
-nobody, human or model, is paying attention). The lit-review example's citation-closure
-rule is the pattern: stated in `capabilities/findings-and-citations.md`, enforced by
-`tools/add_finding.py`, checked globally by `tools/validate.py`.
+A rule is not written twice — it is **factored once**. Every rule the overview states
+splits into two parts, and each part lives where it belongs:
+
+- The **enforceable core** — the predicate a machine can check with no judgment — goes
+  to the hard layer: a schema constraint, a tool that refuses, a validator check. "An
+  issue cites only included articles" is a core; the assemble tool refuses it, and no
+  capability restates it.
+- The **judgment remainder** — the part that needs a reader — goes to a capability:
+  what counts as relevant, how to weigh the borderline case, what a good reason looks
+  like. No deterministic tool can hold it.
+
+The factoring is the design act, and it has a direction: **push everything checkable
+into the hard layer**, because enforcement holds when nobody — human or model — is
+paying attention; leave in language only what genuinely needs judgment.
+
+The split is rarely even, and either side can be empty. Some rules are all core ("one
+record per PMID" — nothing to judge; the tool *is* the rule, and no capability
+shadows it). Some are all remainder (tablethat's bottom-line rule — pure judgment,
+deliberately unenforced). Most land apart: the lit-review's citation rule puts
+"findings cite only included sources" in `tools/add_finding.py` and "what makes a
+claim a finding" in `capabilities/findings-and-citations.md` — two *different parts*
+of one rule, each written once.
+
+What the two layers must never hold is two statements of the same part. A capability
+that restates what a tool already refuses is a second derivation of one rule — the
+[one-definition](#one-definition-of-every-number) failure, in prose: the copies drift,
+and a reader eventually trusts the wrong one. A capability *cites* the enforcement
+("the tool refuses X; here is how to decide Y"); it never repeats it.
 
 ## In-context and delegated
 
@@ -67,21 +90,27 @@ thrown away.
 
 **Why a workspace can delegate freely.** In an ordinary agent, delegation is a gamble: the
 sub-agent has never read the rules, so it may not respect them. Here it doesn't need to.
-The workspace's memory is the substrate, not the conversation, and the rules that matter
-have their [hard form](#two-forms-of-every-rule) in the tools. A delegated screener writes
-through the screening tool, which *refuses* a verdict with no reason — whether or not the
-agent holding the pen ever read the screening capability. **Delegation is cheap because the
-files remember and the tools refuse.**
+The workspace's memory is the substrate, not the conversation, and every rule's
+[enforceable core](#where-a-rule-lives) is in the tools. A filter's verdicts land through
+the verdict tool, which *refuses* one with no reason — whoever holds the pen, delegate or
+caller, and whether or not they ever read the filter capability. **Delegation is cheap
+because the files remember and the tools refuse.**
 
 Three constraints follow:
 
-1. **A delegated capability deposits to the substrate, not to the conversation.** It writes
-   through the tools. Then its transcript can be discarded without losing anything.
+1. **A delegate's results land in the substrate; its transcript is disposable.** Two
+   honest shapes. The delegate writes through the tools itself — right when each item's
+   work is self-contained. Or it is a **pure analysis**: it returns its findings and the
+   *caller* writes them through the tools — right when the write needs the caller's
+   context (batching, ordering, a gate ahead) or the analysis has more than one consumer
+   (the same filter serves the weekly pipeline and a one-off re-check, and a test run
+   should touch nothing). What a delegate must never do is leave results only in its
+   transcript.
 2. **Delegation may not launder a gate.** If a rule requires the user's approval, a fresh
    agent cannot supply it on their behalf. Gates are answered in the conversation, always.
-3. **Delegation does not soften a rule.** A delegated capability is still the soft form; the
+3. **Delegation does not soften a rule.** A delegated capability is still judgment; the
    enforcer is still the tool. A capability that can only be trusted when its reader is
-   paying attention is one whose rule hasn't been given its hard form yet.
+   paying attention is one whose enforceable core hasn't been factored into a tool yet.
 
 The context economics are the whole point: the work that would flood a conversation with
 search results, page text, and dead ends is exactly the work whose *conclusions* are small.
@@ -101,7 +130,7 @@ A named query belongs to a *question*, never to a consumer: the live board and t
 assembled report render the same query, and the registry (`QUERIES`) is nothing more than
 the list of queries published to the dashboard. A query may *format* its answer — titles,
 citations, human-shaped cards — but any fact it computes exists nowhere else. The reason
-is the same as [two forms of every rule](#two-forms-of-every-rule): what matters is
+is the same as [where a rule lives](#where-a-rule-lives): what matters is
 written down once, where everything that needs it can reach it. Two independent
 derivations of one number will eventually disagree — and an answer that disagrees with
 the substrate is a confident lie.
@@ -141,7 +170,7 @@ Every view separates four parts:
 | **Data access** | reads the record; defines the named queries views render | `tools/repo.py` | layer ships · queries grown |
 | **Code** | binds a query's answer into a rendering | `tools/` (the server; build tools) | server ships · build tools grown |
 | **Template** | the presentation markup | `views/` | index ships · domain templates grown |
-| **Instance** | the rendered result | live: nowhere — served on demand · static: at the root if it *is* the deliverable, else next to the data it renders | — |
+| **Instance** | the rendered result | live: nowhere — served on demand · static: **on the record it renders** (a body field the schema governs, written by the tool); a file copy is an on-demand export, never stored state | — |
 
 Two kinds of view fall out of the instance row:
 
@@ -156,9 +185,14 @@ Two kinds of view fall out of the instance row:
   changes", not an exception to it. And the page adds nothing to the truth: the server
   holds no state of its own, writes nothing, and creates no second source — the files
   remain the ground truth under it.
-- **Static views** are for outputs that must exist as files — the report, the export,
-  the deliverable. A grown build tool renders them from the same queries, and they are
-  regenerated after every data change, never hand-edited.
+- **Static views** are for content that must outlive a page — the report, the
+  newsletter, the deliverable. A grown build tool assembles the content from the same
+  queries and stores it **on the record itself**, in a schema-governed field,
+  regenerated after every data change, never hand-edited. Nothing rendered persists
+  outside `data/`: a loose rendered file is a record outside the law — unvalidated, and
+  a second copy of the truth that can silently go stale. When a copy must actually
+  leave the workspace — an email, a client attachment — the tool *exports* one on
+  demand: a snapshot for sending, never the truth.
 
 So the cost of a new way of seeing is exactly two grown pieces — a query and a
 template — and the [worked example](../examples/lit-review/JOURNEY.md) shows both kinds: a live
@@ -196,4 +230,7 @@ The workspace's outputs — the report, the export, the dashboard — are **asse
 substrate by tools, never hand-written**. That's what makes guarantees structural: the
 example's report *cannot* cite an excluded paper, because findings can't exist against one.
 A dashboard served live is the same discipline — the server just re-asks the queries on
-every request instead of freezing their answers to disk.
+every request instead of freezing their answers to disk. And when a deliverable is
+assembled, the assembled content is still data: it lives on the record, under its schema
+(see the instance row above) — the deliverable *file* is an export of the record, made on
+demand, owned by whoever it's sent to.

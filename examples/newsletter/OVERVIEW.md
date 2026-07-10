@@ -15,13 +15,20 @@ sent as-is.
 
 ## The things
 
+- **retrieval_config** (`C-##`) — one stream definition, as data: the PubMed query,
+  the default window, the cap, and whether it's active. Refining the stream is a data
+  edit, never a code edit. (KH: the stream definition.)
+- **run** (`R-###`) — one retrieval execution: when it ran, which config, over what
+  window, what it matched, what it landed, what it skipped as already known. The
+  provenance of coverage; every article points back to its run.
 - **article** (`A-###`) — one candidate paper from a retrieval run: PMID, title,
-  journal, publication date, authors, abstract, then the screening verdict — `status`
-  (candidate / included / excluded), the `filter_reason`, and a plain-language
-  `summary` once included.
-- **issue** (`N-###`) — one weekly newsletter: the window it covers, the included
-  article ids, an executive summary, and its status (draft / final). The rendered
-  newsletter file is a projection of this record, assembled by tool.
+  journal, publication date, authors, abstract, its `run_id`, then the screening
+  verdict — `status` (candidate / included / excluded), the `filter_reason`, and a
+  plain-language `summary` once included.
+- **issue** (`N-###`) — one weekly newsletter, complete: the window it covers, the
+  included article ids, an executive summary, the assembled `body`, and its status
+  (draft / final). The newsletter *is* this record; a file copy is an on-demand
+  export, never stored state.
 
 ## The rules
 
@@ -35,23 +42,30 @@ sent as-is.
    unscreened paper. (The lit-review example's citation-closure rule, in newsletter
    form.)
 4. **The newsletter is assembled, never hand-written.** `tools/assemble_issue.py`
-   renders it from the issue record and the article records; regenerate after any
-   change, never edit the output.
+   renders the body from the issue record and the article records and stores it *on
+   the issue record*; regenerate after any change. A final issue must carry its body.
+   File copies (`--export`) are for sending — ephemeral, never the truth.
 
 ## Where the data lives today
 
-- Articles arrive from **PubMed E-utilities** (`tools/fetch_pubmed.py` carries the
-  stream query — talc/asbestos × disease/exposure terms — and the date window).
+- Articles arrive from **PubMed E-utilities** — `tools/fetch_pubmed.py` executes the
+  active **retrieval_config** (the stream query — talc/asbestos × disease/exposure
+  terms — lives in `data/retrieval_config/`, not in code) and records every run.
 - Reference material (bound, read-only): the KH app at `C:\code\kh` — the full-strength
   version of this pipeline (LLM semantic filter, stance analysis, salience scoring),
   used for behavioral fidelity, not as a data source.
 
 ## What you'll ask of it
 
-- **The weekly run:** "Do this week's issue" → fetch the window → screen candidates
-  (`capabilities/screening.md` — delegated, one agent per candidate, when the batch is
-  large) → summarize the keepers → assemble the newsletter.
-- **Status:** "Where's this week's issue?" → the live pipeline board.
+- **The weekly run:** "Do this week's issue" → `capabilities/weekly-issue.md`, the
+  pipeline as procedure: retrieve → filter (`capabilities/semantic-filter.md`,
+  delegated — returns analysis, writes nothing) → record verdicts
+  (`tools/record_verdict.py`) → assemble → the user's gate.
+- **Status:** "Where's this week's issue?" → the issues view; a draft mid-pipeline
+  shows how many candidates still await a verdict.
+- **Reading:** "Show me the newsletters" → the issues view: the shelf on the left, the
+  open issue on the right — its summary, its papers, and how it was retrieved (the
+  runs and the config they executed).
 - **Judgment calls:** "Why was this paper dropped?" → the recorded filter_reason.
 - **Later (KH parity, grow on demand):** stance analysis (pro-plaintiff / pro-defense /
   neutral), salience scoring, category grouping, email delivery.

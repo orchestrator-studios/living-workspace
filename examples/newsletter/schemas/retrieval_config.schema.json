@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "retrieval_config — one stream definition",
+  "description": "The retrieval configuration as data: the query tools/fetch_pubmed.py runs, its default window, and its cap. Refining the stream is a data edit — visible on the issues view — never a code edit. At most one config is active per source (enforced in validate.py); deactivate rather than delete, because runs reference their config forever.",
+  "x-kind": "retrieval_config",
+  "type": "object",
+  "required": ["id", "name", "source", "query", "window_days", "retmax", "active", "created"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^C-[0-9]{2}$" },
+    "name": { "type": "string", "minLength": 1 },
+    "source": { "enum": ["pubmed"] },
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The E-utilities term — this stream's definition of relevance at retrieval time."
+    },
+    "window_days": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Default trailing window when a fetch isn't given explicit dates."
+    },
+    "retmax": { "type": "number", "minimum": 1 },
+    "active": {
+      "type": "boolean",
+      "description": "tools/fetch_pubmed.py runs the active config for its source."
+    },
+    "notes": { "type": "string" },
+    "created": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+  }
+}

@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "article — one candidate paper from a retrieval run",
-  "description": "Arrives as status=candidate from tools/fetch_pubmed.py; screening (skills/screening.md) moves it to included or excluded, always with a filter_reason (OVERVIEW rule 2). Included articles get a summary before they can appear in an issue.",
+  "description": "Arrives as status=candidate from tools/fetch_pubmed.py; the semantic filter (capabilities/semantic-filter.md) judges it and tools/record_verdict.py persists the verdict — always with a filter_reason (OVERVIEW rule 2). Included articles get a summary before they can appear in an issue.",
   "x-kind": "article",
   "type": "object",
-  "required": ["id", "pmid", "title", "journal", "pub_date", "status", "retrieved"],
+  "required": ["id", "pmid", "title", "journal", "pub_date", "status", "retrieved", "run_id"],
   "additionalProperties": false,
   "properties": {
     "id": { "type": "string", "pattern": "^A-[0-9]{3}$" },
@@ -23,6 +23,11 @@
       "oneOf": [{ "type": "string" }, { "type": "null" }],
       "description": "Plain-language summary for the newsletter — included articles only."
     },
-    "retrieved": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+    "retrieved": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "run_id": {
+      "type": "string",
+      "pattern": "^R-[0-9]{3}$",
+      "description": "The retrieval run that landed this article — its provenance (referential integrity in validate.py)."
+    }
   }
 }
