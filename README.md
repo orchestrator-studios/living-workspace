@@ -1,9 +1,13 @@
 # Living Workspace
 
-**A new kind of application: self-growing and agent-operated, rather than built and
-installed.**
+Software 3.0 is slowly emerging to fully unleash AI. No one is quite sure yet what it
+will look like — but one cornerstone seems increasingly settled: **a well-behaved agent
+between users and their systems and data, as the primary interface.**
 
-Every application you've ever used was built the same way:
+**Living workspace is a new architecture built on that cornerstone** — an application
+that is self-growing and agent-operated, rather than built and installed.
+
+Every application until now was built the same way:
 
 ```
 repo  →  app  →  user
@@ -90,9 +94,9 @@ A living workspace is an application written in two languages. The parts that mu
 exact — validation, id assignment, the rules that must hold — are compiled down into
 deterministic code in `tools/`. The parts that need judgment — how to work the data, what
 to watch for — stay as English in `skills/`. The agent is the runtime that binds the two,
-and the operating manual (`CLAUDE.md`) is effectively its `main()`. This is the
-"natural language as programming language, model as runtime" idea taken literally — with
-the boundary drawn honestly: English where judgment lives, code where exactness lives.
+and the operating manual (`CLAUDE.md`) is effectively its `main()`. This is software 3.0's
+"natural language as programming language, model as runtime" taken literally — with the
+boundary drawn honestly: English where judgment lives, code where exactness lives.
 
 Its learning lives in artifacts, not weights. The workspace gets more capable the way a
 skill-library agent does: every gap the agent fills is deposited as a permanent file —
