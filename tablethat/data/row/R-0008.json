@@ -1,0 +1,26 @@
+{
+  "id": "R-0008",
+  "table_id": "T-001",
+  "values": {
+    "name": "Escape Pod",
+    "url": "https://escapepod.org/guidelines/short-fiction/",
+    "genre": "speculative",
+    "status": "open",
+    "window_closes": null,
+    "max_words": 6000,
+    "pays": true,
+    "pay_rate": "$0.08/word (original)",
+    "simultaneous_ok": true
+  },
+  "provenance": {
+    "name": "https://escapepod.org/guidelines/short-fiction/",
+    "url": "https://escapepod.org/guidelines/short-fiction/",
+    "genre": "https://escapepod.org/guidelines/short-fiction/",
+    "status": "https://escapepod.org/guidelines/short-fiction/ (general subs closed; Democratic Futures special window OPEN; general window Sept-May)",
+    "max_words": "https://escapepod.org/guidelines/short-fiction/ (original 1,500-6,000 words)",
+    "pays": "https://escapepod.org/guidelines/short-fiction/",
+    "pay_rate": "https://escapepod.org/guidelines/short-fiction/",
+    "simultaneous_ok": "https://escapepod.org/guidelines/short-fiction/ (allowed except other EA podcasts)"
+  },
+  "researched": "2026-07-09"
+}

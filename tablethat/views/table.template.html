@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!--
+  table.template.html — the table viewer (grown).
+
+  Renders ANY table from its definition: column headers from the table record's
+  columns array, one row per row record, values typed (dates as dates, booleans as
+  marks, selects as chips). Hover a cell for its provenance. This one template is
+  the viewer for every table the workspace will ever hold — the workspace analogue
+  of the app's React table component.
+
+  Parameterized: /view/table?table_id=T-001. Bound to the "table" query at serve
+  time with the same parameters; when live, polls /api/table + location.search.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --track: #f0efec; --accent: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --track: #2c2c2a; --accent: #3987e5;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 28px 22px; }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 16px; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+              background: #2e9e5b; margin-right: 4px; }
+  a.back { color: var(--accent); text-decoration: none; font-size: 0.84rem; }
+  .bottom { margin: 0 0 16px; padding: 10px 12px; background: var(--track);
+            border-radius: 8px; font-size: 0.88rem; }
+  .scroller { overflow-x: auto; background: var(--card);
+              border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  th { text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border);
+       white-space: nowrap; }
+  th .type { display: block; font-weight: 400; font-family: ui-monospace, Consolas,
+             monospace; font-size: 0.68rem; color: var(--ink-2); }
+  td { padding: 7px 12px; border-bottom: 1px solid var(--border);
+       vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.unknown { color: var(--ink-2); }
+  td[title] { cursor: help; }
+  .chip { display: inline-block; background: var(--track); border-radius: 999px;
+          padding: 0 8px; font-size: 0.78rem; }
+  .empty { background: var(--track); border-radius: 10px; padding: 18px;
+           color: var(--ink-2); font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><a class="back" href="/view/tables">&larr; all tables</a></p>
+  <h1 id="title">Table</h1>
+  <p class="sub" id="sub"><span class="live-dot"></span>live</p>
+  <div id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+const initialPayload = __DATA__;
+
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+}
+
+// One cell: typed rendering, provenance on hover.
+function cell(column, row) {
+  const value = row.values[column.key];
+  const source = row.provenance ? row.provenance[column.key] : null;
+  const title = source ? ` title="source: ${esc(source)}"` : "";
+  if (value === null || value === undefined)
+    return `<td class="unknown">—</td>`;
+  if (column.type === "boolean")
+    return `<td${title}>${value ? "✓" : "✗"}</td>`;
+  if (column.type === "number")
+    return `<td class="num"${title}>${esc(value)}</td>`;
+  if (column.type === "select")
+    return `<td${title}><span class="chip">${esc(value)}</span></td>`;
+  if (column.type === "text" && /^https?:\/\//.test(value))
+    return `<td${title}><a href="${esc(value)}">${esc(value.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, ""))}</a></td>`;
+  return `<td${title}>${esc(value)}</td>`;
+}
+
+function render(payload) {
+  const content = document.getElementById("content");
+  if (!payload || payload.error) {
+    document.getElementById("title").textContent = "Table";
+    content.innerHTML = `<div class="empty">${esc(payload ? payload.error : "no data")}` +
+      (payload && payload.tables && payload.tables.length
+        ? ` — try ${payload.tables.map(id => `<a href="/view/table?table_id=${esc(id)}">${esc(id)}</a>`).join(", ")}`
+        : "") + `</div>`;
+    return;
+  }
+  const t = payload.table;
+  document.getElementById("title").textContent = t.name;
+  document.title = t.name;
+  document.getElementById("sub").innerHTML =
+    `<span class="live-dot"></span>${esc(t.id)} · ${esc(payload.rows.length)} rows · ` +
+    `${esc(t.description)}`;
+  let html = t.bottom_line ? `<div class="bottom">${esc(t.bottom_line)}</div>` : "";
+  if (!payload.rows.length) {
+    html += '<div class="empty">No rows yet — populate is next; they appear here as research lands.</div>';
+  } else {
+    html += '<div class="scroller"><table><thead><tr>' +
+      t.columns.map(c => `<th>${esc(c.label)}<span class="type">${esc(c.type)}</span></th>`).join("") +
+      "</tr></thead><tbody>" +
+      payload.rows.map(row => "<tr>" + t.columns.map(c => cell(c, row)).join("") + "</tr>").join("") +
+      "</tbody></table></div>";
+  }
+  content.innerHTML = html;
+}
+
+render(initialPayload);
+
+// Parameterized liveness: this page's identity includes its query string, so it
+// polls its api with its own location.search.
+if (LIVE) {
+  let lastRendered = JSON.stringify(initialPayload);
+  setInterval(async () => {
+    try {
+      const response = await fetch("/api/table" + location.search, {cache: "no-store"});
+      if (!response.ok) return;
+      const freshPayload = await response.json();
+      const serialized = JSON.stringify(freshPayload);
+      if (serialized === lastRendered) return;
+      lastRendered = serialized;
+      render(freshPayload);
+    } catch (err) { /* server briefly away — keep the last good render */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

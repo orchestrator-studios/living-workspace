@@ -1,0 +1,26 @@
+{
+  "id": "R-0003",
+  "table_id": "T-001",
+  "values": {
+    "name": "The Sun Magazine",
+    "url": "https://www.thesunmagazine.org/submit/essays-fiction-poetry",
+    "genre": "literary",
+    "status": "open",
+    "window_closes": null,
+    "max_words": 7000,
+    "pays": true,
+    "pay_rate": "$300-$1,500 (fiction, by length)",
+    "simultaneous_ok": true
+  },
+  "provenance": {
+    "name": "https://www.thesunmagazine.org/submit/essays-fiction-poetry",
+    "url": "https://www.thesunmagazine.org/submit/essays-fiction-poetry",
+    "genre": "https://www.thesunmagazine.org/submit/essays-fiction-poetry",
+    "status": "https://www.thesunmagazine.org/submit/essays-fiction-poetry (rolling; no window)",
+    "max_words": "https://www.thesunmagazine.org/submit/essays-fiction-poetry (tends not to publish over 7,000 words; no formal limit)",
+    "pays": "https://www.thesunmagazine.org/submit/essays-fiction-poetry",
+    "pay_rate": "https://www.thesunmagazine.org/submit/essays-fiction-poetry",
+    "simultaneous_ok": "https://www.thesunmagazine.org/submit/essays-fiction-poetry (considers work submitted elsewhere; notify on acceptance)"
+  },
+  "researched": "2026-07-09"
+}

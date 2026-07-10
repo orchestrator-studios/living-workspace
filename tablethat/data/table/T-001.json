@@ -1,0 +1,67 @@
+{
+  "id": "T-001",
+  "name": "Short-fiction markets",
+  "description": "Literary magazines currently open for short-story submissions \u2014 where can I send a story right now?",
+  "columns": [
+    {
+      "key": "name",
+      "label": "Magazine",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "url",
+      "label": "Guidelines",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "genre",
+      "label": "Genre",
+      "type": "select",
+      "options": [
+        "literary",
+        "speculative",
+        "general",
+        "mixed"
+      ]
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "open",
+        "closed",
+        "opens_soon"
+      ]
+    },
+    {
+      "key": "window_closes",
+      "label": "Window closes",
+      "type": "date"
+    },
+    {
+      "key": "max_words",
+      "label": "Max words",
+      "type": "number"
+    },
+    {
+      "key": "pays",
+      "label": "Pays",
+      "type": "boolean"
+    },
+    {
+      "key": "pay_rate",
+      "label": "Pay rate",
+      "type": "text"
+    },
+    {
+      "key": "simultaneous_ok",
+      "label": "Simultaneous OK",
+      "type": "boolean"
+    }
+  ],
+  "created": "2026-07-09",
+  "bottom_line": "As of 2026-07-09: 5 of 8 markets are open. Clarkesworld ($0.14/word, up to 22k words) and The Sun ($300-$1,500, simultaneous OK) take submissions year-round; Apex ($0.08/word) closes with July; Ploughshares runs through Nov 15; Escape Pod is open only via a themed special window. Strange Horizons and One Story expect to reopen in the fall; Uncanny is closed indefinitely. Best paying open door: Clarkesworld. Only open door that allows simultaneous submissions to other magazines: The Sun (and Escape Pod, within its theme)."
+}

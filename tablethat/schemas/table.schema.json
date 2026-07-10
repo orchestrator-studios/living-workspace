@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "table — the definition of one user-commissioned table",
+  "description": "The meta-record TableThat is built on: a user's table is data, not workspace structure. The columns array is the user's emergent schema — grown by Build, extended by Enrich — while this schema itself never changes. Cross-record rules (values conform to columns, provenance coverage) live in tools/validate.py integrity_checks().",
+  "x-kind": "table",
+  "type": "object",
+  "required": ["id", "name", "description", "columns", "created"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^T-[0-9]{3}$" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": {
+      "type": "string",
+      "description": "What this table is for, in the user's terms — the intent Build inferred the columns from."
+    },
+    "columns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["key", "label", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "The key rows use in their values and provenance maps."
+          },
+          "label": { "type": "string", "minLength": 1 },
+          "type": { "enum": ["text", "number", "date", "boolean", "select"] },
+          "options": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "description": "Allowed values — select columns only."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "When true, every row must carry a non-null value for this column."
+          }
+        }
+      }
+    },
+    "created": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "bottom_line": {
+      "type": "string",
+      "description": "The latest plain-language synthesis of what the table says — refreshed after material changes (OVERVIEW rule 6)."
+    }
+  }
+}

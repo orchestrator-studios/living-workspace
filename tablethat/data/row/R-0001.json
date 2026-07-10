@@ -1,0 +1,26 @@
+{
+  "id": "R-0001",
+  "table_id": "T-001",
+  "values": {
+    "name": "Clarkesworld",
+    "url": "https://clarkesworldmagazine.com/submissions/",
+    "genre": "speculative",
+    "status": "open",
+    "window_closes": null,
+    "max_words": 22000,
+    "pays": true,
+    "pay_rate": "$0.14/word",
+    "simultaneous_ok": false
+  },
+  "provenance": {
+    "name": "https://clarkesworldmagazine.com/submissions/",
+    "url": "https://clarkesworldmagazine.com/submissions/",
+    "genre": "https://clarkesworldmagazine.com/submissions/",
+    "status": "https://clarkesworldmagazine.com/submissions/",
+    "max_words": "https://clarkesworldmagazine.com/submissions/ (1000-22000 words, no exceptions)",
+    "pays": "https://clarkesworldmagazine.com/submissions/",
+    "pay_rate": "https://clarkesworldmagazine.com/submissions/ (14 cents/word)",
+    "simultaneous_ok": "https://clarkesworldmagazine.com/submissions/ (simultaneous submissions not permitted)"
+  },
+  "researched": "2026-07-09"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "R-0006",
+  "table_id": "T-001",
+  "values": {
+    "name": "Uncanny Magazine",
+    "url": "https://www.uncannymagazine.com/submissions/",
+    "genre": "speculative",
+    "status": "closed",
+    "window_closes": null,
+    "max_words": null,
+    "pays": null,
+    "pay_rate": null,
+    "simultaneous_ok": null
+  },
+  "provenance": {
+    "name": "https://www.uncannymagazine.com/submissions/",
+    "url": "https://www.uncannymagazine.com/submissions/",
+    "genre": "https://www.uncannymagazine.com/submissions/",
+    "status": "https://www.uncannymagazine.com/submissions/ (closed to all submissions; watch official channels for windows)"
+  },
+  "researched": "2026-07-09"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "R-0005",
+  "table_id": "T-001",
+  "values": {
+    "name": "Apex Magazine",
+    "url": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines",
+    "genre": "speculative",
+    "status": "open",
+    "window_closes": "2026-07-31",
+    "max_words": 7500,
+    "pays": true,
+    "pay_rate": "$0.08/word (min $50)",
+    "simultaneous_ok": null
+  },
+  "provenance": {
+    "name": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines",
+    "url": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines",
+    "genre": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines",
+    "status": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines (2026: open odd months, closed Feb/Apr/Jun/Aug/Oct/Dec)",
+    "window_closes": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines (July window ends with the month)",
+    "max_words": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines (up to 7,500 words)",
+    "pays": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines",
+    "pay_rate": "https://www.apexbookcompany.com/blogs/apex-magazine/apex-magazine-submissions-guidelines"
+  },
+  "researched": "2026-07-09"
+}

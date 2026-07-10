@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "row — one real-world entity in one table",
+  "description": "Values are keyed by the owning table's column keys; null means unknown. Every non-null value must have a provenance entry — a source URL, or a stated basis such as 'user' (OVERVIEW rules 2, 4, 5). Conformance of values to the owning table's columns is a cross-record rule enforced by tools/validate.py integrity_checks().",
+  "x-kind": "row",
+  "type": "object",
+  "required": ["id", "table_id", "values", "provenance", "researched"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^R-[0-9]{4}$" },
+    "table_id": { "type": "string", "pattern": "^T-[0-9]{3}$" },
+    "values": {
+      "type": "object",
+      "description": "column key → typed value (text: string · number · date: YYYY-MM-DD string · boolean · select: one of the column's options), or null for unknown."
+    },
+    "provenance": {
+      "type": "object",
+      "description": "column key → source URL or stated basis, for every non-null value."
+    },
+    "researched": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "When this row's values were last verified against live sources."
+    }
+  }
+}

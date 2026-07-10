@@ -1,0 +1,24 @@
+{
+  "id": "R-0004",
+  "table_id": "T-001",
+  "values": {
+    "name": "One Story",
+    "url": "https://one-story.com/write/submit-a-story/",
+    "genre": "literary",
+    "status": "closed",
+    "window_closes": null,
+    "max_words": null,
+    "pays": true,
+    "pay_rate": "$500 flat per story",
+    "simultaneous_ok": null
+  },
+  "provenance": {
+    "name": "https://one-story.com/write/submit-a-story/",
+    "url": "https://one-story.com/write/submit-a-story/",
+    "genre": "https://one-story.com/write/submit-a-story/",
+    "status": "https://one-story.com/write/submit-a-story/ (spring 2026 cap of 2000 reached; reopens fall)",
+    "pays": "https://www.freedomwithwriting.com/freedom/uncategorized/one-story-500-per-short-story/",
+    "pay_rate": "https://www.freedomwithwriting.com/freedom/uncategorized/one-story-500-per-short-story/"
+  },
+  "researched": "2026-07-09"
+}

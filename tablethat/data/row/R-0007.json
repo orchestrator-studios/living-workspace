@@ -1,0 +1,24 @@
+{
+  "id": "R-0007",
+  "table_id": "T-001",
+  "values": {
+    "name": "Ploughshares",
+    "url": "https://www.pshares.org/submit/",
+    "genre": "literary",
+    "status": "open",
+    "window_closes": "2026-11-15",
+    "max_words": 6500,
+    "pays": null,
+    "pay_rate": null,
+    "simultaneous_ok": null
+  },
+  "provenance": {
+    "name": "https://www.pshares.org/submit/",
+    "url": "https://www.pshares.org/submit/",
+    "genre": "https://www.pshares.org/submit/",
+    "status": "https://www.pshares.org/submit/ (reading period June 1 - November 15, 5:00pm EST)",
+    "window_closes": "https://www.pshares.org/submit/ (November 15 at 5:00pm EST)",
+    "max_words": "https://www.pshares.org/submit/ (regular fiction up to 6,500 words)"
+  },
+  "researched": "2026-07-09"
+}

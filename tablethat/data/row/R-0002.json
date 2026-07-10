@@ -1,0 +1,26 @@
+{
+  "id": "R-0002",
+  "table_id": "T-001",
+  "values": {
+    "name": "Strange Horizons",
+    "url": "http://strangehorizons.com/submit/fiction-submission-guidelines/",
+    "genre": "speculative",
+    "status": "closed",
+    "window_closes": null,
+    "max_words": 10000,
+    "pays": true,
+    "pay_rate": "$0.10/word (min $60)",
+    "simultaneous_ok": false
+  },
+  "provenance": {
+    "name": "http://strangehorizons.com/submit/fiction-submission-guidelines/",
+    "url": "http://strangehorizons.com/submit/fiction-submission-guidelines/",
+    "genre": "http://strangehorizons.com/submit/fiction-submission-guidelines/",
+    "status": "http://strangehorizons.com/submit/fiction-submission-guidelines/ (closed; anticipate reopening fall 2026)",
+    "max_words": "http://strangehorizons.com/submit/fiction-submission-guidelines/ (max 10,000; under 5,000 preferred)",
+    "pays": "http://strangehorizons.com/submit/fiction-submission-guidelines/",
+    "pay_rate": "http://strangehorizons.com/submit/fiction-submission-guidelines/",
+    "simultaneous_ok": "http://strangehorizons.com/submit/fiction-submission-guidelines/ (no simultaneous or multiple submissions)"
+  },
+  "researched": "2026-07-09"
+}
