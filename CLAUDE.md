@@ -11,7 +11,9 @@ views here.
   after writes, keep the live board up, regenerate outputs, use its tools). The examples:
   `lit-review` (client-commissioned literature review), `tablethat` (AI table builder,
   replicating `C:\code\table-that`), `newsletter` (weekly literature-monitoring
-  newsletter, modeled on Knowledge Horizon's talc/asbestos stream).
+  newsletter, modeled on Knowledge Horizon's talc/asbestos stream), `life-tracker`
+  (personal life-infrastructure tracker, seeded from the user's BotBeam backlog; beams
+  its board back to BotBeam).
 - **The user wants to start their own workspace** → copy `template/` to a new location
   *outside this repo* and begin there with the interview. Don't scaffold workspaces here.
 - **Editing the canon or template** → these are the published doctrine and the published
