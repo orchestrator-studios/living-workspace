@@ -1,0 +1,14 @@
+{
+  "id": "A-007",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "excluded",
+  "filter_reason": "Incremental retrieval tweak (procedural similarity) for repository-level code generation - one of many marginal RAG-for-code papers, not a capability-moving result.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08691v1",
+  "title": "ProjAgent: Procedural Similarity Retrieval for Repository-Level Code Generation",
+  "published": "2026-07-09",
+  "authors": "QiHong Chen et al.",
+  "excerpt": "Repository-level code generation requires implementing target functions while accounting for complex cross-file dependencies and project-specific conventions. Existing retrieval methods predominantly rely on lexical, structural, or semantic similarity, often overlooking repository functions that implement similar procedural logic despite differing in identifiers or application domains. We propose ProjAgent, a repository-level code generation system that introduces procedural similarity as an explicit retrieval signal. ProjAgent decomposes the target function into intermediate reasoning steps a"
+}

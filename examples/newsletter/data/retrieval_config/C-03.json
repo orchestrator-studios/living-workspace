@@ -1,0 +1,11 @@
+{
+  "id": "C-03",
+  "name": "Google DeepMind Blog",
+  "source": "rss",
+  "query": "https://deepmind.google/blog/rss.xml",
+  "window_days": 7,
+  "retmax": 15,
+  "notes": "Official announcements and research posts.",
+  "created": "2026-07-10",
+  "active": true
+}

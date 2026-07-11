@@ -1,0 +1,14 @@
+{
+  "id": "A-010",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "included",
+  "filter_reason": "A novel multi-agent orchestration architecture for deep research/web search, addressing a real limitation of single ReAct agents - squarely in the orchestration lane.",
+  "summary": "WebSwarm proposes recursive multi-agent orchestration for web search tasks that need both depth and breadth. A single ReAct-style agent is bottlenecked by one long trajectory and a finite context window, so complex research tasks force a tradeoff between going deep and covering ground; WebSwarm instead spawns and coordinates agents recursively to handle both at once. With deep-research products becoming a standard offering, architectures for decomposing and parallelizing search agents are directly relevant to this stream.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08662v1",
+  "title": "WebSwarm: Recursive Multi-Agent Orchestration for Deep-and-Wide Web Search",
+  "published": "2026-07-09",
+  "authors": "Xiaoshuai Song et al.",
+  "excerpt": "Large language model (LLM)-based web search agents are transforming information seeking from simple factoid question answering into complex, deep-and-wide search and research-oriented tasks. A single ReAct-style agent is constrained by one long trajectory and limited context, making it difficult to handle depth and coverage simultaneously. Existing multi-agent systems improve search coverage through parallel execution and aggregation, but still exhibit clear limitations in recursive depth, collaboration adaptability, and evidence-grounded expansion. We propose WebSwarm, a progressive recursive"
+}

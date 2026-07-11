@@ -1,0 +1,14 @@
+{
+  "id": "A-029",
+  "source_name": "OpenAI News",
+  "status": "included",
+  "filter_reason": "Primary post for a new OpenAI voice model generation - a multimodal capability release from a major player.",
+  "summary": "OpenAI introduced GPT-Live, a new generation of voice models now powering ChatGPT Voice, aimed at more natural real-time human-AI conversation. Voice model generations matter because latency and naturalness are the gating factors for spoken assistants and phone-style agents. This resets OpenAI's speech stack alongside the GPT-5.6 launch.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/introducing-gpt-live",
+  "title": "Introducing GPT-Live",
+  "published": "2026-07-08",
+  "authors": "",
+  "excerpt": "A new generation of voice models for natural human-AI interaction, now powering ChatGPT Voice."
+}

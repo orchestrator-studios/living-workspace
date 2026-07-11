@@ -1,0 +1,14 @@
+{
+  "id": "A-054",
+  "url": "https://www.anthropic.com/research/off-switch-dual-use",
+  "title": "An off switch for dual-use knowledge in AI models",
+  "source_name": "Anthropic",
+  "published": "2026-07-08",
+  "authors": "",
+  "excerpt": "Anthropic alignment research introducing a mechanism to selectively disable dual-use knowledge in AI models.",
+  "status": "included",
+  "filter_reason": "Anthropic alignment research on selectively disabling dual-use knowledge - a substantive safety-capability mechanism from a major lab.",
+  "summary": "Anthropic published alignment research introducing an 'off switch' for dual-use knowledge: a mechanism that can selectively disable hazardous knowledge (e.g., bio or cyber uplift) inside a model without retraining it from scratch. This matters because unlearning and knowledge gating have been notoriously brittle, and a working selective-disable mechanism would change how labs handle dangerous-capability thresholds. It is a concrete safety-engineering advance from a frontier lab, not a policy statement.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

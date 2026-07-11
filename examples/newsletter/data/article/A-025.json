@@ -1,0 +1,14 @@
+{
+  "id": "A-025",
+  "source_name": "OpenAI News",
+  "status": "included",
+  "filter_reason": "Borderline but included: an OpenAI biosecurity bounty program for a frontier model is a concrete safety move from a major lab, not PR fluff.",
+  "summary": "OpenAI is running a Bio Bug Bounty for GPT-5.5, inviting outside researchers to probe the model for bioweapons-relevant failure modes and paying for successful jailbreaks or safeguard bypasses. It signals how OpenAI is stress-testing biosecurity mitigations on frontier models with external red-teamers rather than only internal evals. Worth a briefing line as a data point on how frontier-lab safety practice is evolving.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/bio-bug-bounty",
+  "title": "GPT-5.5 Bio Bug Bounty",
+  "published": "2026-07-09",
+  "authors": "",
+  "excerpt": "Details about the OpenAI Bio Bounty program"
+}

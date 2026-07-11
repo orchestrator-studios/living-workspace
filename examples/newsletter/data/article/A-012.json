@@ -1,0 +1,14 @@
+{
+  "id": "A-012",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "excluded",
+  "filter_reason": "Inverse-RL reward learning research aimed at robustness across environments - incremental alignment/RL work without a capability or orchestration result a briefing reader needs.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08647v1",
+  "title": "Multi-Modal, Multi-Environment Machine Teaching for Robust Reward Learning",
+  "published": "2026-07-09",
+  "authors": "Ali Larian et al.",
+  "excerpt": "As autonomous agents are increasingly deployed across diverse operational contexts, aligning their behavior with human intent demands reward functions that remain robust to such changes rather than overfitting to any single environment. Inverse reinforcement learning (IRL) provides a principled way to infer such objectives from human feedback. However, existing analyses of optimal teaching approaches for IRL focus on single-environment, demonstration-only settings, leaving underexplored how heterogeneous feedback modalities and environment dynamics jointly constrain reward functions that gener"
+}

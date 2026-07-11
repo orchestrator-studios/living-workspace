@@ -1,0 +1,14 @@
+{
+  "id": "A-021",
+  "source_name": "OpenAI News",
+  "status": "excluded",
+  "filter_reason": "OpenAI-published customer case study of Deutsche Telekom adopting its products - a testimonial/marketing piece, not a substantive release, research, or strategic announcement.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/deutsche-telekom",
+  "title": "How Deutsche Telekom is rewiring telecommunications with AI",
+  "published": "2026-07-10",
+  "authors": "",
+  "excerpt": "How Deutsche Telekom is becoming an AI-native telco with OpenAI-transforming customer service, employee workflows, network operations, and the future of voice."
+}

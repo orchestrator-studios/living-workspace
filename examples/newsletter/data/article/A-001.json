@@ -1,14 +1,14 @@
 {
   "id": "A-001",
-  "status": "excluded",
-  "filter_reason": "General GBD burden study of early-onset laryngeal cancer; no asbestos/talc exposure or causation content \u2014 matched the query on 'cancer' alone.",
-  "summary": null,
-  "retrieved": "2026-07-09",
-  "pmid": "42402502",
-  "title": "Burden of early-onset laryngeal cancer in individuals aged 15-49\u00a0years: global, regional, and national estimates from the GBD 2021 study.",
-  "journal": "European archives of oto-rhino-laryngology : official journal of the European Federation of Oto-Rhino-Laryngological Societies (EUFOS) : affiliated with the German Society for Oto-Rhino-Laryngology - Head and Neck Surgery",
-  "pub_date": "2026 Jul 05",
-  "authors": "Liu D et al.",
-  "abstract": "Early-onset laryngeal cancer remains understudied despite its potential clinical and socioeconomic impact in adolescents and adults of working age. We aimed to describe the global, regional, and national burden of laryngeal cancer among individuals aged 15-49\u00a0years using data from the Global Burden of Disease (GBD) 2021 study. Data from the Global Burden of Disease (GBD) 2021 study were used to estimate incidence, mortality, disability-adjusted life years (DALYs), and attributable risk factors of laryngeal cancer among individuals aged 15-49 across 204 countries and territories from 1990 to 2021. Age-standardized rates (ASRs) and Joinpoint regression were applied to assess temporal trends, while associations with socio-demographic index (SDI) and risk factors were evaluated. In 2021, early-onset laryngeal cancer accounted for 36,855 cases (ASR: 0.48/100,000), 19,550 deaths (ASR: 0.26/100,000), and 935,561 DALYs (ASR: 12.35/100,000) globally. The global age-standardized incidence rate (ASIR) in males was 4.39 times that in females. From 1990 to 2021, global age-standardized incidence and mortality generally declined, whereas incidence increased among females in Asia. Mortality and DALY rates were inversely associated with SDI, while incidence showed no significant correlation with SDI. Sulfuric acid exposure was the only factor associated with an increase in attributable mortality and DALYs over time, whereas smoking, alcohol use, and asbestos exposure showed declining attributable burdens. Although the global burden of early-onset laryngeal cancer decreased from 1990 to 2021, marked sex- and region-specific disparities remained. Males bore a higher burden overall, and distinct regional patterns were observed, including a rising incidence among females in Asia. These findings provide a global descriptive overview of early-onset laryngeal cancer and may help inform future etiological research and region-specific prevention priorities. not applicable.",
-  "run_id": "R-001"
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "included",
+  "filter_reason": "Agent evaluation harnesses are squarely in scope, and this targets a real gap: evaluating proactive agents on real-world tasks rather than sandboxed single-turn setups.",
+  "summary": "UniClawBench is a new benchmark for 'proactive' agents - assistants that operate everyday tools and take initiative in real-world environments rather than just answering prompts. The authors argue existing agent benchmarks fall short because they rely on sandboxed environments and single-task setups. As proactive, always-on personal agents move from demos to deployments, standardized ways to evaluate them on messy real-world tasks matter to anyone building or comparing agent systems.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08768v1",
+  "title": "UniClawBench: A Universal Benchmark for Proactive Agents on Real-World Tasks",
+  "published": "2026-07-09",
+  "authors": "Zhekai Chen et al.",
+  "excerpt": "The rapid development of large language models and multimodal large language models has accelerated the emergence of proactive agents capable of operating everyday tools and assisting users in real-world environments. However, existing benchmarks struggle to evaluate such agents effectively, as they often rely on sandboxed environments and single-turn evaluation paradigms. Moreover, their scenario-based task taxonomies mix multiple model capabilities within the same task category, making it difficult to identify the root causes of agent failures. To address these limitations, we introduce UniC"
 }

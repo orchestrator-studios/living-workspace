@@ -1,0 +1,14 @@
+{
+  "id": "A-031",
+  "source_name": "OpenAI News",
+  "status": "excluded",
+  "filter_reason": "Customer case study (Australian Payments Plus using ChatGPT/Codex) - testimonial marketing, nothing a briefing reader needs.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/australian-payments-plus",
+  "title": "Australian Payments Plus moves faster with ChatGPT and Codex",
+  "published": "2026-07-07",
+  "authors": "",
+  "excerpt": "See how Australian Payments Plus uses ChatGPT Enterprise and Codex to move faster through payments complexity. AP+ saves time, improves quality, and keeps human judgment central."
+}

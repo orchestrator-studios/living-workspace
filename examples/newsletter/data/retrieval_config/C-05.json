@@ -1,0 +1,11 @@
+{
+  "id": "C-05",
+  "name": "Hacker News ? LLM stories",
+  "source": "hackernews",
+  "query": "LLM",
+  "window_days": 7,
+  "retmax": 20,
+  "notes": "What the field is talking about; expect bycatch, the filter works here.",
+  "created": "2026-07-10",
+  "active": true
+}

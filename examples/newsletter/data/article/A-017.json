@@ -1,0 +1,14 @@
+{
+  "id": "A-017",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "excluded",
+  "filter_reason": "MoE expert-pruning method for deployment efficiency - solid systems work but one of many incremental compression papers, not briefing-level.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08601v1",
+  "title": "It Takes a MAESTRO To Prune Bad Experts",
+  "published": "2026-07-09",
+  "authors": "Palaash Goel et al.",
+  "excerpt": "Sparsely-activated Mixture-of-Experts (MoE) language models achieve remarkable inference efficiency by activating only a small fraction of parameters per token, yet their full expert banks reside in memory at all times, creating a prohibitive deployment bottleneck. Existing structured pruning methods, largely designed for dense transformers, assess expert importance using locally derived heuristics that are blind to the interdependent nature of MoE routing. We introduce MAESTRO (Markov-chain Approximated Expert Sparsification via Transition-based ROuting), a structured pruning framework design"
+}

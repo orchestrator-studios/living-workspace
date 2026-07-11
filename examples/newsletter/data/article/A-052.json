@@ -1,0 +1,14 @@
+{
+  "id": "A-052",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Systems-programming/language project with no AI component.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://github.com/DO-SAY-GO/freelang/blob/main/examples/HTTPD.md",
+  "title": "FreedomLang \u2013 native x86-64 HTTP with no libc / no CRT",
+  "published": "2026-07-10",
+  "authors": "keepamovin",
+  "excerpt": "1 points on Hacker News"
+}

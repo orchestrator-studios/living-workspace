@@ -1,0 +1,14 @@
+{
+  "id": "A-033",
+  "source_name": "Google AI ? The Keyword",
+  "status": "included",
+  "filter_reason": "Agent infrastructure news from Google - background tasks and remote MCP in the Gemini API are squarely orchestration and interoperability.",
+  "summary": "Google expanded Managed Agents in the Gemini API with background task execution, remote MCP support, and other features aimed at production-ready agents. Remote MCP support is notable interoperability news, since MCP is emerging as the cross-vendor standard for agent tool use. For teams building agents on Gemini, this moves more orchestration burden into Google's managed layer.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-004",
+  "url": "https://blog.google/innovation-and-ai/technology/developers-tools/expanding-managed-agents-gemini-api/",
+  "title": "Expanding Managed Agents in Gemini API: background tasks, remote MCP and more",
+  "published": "2026-07-07",
+  "authors": "",
+  "excerpt": "We\u2019re announcing new capabilities in Managed Agents in Gemini API so developers can build reliable, production-ready agents."
+}

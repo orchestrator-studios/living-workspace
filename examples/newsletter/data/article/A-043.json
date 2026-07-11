@@ -1,0 +1,14 @@
+{
+  "id": "A-043",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Climate/forestry research with no connection to AI model capabilities, orchestration, or major-player news.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://lamont.columbia.edu/news/new-research-indicates-future-trees-may-store-less-carbon-expected",
+  "title": "New Research Indicates That in Future, Trees May Store Less Carbon Than Expected",
+  "published": "2026-07-10",
+  "authors": "littlexsparkee",
+  "excerpt": "2 points on Hacker News"
+}

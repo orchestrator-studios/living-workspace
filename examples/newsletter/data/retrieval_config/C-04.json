@@ -1,0 +1,11 @@
+{
+  "id": "C-04",
+  "name": "Google AI ? The Keyword",
+  "source": "rss",
+  "query": "https://blog.google/technology/ai/rss/",
+  "window_days": 7,
+  "retmax": 15,
+  "notes": "Gemini/product-side announcements.",
+  "created": "2026-07-10",
+  "active": true
+}

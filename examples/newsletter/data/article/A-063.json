@@ -1,0 +1,14 @@
+{
+  "id": "A-063",
+  "url": "https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/",
+  "title": "Introducing Muse Spark 1.1",
+  "source_name": "Meta",
+  "published": "2026-07-09",
+  "authors": "",
+  "excerpt": "Meta Superintelligence Labs releases Muse Spark 1.1, a multimodal agentic reasoning model with self-managed 1M-token context, launched alongside the new Meta Model API - the first time Meta has charged for model access.",
+  "status": "included",
+  "filter_reason": "Major release from Meta: a new agentic multimodal model plus Meta's first-ever paid model API - both capability and strategic news.",
+  "summary": "Meta Superintelligence Labs released Muse Spark 1.1, a multimodal agentic reasoning model with self-managed 1M-token context, alongside the new Meta Model API. The API is the bigger story: it is the first time Meta has charged for model access, a strategic break from its open-weights-only posture. The combination of long self-managed context and agentic focus also makes the model itself relevant to anyone building or evaluating agent stacks.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

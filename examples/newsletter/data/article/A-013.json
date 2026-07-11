@@ -1,0 +1,14 @@
+{
+  "id": "A-013",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "excluded",
+  "filter_reason": "Pre-training data refinement pipeline research - relevant to the data-wall discussion but one of many incremental data-curation papers, with no headline capability result in evidence.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08646v1",
+  "title": "UltraX: Refining Pre-Training Data at Scale with Adaptive Programmatic Editing",
+  "published": "2026-07-09",
+  "authors": "Xinlong Zhao et al.",
+  "excerpt": "As available training data approaches its physical limit, gains from Scaling Laws have begun to diminish. Consequently, improving Large Language Models (LLMs) now depends less on data expansion and more on higher-quality data utilization. However, in the context of large-scale corpora, existing refinement methodologies face significant limitations in quality, efficiency, and reliability: Rule-based approaches are constrained by fixed heuristics and struggle with instance-level variations; LLM-based approaches improve quality but fail to meet the efficiency and reliability requirements of large"
+}

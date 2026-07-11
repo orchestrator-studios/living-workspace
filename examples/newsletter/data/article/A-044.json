@@ -1,0 +1,14 @@
+{
+  "id": "A-044",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Tiny Show HN hobby project (1 point) wiring Cursor agents to a local LLM chat; no new capability or orchestration insight, effectively a minor integration.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://github.com/mattmireles/local-motion",
+  "title": "Show HN: Local Motion \u2013 Use Cursor Agents and Chat with a Local LLM",
+  "published": "2026-07-10",
+  "authors": "MediaSquirrel",
+  "excerpt": "1 points on Hacker News"
+}

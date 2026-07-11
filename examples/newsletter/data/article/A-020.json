@@ -1,0 +1,14 @@
+{
+  "id": "A-020",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "excluded",
+  "filter_reason": "Bandwidth-constrained cooperative vision-language navigation for robotics - a narrow embodied-AI subproblem, not general agent orchestration or capability news.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08504v1",
+  "title": "Early to Share, Late to Save: Synchronisation-Driven Communication Gating in Bandwidth-Constrained Cooperative VLN",
+  "published": "2026-07-09",
+  "authors": "Arav Gupta et al.",
+  "excerpt": "Most cooperative Vision-Language Navigation (VLN) methods assume unlimited communication, not considering real-world applications where bandwidth is restricted and information efficiency is critical. We introduce \\textbf{bandwidth-constrained cooperative VLN} and propose \\textbf{hindsight gating}: a lightweight supervised gate that labels communication-critical steps post-hoc from navigation failures, avoiding the high variance of REINFORCE. Contrary to the intuition that agents should communicate when uncertain, we observe a consistent counter-intuitive pattern: trained gates fire predominant"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "A-035",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "A niche Show HN - an MCP server for insurance quotes is a minor single-purpose integration, not orchestration news a briefing reader needs.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://github.com/seaworthy-io/seaworthy-mcp",
+  "title": "Show HN: An MCP server that lets AI agents request disability insurance quotes",
+  "published": "2026-07-10",
+  "authors": "tobylason",
+  "excerpt": "2 points on Hacker News"
+}

@@ -96,23 +96,16 @@ def alignment_checks(errors):
 
 def integrity_checks(errors):
     """The workspace's cross-record rules (grown) — OVERVIEW rules 1–4: one record per
-    PMID; every verdict carries its reason; an issue cites only included, summarized
-    articles; a final issue carries its assembled body. Plus provenance: every article
-    traces to a run, every run to a config, and at most one config is active per
-    source. Validation reads the raw files on purpose — it checks the substrate
+    URL; every verdict carries its reason; an issue cites only included, summarized
+    stories; a final issue carries its assembled body. Plus provenance (every article
+    traces to a run, every run to a config) and coverage (issue windows tile, never
+    overlap). Validation reads the raw files on purpose — it checks the substrate
     itself, not a query's answer — but paths still come from repo."""
     def records(kind):
         folder = repo.DATA / kind
         return [load(p) for p in sorted(folder.glob("*.json"))] if folder.exists() else []
 
     configs = {c["id"]: c for c in records("retrieval_config")}
-    active = {}
-    for c in configs.values():
-        if c["active"]:
-            if c["source"] in active:
-                errors.append(f"{c['id']}: second active config for {c['source']} "
-                              f"(already {active[c['source']]}) — at most one per source")
-            active[c["source"]] = c["id"]
 
     runs = {r["id"]: r for r in records("run")}
     for r in runs.values():
@@ -120,13 +113,14 @@ def integrity_checks(errors):
             errors.append(f"{r['id']}: config {r['config']} does not exist")
 
     articles = {}
-    seen_pmids = {}
+    seen_urls = {}
     for a in records("article"):
         articles[a["id"]] = a
-        if a["pmid"] in seen_pmids:
-            errors.append(f"{a['id']}: PMID {a['pmid']} already held by "
-                          f"{seen_pmids[a['pmid']]} — one record per PMID, ever")
-        seen_pmids[a["pmid"]] = a["id"]
+        url = a["url"].lower()
+        if url in seen_urls:
+            errors.append(f"{a['id']}: URL already held by {seen_urls[url]} — "
+                          f"one record per URL, ever")
+        seen_urls[url] = a["id"]
         if a["status"] != "candidate" and not (a.get("filter_reason") or "").strip():
             errors.append(f"{a['id']}: {a['status']} without a filter_reason — "
                           f"every verdict carries its reason")
@@ -139,7 +133,13 @@ def integrity_checks(errors):
             if aid not in articles:
                 errors.append(f"{r['id']}: added article {aid} does not exist")
 
-    for issue in records("issue"):
+    issues = sorted(records("issue"), key=lambda i: i["week_start"])
+    for prev, cur in zip(issues, issues[1:]):
+        if cur["week_start"] <= prev["week_end"]:
+            errors.append(f"{cur['id']}: window overlaps {prev['id']} "
+                          f"({cur['week_start']} <= {prev['week_end']}) — "
+                          f"issue windows tile, never overlap")
+    for issue in issues:
         if issue["status"] == "final" and not (issue.get("body") or "").strip():
             errors.append(f"{issue['id']}: final without an assembled body — "
                           f"run tools/assemble_issue.py {issue['id']}")

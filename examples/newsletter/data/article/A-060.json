@@ -1,0 +1,14 @@
+{
+  "id": "A-060",
+  "url": "https://www.anthropic.com/news/ust-claude",
+  "title": "UST is bringing Claude to physical AI",
+  "source_name": "Anthropic",
+  "published": "2026-07-09",
+  "authors": "",
+  "excerpt": "Partnership announcement: UST is deploying Claude in physical AI applications.",
+  "status": "excluded",
+  "filter_reason": "Partnership/deployment announcement - vendor marketing about bringing Claude to 'physical AI' with no technical substance in evidence.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "A-062",
+  "url": "https://x.ai/news/grok-4-5",
+  "title": "Introducing Grok 4.5",
+  "source_name": "xAI",
+  "published": "2026-07-08",
+  "authors": "",
+  "excerpt": "xAI launches Grok 4.5, described as an Opus-class model but faster and cheaper ($2/$6 per M tokens), trained alongside Cursor for coding and agentic tasks; not yet available in the EU.",
+  "status": "included",
+  "filter_reason": "Major model release from xAI with concrete capability and pricing claims - squarely in scope.",
+  "summary": "xAI launched Grok 4.5, pitching it as an Opus-class model that is faster and cheaper at $2/$6 per million tokens. Notably, xAI says it was trained alongside Cursor with a focus on coding and agentic tasks, signaling a deliberate play for the coding-agent market rather than general chat. It is not yet available in the EU. If the Opus-class claim holds, the price point puts real pressure on frontier coding-model pricing.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

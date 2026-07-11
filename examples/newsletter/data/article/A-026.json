@@ -1,0 +1,14 @@
+{
+  "id": "A-026",
+  "source_name": "OpenAI News",
+  "status": "included",
+  "filter_reason": "Borderline major-player call, included per the in-doubt rule: it's a positioning document rather than a concrete deal, but OpenAI formalizing principles for government and national-security work is a strategic move with real consequence.",
+  "summary": "OpenAI published its framework for government and national-security partnerships, laying out principles around responsible use, democratic accountability, and public safety. It's a principles post rather than a specific contract, but it telegraphs how far OpenAI intends to go with defense and government customers. Useful context for reading future deals in this space.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/government-national-security-partnerships",
+  "title": "Our approach to government and national security partnerships",
+  "published": "2026-07-08",
+  "authors": "",
+  "excerpt": "Learn how OpenAI approaches government and national security partnerships, with principles for responsible AI use, democratic accountability, and public safety."
+}

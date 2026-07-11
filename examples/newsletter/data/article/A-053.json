@@ -1,0 +1,14 @@
+{
+  "id": "A-053",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Months-old arXiv preprint (April) resurfacing at 1 point; reads as routine incremental research with no demonstrated capability significance.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://arxiv.org/abs/2604.06228",
+  "title": "Generalizing LLMs to PLTs: Probabilistic Language Tries",
+  "published": "2026-07-10",
+  "authors": "EGreg",
+  "excerpt": "1 points on Hacker News"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "A-059",
+  "url": "https://www.anthropic.com/news/ben-bernanke",
+  "title": "Ben Bernanke appointed to Anthropic's Long-Term Benefit Trust",
+  "source_name": "Anthropic",
+  "published": "2026-07-09",
+  "authors": "",
+  "excerpt": "Former Federal Reserve chair joins the Long-Term Benefit Trust, the body overseeing Anthropic's long-term governance.",
+  "status": "included",
+  "filter_reason": "Borderline major-player governance news, included per the when-in-doubt rule: a former Fed chair joining the body that controls Anthropic's long-term governance is a substantive strategic move, not PR fluff.",
+  "summary": "Former Federal Reserve chair Ben Bernanke has been appointed to Anthropic's Long-Term Benefit Trust, the independent body that oversees the company's long-term governance and can appoint board members. Adding a figure of Bernanke's stature signals how seriously Anthropic is institutionalizing its governance structure, and the Trust's composition matters because it is the mechanism meant to keep the company's mission ahead of commercial pressure.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

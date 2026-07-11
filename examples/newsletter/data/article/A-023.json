@@ -1,0 +1,14 @@
+{
+  "id": "A-023",
+  "source_name": "OpenAI News",
+  "status": "included",
+  "filter_reason": "Primary post for a frontier model release from OpenAI - squarely model-capabilities news.",
+  "summary": "OpenAI released GPT-5.6, its newest flagship model, pitching better intelligence per token, improved performance per dollar, and the ability to scale up capability on demand for harder tasks. As a frontier model release it resets the baseline that other labs and downstream products (including Microsoft 365 Copilot, which adopted it at launch) will be measured against. Expect benchmark comparisons and pricing analysis to follow this week.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/gpt-5-6",
+  "title": "GPT-5.6: Frontier intelligence that scales with your ambition",
+  "published": "2026-07-09",
+  "authors": "",
+  "excerpt": "More intelligence from every token, stronger performance per dollar, and more capability on demand for your hardest work."
+}

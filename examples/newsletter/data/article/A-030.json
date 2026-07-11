@@ -1,0 +1,14 @@
+{
+  "id": "A-030",
+  "source_name": "OpenAI News",
+  "status": "excluded",
+  "filter_reason": "Customer case study (MUFG on ChatGPT Enterprise) that is effectively a testimonial - no new capability or orchestration information.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/mufg",
+  "title": "MUFG aims to become AI-native with OpenAI",
+  "published": "2026-07-07",
+  "authors": "",
+  "excerpt": "MUFG uses ChatGPT Enterprise to build an AI-native organization, improve workflows, and deliver new AI-powered financial services at scale."
+}

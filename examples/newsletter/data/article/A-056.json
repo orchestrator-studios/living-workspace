@@ -1,0 +1,14 @@
+{
+  "id": "A-056",
+  "url": "https://www.anthropic.com/features/making-of-claude-code",
+  "title": "The Making of Claude Code",
+  "source_name": "Anthropic",
+  "published": "2026-07-06",
+  "authors": "",
+  "excerpt": "Feature telling the inside story of how Claude Code went from an internal CLI to Anthropic's coding agent; notes over 80 percent of Anthropic engineers who write code use it daily.",
+  "status": "included",
+  "filter_reason": "Borderline but included: major-player feature about Anthropic's flagship coding agent with real production-adoption detail (80%+ of Anthropic engineers use it daily), which carries orchestration lessons beyond PR.",
+  "summary": "Anthropic published the inside story of Claude Code's path from an internal CLI experiment to its flagship coding agent, reporting that over 80 percent of Anthropic engineers who write code now use it daily. The piece is partly a feature story, but it documents how a frontier lab dogfooded and productionized an agent, which is useful signal on what agentic coding workflows look like when run at scale inside the lab that builds the model.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

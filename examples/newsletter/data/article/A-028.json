@@ -1,0 +1,14 @@
+{
+  "id": "A-028",
+  "source_name": "OpenAI News",
+  "status": "excluded",
+  "filter_reason": "Education outreach program (AI Skills Jams for K-12 teachers) - corporate goodwill/marketing with no capability, orchestration, or strategic significance.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/k-12-educators-practical-skills",
+  "title": "Helping K\u201312 educators build practical AI skills",
+  "published": "2026-07-08",
+  "authors": "",
+  "excerpt": "OpenAI Academy and the Walton Family Foundation are bringing hands-on AI Skills Jams to help K\u201312 educators build practical AI skills for the classroom."
+}

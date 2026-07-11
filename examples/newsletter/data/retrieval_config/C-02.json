@@ -1,0 +1,11 @@
+{
+  "id": "C-02",
+  "name": "OpenAI News",
+  "source": "rss",
+  "query": "https://openai.com/news/rss.xml",
+  "window_days": 7,
+  "retmax": 15,
+  "notes": "Official announcements.",
+  "created": "2026-07-10",
+  "active": true
+}

@@ -1,0 +1,14 @@
+{
+  "id": "A-024",
+  "source_name": "OpenAI News",
+  "status": "included",
+  "filter_reason": "Primary post for a new OpenAI agent product - major-player news with direct orchestration relevance.",
+  "summary": "OpenAI launched ChatGPT Work, an agent that takes actions across a user's apps and files, can stay on a project for hours, and turns a stated goal into finished work rather than just chat replies. It's OpenAI's clearest move yet toward long-running, autonomous workplace agents. For anyone tracking agent orchestration, this is a production-scale test of long-horizon task execution and cross-app tool use.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/chatgpt-for-your-most-ambitious-work",
+  "title": "ChatGPT is now a partner for your most ambitious work",
+  "published": "2026-07-09",
+  "authors": "",
+  "excerpt": "ChatGPT Work is an agent that can take action across your apps and files, stay with a project for hours if needed, and turn a goal into finished work."
+}

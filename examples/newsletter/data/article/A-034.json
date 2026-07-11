@@ -1,0 +1,14 @@
+{
+  "id": "A-034",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "A Python JIT compiler project - compilers/performance tooling, not AI capabilities or agent orchestration despite the 'genetic algorithm' label.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://github.com/ezducate/HanaJit",
+  "title": "Show HN: Hana JIT \u2013 LLVM-backed Python JIT with genetic-algorithm superoptimizer",
+  "published": "2026-07-10",
+  "authors": "iqbal1980",
+  "excerpt": "1 points on Hacker News"
+}

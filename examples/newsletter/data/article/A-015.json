@@ -1,0 +1,14 @@
+{
+  "id": "A-015",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "excluded",
+  "filter_reason": "Incremental mechanistic-interpretability work on sparse autoencoders in VLMs - niche interp progress without a capability claim that moves the picture.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08605v1",
+  "title": "When Structured Sparse Autoencoders Learn Consistent Concepts Across Modalities",
+  "published": "2026-07-09",
+  "authors": "Weiduo Liao et al.",
+  "excerpt": "Sparse autoencoders (SAEs) have emerged as a promising technique for mechanistic interpretability by learning a set of sparse latent features in large models, each of which encodes a distinct concept. However, in vision-language models (VLMs), vanilla SAEs struggle to learn modality-consistent concepts, with concepts often exhibiting fragmented coverage (i.e., disjoint regions) in the visual modality. To address this challenge, we propose a Structured Sparse AutoEncoder ($S^2AE$) that enforces concept consistency from both semantic and spatial perspectives in the visual modality. Specifically,"
+}

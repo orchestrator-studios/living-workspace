@@ -1,0 +1,14 @@
+{
+  "id": "A-047",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Ask HN anecdote thread - crowd-sourced opinions on frontier-model tasks with no new information or results; discussion threads are not briefing material.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://news.ycombinator.com/item?id=48863171",
+  "title": "Ask HN: What was the last task where only a frontier model could do it?",
+  "published": "2026-07-10",
+  "authors": "thedebuglife",
+  "excerpt": "22 points on Hacker News"
+}

@@ -1,14 +1,14 @@
 {
   "id": "A-004",
+  "source_name": "arXiv ? LLM & agent research",
   "status": "excluded",
-  "filter_reason": "About airborne carbon nanotubes, drawing an analogy to asbestos; a different exposure entirely, with no talc/asbestos causation or exposure findings.",
+  "filter_reason": "Useful-but-incremental evaluation methodology for quantized models; a new metric for quantization side-effects is one of many deployment-engineering papers and doesn't shift the capability picture.",
   "summary": null,
-  "retrieved": "2026-07-09",
-  "pmid": "42392601",
-  "title": "A Novel Sampling and Analytical Framework for Airborne Carbon Nanotubes.",
-  "journal": "Analytical chemistry",
-  "pub_date": "2026 Jul 02",
-  "authors": "Davey HA et al.",
-  "abstract": "Airborne carbon nanotubes (CNTs) present growing environmental and occupational health concerns. Like asbestos, CNT can deposit deep in the lungs and induce toxic effects, underscoring the need for accurate exposure metrics amid increasing global production. Current exposure assessment methods by the National Institute for Occupational Safety and Health (NIOSH) rely on mass-based measurements and indirect transmission electron microscopy (TEM), which often underestimate exposure, particularly for nanoscale fibers. To overcome these limitations, the objectives of this study were to develop a CNT-specific sampling and analysis method to improve fiber detection and characterization and validate its performance by comparing the novel diffusion-based sampler, Tsai Diffusion Sampler (TDS), with conventional approaches. Samplers were operated side-by-side under controlled conditions to ensure comparability. Furthermore, polycarbonate (PC) and mixed cellulose ester (MCE) filters were evaluated for all of the sampling configurations. CNTs collected onto filters and TEM grids were examined for their corresponding direct or indirect analysis. An automated image segmentation algorithm was applied to CNT images to ensure consistent fiber sizing and to support a count-based exposure metric. Results demonstrated that the TDS (which utilizes low flow rate) paired with PC filters most effectively captured individualized nanoscale fibers, enabling recovery of CNT structures of less than 100 nm that were underrepresented in compared methods. Aerosolized hydrophilic CNTs exhibited higher number concentrations than hydrophobic CNTs, while open-face samplers with MCE filters produced the highest mass concentrations. Importantly, these findings establish a reproducible, integrated sampling, and analytical framework that enhances CNT exposure assessment and supports refinement of occupational health guidelines.",
-  "run_id": "R-001"
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08734v1",
+  "title": "The Illusion of Equivalency: Statistical Characterization of Quantization Effects in LLMs",
+  "published": "2026-07-09",
+  "authors": "Baha Rababah et al.",
+  "excerpt": "Post-training quantization is widely used to deploy large language models in resource-constrained settings, yet its evaluation relies almost exclusively on accuracy and perplexity. We show that these metrics fail to capture behavioral changes induced by quantization. We introduce correctness agreement, a decision-level metric that measures overlap in correct predictions between a base model and its quantized variants, independent of absolute accuracy. Across multiple models and quantization schemes from 8-bit to 2-bit, we find that behavioral divergence emerges under moderate quantization even"
 }

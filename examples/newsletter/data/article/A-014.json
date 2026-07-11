@@ -1,0 +1,14 @@
+{
+  "id": "A-014",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "excluded",
+  "filter_reason": "Analysis of real patient-chatbot conversations in healthcare - an application-domain usability study, not capability or orchestration news.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08625v1",
+  "title": "The complexities of patient-centred conversational artificial intelligence",
+  "published": "2026-07-09",
+  "authors": "Jo\u00e3o Matos et al.",
+  "excerpt": "Consumer-facing health chatbots powered by large language models (LLMs) are increasingly used for symptom assessment. However, chatbot development and evaluation often rely on cooperative, articulate, simulated patients. We analysed 2,053 real patient-chatbot conversations and found that communication patterns and expression of emotions vary widely across users. We developed a patient simulator that separately models clinical content, emotional state, conversational strategy, and communication style. In a Turing-inspired evaluation of realism with 15 human graders, simulated conversations were"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "A-050",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Explainer/tutorial blog post on quantization and VRAM accounting; useful education but a how-to, not news that moves the capability picture.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://www.lttlabs.com/articles/2026/07/10/llm-quantization-part-2-youre-gonna-need-a-bigger-vram",
+  "title": "Memory is needed for more than just weights",
+  "published": "2026-07-10",
+  "authors": "LabsLucas",
+  "excerpt": "2 points on Hacker News"
+}

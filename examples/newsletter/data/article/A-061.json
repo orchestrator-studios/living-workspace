@@ -1,0 +1,14 @@
+{
+  "id": "A-061",
+  "url": "https://www.anthropic.com/news/alberta-government-claude-cybersecurity",
+  "title": "Government of Alberta uses Claude to find and fix cybersecurity vulnerabilities",
+  "source_name": "Anthropic",
+  "published": "2026-07-06",
+  "authors": "",
+  "excerpt": "Case study on the Government of Alberta using Claude to find and remediate cybersecurity vulnerabilities across government systems.",
+  "status": "excluded",
+  "filter_reason": "Customer case study that is effectively a testimonial (a government using Claude for security remediation); no new capability or orchestration information.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

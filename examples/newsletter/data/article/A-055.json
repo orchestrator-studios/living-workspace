@@ -1,0 +1,14 @@
+{
+  "id": "A-055",
+  "url": "https://www.anthropic.com/research/global-workspace",
+  "title": "A global workspace in language models",
+  "source_name": "Anthropic",
+  "published": "2026-07-06",
+  "authors": "",
+  "excerpt": "Interpretability research reporting an emergent mental workspace in Claude that holds internal thoughts which do not appear in the model output.",
+  "status": "included",
+  "filter_reason": "Anthropic interpretability finding of an emergent internal workspace in Claude - capability-relevant research on how frontier models actually compute.",
+  "summary": "Anthropic interpretability researchers report evidence of an emergent 'global workspace' in Claude: an internal mental scratch space holding thoughts that never surface in the model's text output. If it holds up, this reshapes assumptions that chain-of-thought text reflects what the model is doing internally, with direct implications for monitoring, faithfulness of reasoning traces, and how much latent computation frontier models carry out unseen.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

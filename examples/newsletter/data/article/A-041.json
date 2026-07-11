@@ -1,0 +1,14 @@
+{
+  "id": "A-041",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "A ClickHouse JavaScript client library - database tooling, no AI relevance.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://github.com/maxjustus/chwire",
+  "title": "Show HN: chwire \u2013 Native-Format ClickHouse JavaScript Client over HTTP/TCP",
+  "published": "2026-07-10",
+  "authors": "maxjustus",
+  "excerpt": "2 points on Hacker News"
+}

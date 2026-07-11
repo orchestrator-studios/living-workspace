@@ -1,0 +1,14 @@
+{
+  "id": "A-027",
+  "source_name": "OpenAI News",
+  "status": "included",
+  "filter_reason": "Benchmark-integrity analysis from a major lab - directly moves the picture on how coding evals should be read.",
+  "summary": "OpenAI published an analysis identifying reliability problems in SWE-Bench Pro, a widely cited benchmark for AI coding ability. The findings raise questions about how much weight recent coding-benchmark comparisons should carry across models. If you use SWE-Bench Pro numbers to compare frontier models' coding skills, this changes how skeptically you should read them.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-002",
+  "url": "https://openai.com/index/separating-signal-from-noise-coding-evaluations",
+  "title": "Separating signal from noise in coding evaluations",
+  "published": "2026-07-08",
+  "authors": "",
+  "excerpt": "A new analysis from OpenAI reveals issues in SWE-Bench Pro, a popular coding benchmark, raising concerns about reliability and accuracy in evaluating AI models."
+}

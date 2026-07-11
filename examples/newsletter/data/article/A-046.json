@@ -1,0 +1,14 @@
+{
+  "id": "A-046",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Functional-programming architecture post about Elm; no AI relevance.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://cekrem.github.io/posts/elm-run-batch-job/",
+  "title": "A batch job, in The Elm Architecture",
+  "published": "2026-07-10",
+  "authors": "linggen",
+  "excerpt": "1 points on Hacker News"
+}

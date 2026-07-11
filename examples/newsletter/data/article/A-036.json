@@ -1,0 +1,14 @@
+{
+  "id": "A-036",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Signal-without-a-smartphone tool - no AI relevance at all.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://github.com/almet/signal-without-smartphone",
+  "title": "Tool to use signal without a smartphone",
+  "published": "2026-07-10",
+  "authors": "almet",
+  "excerpt": "1 points on Hacker News"
+}

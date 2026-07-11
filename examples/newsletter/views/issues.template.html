@@ -66,6 +66,8 @@
   .exec { font-size: 0.9rem; }
   .paper { border-top: 1px solid var(--border); padding: 10px 0; }
   .paper .t { font-weight: 600; font-size: 0.9rem; }
+  .paper .t a { color: var(--ink); text-decoration: none; }
+  .paper .t a:hover { color: var(--accent); }
   .paper .m { color: var(--ink-2); font-size: 0.76rem; margin: 2px 0 4px; }
   .paper .m a { color: var(--accent); text-decoration: none; }
   .paper .s { font-size: 0.86rem; }
@@ -147,10 +149,10 @@ function panelHtml(answer) {
       `candidate(s) in this window still await a verdict</div>` : "";
   const exec = issue.executive_summary
     ? `<h3>This week</h3><p class="exec">${esc(issue.executive_summary)}</p>` : "";
-  const papers = issue.articles.map(a =>
-    `<div class="paper"><div class="t">${esc(a.title)}</div>` +
-    `<div class="m">${esc(a.authors)} — ${esc(a.journal)}, ${esc(a.pub_date)} · ` +
-    `<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(a.pmid)}/">PMID ${esc(a.pmid)}</a></div>` +
+  const stories = issue.articles.map(a =>
+    `<div class="paper"><div class="t"><a href="${esc(a.url)}">${esc(a.title)}</a></div>` +
+    `<div class="m">${esc(a.source_name)}${a.published ? " · " + esc(a.published) : ""}` +
+    ` · ${esc(a.id)}</div>` +
     `<div class="s">${esc(a.summary || "(no summary yet)")}</div></div>`).join("");
   const retrieval = issue.runs.map(runHtml).join("") ||
     '<p class="exec">no recorded runs cover this window</p>';
@@ -160,8 +162,8 @@ function panelHtml(answer) {
          `${esc(issue.week_end)} · created ${esc(issue.created)}` +
          `${issue.has_body ? "" : " · body not assembled yet"}</div>` +
          working + exec +
-         `<h3>The papers (${issue.articles.length})</h3>` +
-         (papers || '<p class="exec">none</p>') +
+         `<h3>The stories (${issue.articles.length})</h3>` +
+         (stories || '<p class="exec">none</p>') +
          `<details class="retrieval"><summary>How it was retrieved</summary>` +
          retrieval + `</details></div>`;
 }

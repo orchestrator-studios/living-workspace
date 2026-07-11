@@ -1,0 +1,14 @@
+{
+  "id": "A-057",
+  "url": "https://www.anthropic.com/news/reflect-with-claude",
+  "title": "Introducing a way to reflect on how you use Claude",
+  "source_name": "Anthropic",
+  "published": "2026-07-09",
+  "authors": "",
+  "excerpt": "New Reflect feature adds a monthly recap and focus settings for Claude on web and desktop.",
+  "status": "excluded",
+  "filter_reason": "Minor consumer product feature (monthly recap and focus settings for the Claude app) with no capability, orchestration, or strategic consequence - 'app adds feature' territory even from a major lab.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-006"
+}

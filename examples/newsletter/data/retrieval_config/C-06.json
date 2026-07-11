@@ -1,0 +1,11 @@
+{
+  "id": "C-06",
+  "name": "Web sweep ? major-player news",
+  "source": "websweep",
+  "query": "Major AI news in the window that the feeds miss. Priority: Anthropic (no reliable RSS) ? releases, research, policy; then any frontier-lab model launches, notable evals, big API changes; then orchestration news (agent frameworks, interop protocols). Primary sources only.",
+  "window_days": 7,
+  "retmax": 12,
+  "notes": "Runs as capabilities/news-sweep.md; landed via tools/land_stories.py.",
+  "created": "2026-07-10",
+  "active": true
+}

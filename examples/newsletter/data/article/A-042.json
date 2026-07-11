@@ -1,0 +1,14 @@
+{
+  "id": "A-042",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Geopolitics piece on Starlink, Russia, and China - no bearing on AI models, agents, or major-lab news.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://theins.press/en/inv/294635",
+  "title": "Shooting Starlink: The \"no limits\" partnership between Russia and China",
+  "published": "2026-07-10",
+  "authors": "uxhacker",
+  "excerpt": "8 points on Hacker News"
+}

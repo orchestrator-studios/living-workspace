@@ -1,0 +1,14 @@
+{
+  "id": "A-045",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Hardware/biosignal research on in-ear EEG; not about AI models, agents, or major labs.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11207223/",
+  "title": "EEG Signal Quality of an In-Ear Wearable",
+  "published": "2026-07-10",
+  "authors": "soupspaces",
+  "excerpt": "1 points on Hacker News"
+}

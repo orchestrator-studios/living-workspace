@@ -1,14 +1,14 @@
 {
   "id": "A-006",
+  "source_name": "arXiv ? LLM & agent research",
   "status": "included",
-  "filter_reason": "Asbestos-associated disease: PREDICT-Meso cohort studies the natural history from benign asbestos-associated pleural inflammation to pleural mesothelioma \u2014 bears on causation and latency.",
-  "summary": "Protocol for the PREDICT-Meso International Accelerator Network, a biobank-backed observational study tracking progression from benign asbestos-associated pleural inflammation to pleural mesothelioma. Its natural-history and risk-prediction data bear on the latency and causation questions at the heart of asbestos litigation.",
-  "retrieved": "2026-07-09",
-  "pmid": "42386348",
-  "title": "Protocol for Mesothelioma Observational study of Risk prediction and Generation of paired benign-meso tissue samples, Including a Nested MRI Substudy (Meso-ORIGINS).",
-  "journal": "BMJ open respiratory research",
-  "pub_date": "2026 Jul 01",
-  "authors": "Neilly MDJ et al.",
-  "abstract": "Pleural mesothelioma (PM) is often presaged by benign asbestos-associated pleural inflammation (AAPI), offering a unique window of opportunity for translational research. The PREDICT-Meso International Accelerator Network is leveraging this natural history to perform target identification and develop novel therapies for early-stage or pre-invasive disease. This requires assembly of a unique bioresource of longitudinal human tissue samples spanning the terminal stages of PM evolution, development of preclinical models for drug screening and reliable tools for risk prediction in patients presenting with AAPI. Mesothelioma Observational study of Risk prediction and Generation of paired benign-meso tissue samples, Including a Nested MRI Substudy (Meso-ORIGINS) is a prospective, multicentre observational study, comprising two arms (A and B), with a nested MRI substudy in arm A. Arm A will recruit 300 AAPI patients and perform 6-monthly surveillance for 2 years. Suspicion of PM evolution will prompt repeat biopsy and banking, delivering a primary objective of \u226538 longitudinal AAPI-PM tissue pairs. This target reflects a projected PM evolution rate of 14% (95% CI 10.5 to 19.2) derived from a prior multicentre feasibility trial. Multiomic risk profiling will be performed in arm A, using blood proteomics, exhaled breath metabolomics and perfusion MRI. Arm B will recruit 300 patients with suspected PM, permitting collection of multiregion pleural biopsies in patients spanning AAPI and PM timepoints for evaluation of anatomical heterogeneity. Where possible, patients in arm B diagnosed with AAPI will be recruited to arm A for 2-year surveillance +/- repeat biopsy in subsequent PM evolution cases. Pleural fluid will be collected in arm B for cell-line generation and diagnostic biomarker evaluation. Exhaled breath will be collected in arm B for diagnostic biomarker evaluation. The study has ethical approval (REC Ref 21/WS/0120). Results will be disseminated via peer-reviewed journals and national/international scientific conferences. Tissues, data and derived omics will be shared via the PREDICT-Meso Research Tissue Bank (REC Ref 21/WS/0011). ISRCTN22929761.",
-  "run_id": "R-001"
+  "filter_reason": "Agent memory for long-horizon tasks is a live orchestration problem, and this proposes a proactive memory architecture rather than another passive retrieval store.",
+  "summary": "This paper tackles a core failure mode of long-running agents: as trajectories grow, task requirements, prior attempts, and open subgoals get buried in or pushed out of the context window and stop influencing decisions. It proposes a proactive memory agent that surfaces decision-relevant state at the moment it matters, instead of waiting for the action agent to query for it. Memory management is one of the main bottlenecks for long-horizon agent reliability, so approaches like this are directly relevant to anyone building agents that run for hours or days.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08716v1",
+  "title": "Remember When It Matters: Proactive Memory Agent for Long-Horizon Agents",
+  "published": "2026-07-09",
+  "authors": "Yifan Wu et al.",
+  "excerpt": "In long-horizon tasks, decision-relevant state is often scattered across an expanding trajectory, while the action agent must surface it and act. As trajectories grow, task requirements, environment facts, prior attempts, diagnoses, and open subgoals can be buried in the context window or pushed beyond it, failing to influence decisions when needed. We call this failure mode \"behavioral state decay\". We study memory as an active intervention mechanism rather than passive retrieval. A separate memory agent runs alongside an unmodified action agent, updating a structured memory bank from the rec"
 }

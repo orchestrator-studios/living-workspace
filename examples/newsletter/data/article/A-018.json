@@ -1,0 +1,14 @@
+{
+  "id": "A-018",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "included",
+  "filter_reason": "Directly addresses how agent-issued workloads break assumptions in LLM serving - production lessons about running agents, which the stream explicitly tracks.",
+  "summary": "This paper argues that LLM serving schedulers were designed for human-issued requests and fit poorly when the clients are agents. Agents only act on complete responses, which makes cluster-wide token throughput the goal and relaxes per-token latency requirements, and their sessions issue chained requests that existing schedulers handle badly. SMetric proposes session-centric scheduling for agentic workloads - relevant to anyone running agents at scale, where serving efficiency is becoming its own discipline distinct from chat serving.",
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08565v1",
+  "title": "SMetric: Rethink LLM Scheduling for Serving Agents with Balanced Session-centric Scheduling",
+  "published": "2026-07-09",
+  "authors": "Jiahao Wang et al.",
+  "excerpt": "LLM scheduling is critical to serving, yet it remains unclear how well existing designs fit agentic serving--with LLM requests issued by agents instead of humans. This shifts the workload in two ways: (1) agents act only on complete responses, making the cluster's tokens per second (TPS) the primary goal and relaxing--not eliminating--per-token latency requirements; and (2) requests share much of their KV\\$-reuse exceeds 80% of request tokens in a production trace from BAILIAN, versus 54-62% in chat. This paper first contributes a systematic study of request scheduling for agents on two real-w"
+}

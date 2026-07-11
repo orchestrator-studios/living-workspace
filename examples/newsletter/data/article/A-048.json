@@ -1,0 +1,14 @@
+{
+  "id": "A-048",
+  "source_name": "Hacker News ? LLM stories",
+  "status": "excluded",
+  "filter_reason": "Small Show HN dev-tool launch (2 points); a self-healing test runner is product promotion, not a capability or orchestration development a briefing reader needs.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-005",
+  "url": "https://github.com/Quality-Max/9lives",
+  "title": "Show HN: 9lives \u2013 Self-healing test runner that refuses to mask real bugs",
+  "published": "2026-07-10",
+  "authors": "ruslan_qm",
+  "excerpt": "2 points on Hacker News"
+}

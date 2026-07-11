@@ -114,7 +114,18 @@ def next_id(kind):
 # ----------------------------------------------------------------------------
 # 2. shared helpers
 # ----------------------------------------------------------------------------
-# (grown: the citation formatter, the label parser — whatever starts repeating)
+def runs_in_window(week_start, week_end):
+    """The runs that fed a window — a run counts if its window overlaps."""
+    return [r for r in load_all("run")
+            if r["window_start"] <= week_end and r["window_end"] >= week_start]
+
+
+def window_articles(week_start, week_end):
+    """The articles a window's runs landed, in id order — the one definition of
+    'what belongs to this issue' (assembly and the issues view both ask here)."""
+    ids = sorted({aid for r in runs_in_window(week_start, week_end)
+                  for aid in r["added"]})
+    return [load("article", aid) for aid in ids if exists("article", aid)]
 
 
 # ----------------------------------------------------------------------------
@@ -136,22 +147,20 @@ def issues(issue=None):
 
     all_articles = {a["id"]: a for a in load_all("article")}
     runs = []
-    for r in load_all("run"):
-        # a run feeds this issue if its window overlaps the issue's week
-        if r["window_start"] <= selected["week_end"] and r["window_end"] >= selected["week_start"]:
-            outcome = {"included": 0, "excluded": 0, "candidate": 0}
-            for aid in r["added"]:
-                if aid in all_articles:
-                    outcome[all_articles[aid]["status"]] += 1
-            config = (load("retrieval_config", r["config"])
-                      if exists("retrieval_config", r["config"]) else None)
-            runs.append({"id": r["id"], "date": r["date"],
-                         "window_start": r["window_start"], "window_end": r["window_end"],
-                         "matched": r["matched"], "added": len(r["added"]),
-                         "skipped": len(r["skipped_pmids"]), "outcome": outcome,
-                         "config": config and {"id": config["id"], "name": config["name"],
-                                               "source": config["source"],
-                                               "query": config["query"]}})
+    for r in runs_in_window(selected["week_start"], selected["week_end"]):
+        outcome = {"included": 0, "excluded": 0, "candidate": 0}
+        for aid in r["added"]:
+            if aid in all_articles:
+                outcome[all_articles[aid]["status"]] += 1
+        config = (load("retrieval_config", r["config"])
+                  if exists("retrieval_config", r["config"]) else None)
+        runs.append({"id": r["id"], "date": r["date"],
+                     "window_start": r["window_start"], "window_end": r["window_end"],
+                     "matched": r["matched"], "added": len(r["added"]),
+                     "skipped": len(r["skipped_urls"]), "outcome": outcome,
+                     "config": config and {"id": config["id"], "name": config["name"],
+                                           "source": config["source"],
+                                           "query": config["query"]}})
 
     # the working state a draft shows: candidates its window's runs landed that
     # still await a verdict (0 once the filter+record stages are done)
@@ -165,10 +174,10 @@ def issues(issue=None):
                          "week_end": selected["week_end"],
                          "executive_summary": selected.get("executive_summary"),
                          "has_body": bool(selected.get("body")),
-                         "articles": [{"id": a["id"], "pmid": a["pmid"],
-                                       "title": a["title"], "journal": a["journal"],
-                                       "pub_date": a["pub_date"],
-                                       "authors": a.get("authors", ""),
+                         "articles": [{"id": a["id"], "url": a["url"],
+                                       "title": a["title"],
+                                       "source_name": a["source_name"],
+                                       "published": a.get("published", ""),
                                        "summary": a.get("summary")}
                                       for a in (all_articles.get(aid) for aid in selected["articles"])
                                       if a],

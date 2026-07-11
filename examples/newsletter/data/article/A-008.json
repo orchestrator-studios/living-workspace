@@ -1,0 +1,14 @@
+{
+  "id": "A-008",
+  "source_name": "arXiv ? LLM & agent research",
+  "status": "excluded",
+  "filter_reason": "A practical study of relaxed speculative decoding - inference-efficiency work that is incremental within an established line, without a notable speed/cost breakthrough claim.",
+  "summary": null,
+  "retrieved": "2026-07-10",
+  "run_id": "R-001",
+  "url": "http://arxiv.org/abs/2607.08690v1",
+  "title": "A Practical Investigation of Training-free Relaxed Speculative Decoding",
+  "published": "2026-07-09",
+  "authors": "Guoxuan Xia et al.",
+  "excerpt": "Speculative decoding accelerates sampling from an autoregressive LLM by using a faster auxiliary model to draft tokens which are then verified in parallel by the LLM. Standard speculative decoding is lossless: its rejection and resampling steps exactly preserve the LLM's sampling distribution. Recent work argues that relaxing this strict guarantee can yield further speed-ups, controlled capability-speed trade-offs, or even capability gains. We practically investigate training-free relaxed speculative decoding techniques, unify existing approaches within a shared framework, benchmark them on co"
+}
