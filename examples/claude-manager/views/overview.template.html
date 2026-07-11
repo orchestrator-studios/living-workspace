@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+  overview.template.html — the manager's cockpit home (grown). Bound to the "overview"
+  query; polls /api/overview. The front door: at-a-glance numbers across every module,
+  what's live, and what needs attention. Each module is a separate live view; the shared
+  nav links them.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Manager</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de; --track: #f0efec;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --ink-3: #8b8a80;
+    --accent: #2a78d6; --hover: #f6f9fe; --live: #2e9e5b; --recent: #c8901f; --warn: #b4534b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835; --track: #2c2c2a;
+      --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #8b8a80;
+      --accent: #3987e5; --hover: #262a30; --live: #43b573; --recent: #d9a94e; --warn: #d0736b;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface); color: var(--ink);
+         padding: 20px 22px 60px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  /* shared nav */
+  .topnav { display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px;
+            margin-bottom: 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .topnav .brand { font-weight: 700; font-size: 1.05rem; margin-right: 4px; }
+  .topnav a { color: var(--ink-2); text-decoration: none; font-size: 0.9rem; }
+  .topnav a:hover { color: var(--accent); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600;
+                                   border-bottom: 2px solid var(--accent); padding-bottom: 3px; }
+  .topnav .soon { color: var(--ink-3); font-size: 0.9rem; cursor: default; }
+  .topnav .now { margin-left: auto; color: var(--ink-3); font-size: 0.78rem; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+           gap: 10px; margin-bottom: 16px; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+          padding: 11px 15px; text-decoration: none; color: var(--ink); display: block; }
+  a.tile:hover { border-color: var(--accent); background: var(--hover); }
+  .tile .n { font-size: 1.6rem; font-weight: 700; }
+  .tile .n.live { color: var(--live); }
+  .tile .k { color: var(--ink-2); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .tile .sub { color: var(--ink-3); font-size: 0.76rem; margin-top: 1px; }
+
+  .panels { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 760px) { .panels { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 13px 15px; }
+  .panel h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em;
+              color: var(--ink-3); margin-bottom: 10px; }
+  .panel h2 a { color: var(--accent); text-decoration: none; float: right; text-transform: none;
+                letter-spacing: 0; font-size: 0.8rem; }
+  svg.bars { width: 100%; display: block; }
+  svg.bars rect { fill: var(--accent); opacity: 0.85; }
+  svg.bars rect:hover { opacity: 1; }
+  .cap { display: flex; justify-content: space-between; color: var(--ink-3);
+         font-size: 0.72rem; margin-top: 4px; }
+
+  .row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .row:last-child { border-bottom: none; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex-shrink: 0; }
+  .dot.live { background: var(--live); animation: pulse 1.6s infinite; }
+  .dot.recent { background: var(--recent); }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46,158,91,.5); } 70% { box-shadow: 0 0 0 6px rgba(46,158,91,0); } 100% { box-shadow: 0 0 0 0 rgba(46,158,91,0); } }
+  .row a { color: var(--ink); text-decoration: none; font-weight: 600; font-size: 0.86rem; }
+  .row a:hover { color: var(--accent); }
+  .row .when { margin-left: auto; color: var(--ink-3); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+  .attn { display: flex; gap: 8px; align-items: center; padding: 4px 0; font-size: 0.86rem; }
+  .attn .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); flex-shrink: 0; }
+  .attn.live .pip { background: var(--live); }
+  .none { color: var(--ink-3); font-size: 0.84rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topnav">
+    <span class="brand">Claude Manager</span>
+    <a href="/view/overview" aria-current="page">Overview</a>
+    <a href="/view/sessions">Sessions</a>
+    <a href="/view/usage">Usage</a>
+    <span class="soon" title="coming soon">Skills</span>
+    <span class="now" id="now"></span>
+  </div>
+  <div id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+let payload = __DATA__;
+
+function esc(v) { return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function rel(sec) {
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return sec + "s"; if (sec < 3600) return Math.floor(sec/60) + "m";
+  if (sec < 86400) return Math.floor(sec/3600) + "h"; if (sec < 604800) return Math.floor(sec/86400) + "d";
+  return Math.floor(sec/604800) + "w";
+}
+function num(n) { return (n || 0).toLocaleString(); }
+
+function barChart(days, h) {
+  if (!days || !days.length) return '<div class="none">no data</div>';
+  const max = Math.max(1, ...days.map(d => d.prompts));
+  const bw = 100 / days.length, gap = bw > 3 ? 0.6 : 0.2;
+  const bars = days.map((d, i) => {
+    const bh = (d.prompts / max) * 100;
+    const extra = d.messages != null ? ` · ${num(d.messages)} msgs` : "";
+    return `<rect x="${(i*bw+gap/2).toFixed(2)}" y="${(100-bh).toFixed(2)}" width="${(bw-gap).toFixed(2)}" height="${bh.toFixed(2)}">` +
+           `<title>${esc(d.date)}: ${d.prompts} prompts${extra}</title></rect>`;
+  }).join("");
+  return `<svg class="bars" viewBox="0 0 100 100" preserveAspectRatio="none" style="height:${h}px">${bars}</svg>`;
+}
+
+function render() {
+  const s = payload.sessions, u = payload.usage, inv = payload.install;
+  document.getElementById("now").textContent = "as of " + (payload.now || "").replace("T", " ").slice(0, 19);
+
+  const tiles =
+    `<a class="tile" href="/view/sessions"><div class="n${s.live ? " live" : ""}">${s.live}</div><div class="k">live now</div><div class="sub">${s.total} sessions · ${s.summarized} summarized</div></a>` +
+    `<a class="tile" href="/view/usage"><div class="n">${num(u.prompts_7d)}</div><div class="k">prompts · 7d</div><div class="sub">${num(u.prompts_30d)} in 30 days</div></a>` +
+    `<span class="tile"><div class="n">${inv.skills}</div><div class="k">skills</div><div class="sub">across ${inv.plugins} plugins</div></span>` +
+    `<span class="tile"><div class="n">${inv.commands}</div><div class="k">commands</div><div class="sub">custom + plugin</div></span>` +
+    `<a class="tile" href="/view/sessions"><div class="n">${s.archived}</div><div class="k">archived</div><div class="sub">set aside</div></a>`;
+
+  const attn = payload.attention.length
+    ? payload.attention.map(a => `<div class="attn ${a.kind === "live" ? "live" : ""}"><span class="pip"></span>${esc(a.text)}</div>`).join("")
+    : `<div class="none">Nothing needs attention.</div>`;
+
+  const recent = payload.recently_active.length
+    ? payload.recently_active.map(r => {
+        const cls = r.currently_active ? "live" : r.recently_active ? "recent" : "";
+        const when = r.currently_active ? "live" : rel(r.idle_seconds) + " ago";
+        return `<div class="row"><span class="dot ${cls}"></span>` +
+               `<a href="/view/session?session_id=${esc(r.id)}">${esc(r.project)}</a>` +
+               `<span class="when">${when}</span></div>`;
+      }).join("")
+    : `<div class="none">No recent sessions.</div>`;
+
+  document.getElementById("content").innerHTML =
+    `<div class="tiles">${tiles}</div>` +
+    `<div class="panels">` +
+      `<div class="panel"><h2>Activity · prompts/day, 30 days <a href="/view/usage">usage &rarr;</a></h2>` +
+        barChart(u.days, 90) +
+        `<div class="cap"><span>${u.days.length ? esc(u.days[0].date) : ""}</span><span>${u.days.length ? esc(u.days[u.days.length-1].date) : ""}</span></div></div>` +
+      `<div class="panel"><h2>Needs attention</h2>${attn}` +
+        `<h2 style="margin-top:14px">Recently active <a href="/view/sessions">sessions &rarr;</a></h2>${recent}</div>` +
+    `</div>`;
+}
+
+render();
+if (LIVE) {
+  setInterval(async () => {
+    try {
+      const r = await fetch("/api/overview", {cache: "no-store"});
+      if (!r.ok) return;
+      const fresh = await r.json();
+      if (JSON.stringify(fresh) === JSON.stringify(payload)) return;
+      const x = window.scrollX, y = window.scrollY;
+      payload = fresh; render(); window.scrollTo(x, y);
+    } catch (err) { /* server briefly away */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

@@ -5,12 +5,22 @@
 
 ## Purpose
 
-A **Claude Code session tracker**: a live dashboard over every Claude Code session on
-this machine. List them all, filter by how old they are and when they were last active,
-and — the point of the thing — *see which sessions are alive right now*. Two grades of
-alive: **recently active** (touched in the last few minutes) and **currently active**
-(the transcript changed within the last 2 seconds — a session being typed in this
-instant).
+A **global Claude Code manager**: a live dashboard over the whole Claude Code install on
+this machine, one module per concern, all lensing the same `~/.claude/` state directory.
+It began as (and still leads with) a **session tracker** and grows outward from there.
+
+Modules today:
+- **Overview** — the cockpit: at-a-glance numbers across every module, what's live now,
+  and what needs attention. The front door (`/view/overview`).
+- **Sessions** — every Claude Code session: filter by age / last-active / archived, two
+  grades of alive (**recently active** = touched in the last few minutes; **currently
+  active** = the transcript changed within the last 2 seconds), per-session summaries, and
+  archive.
+- **Usage** — activity over time (volume): prompts per day, busiest projects, and Claude
+  Code's own message/tool counts where its stats cache reaches.
+
+Planned next: **Skills** (what's installed, and what earns its keep), then Plugins,
+Commands, MCP servers, and a settings/health read.
 
 ## The substrate is bound, not contained
 
@@ -43,6 +53,10 @@ a contradiction in terms.
 - **subagent** (`schemas/subagent.schema.json`, bound) — a child of a session, under
   `<uuid>/subagents/agent-*.jsonl`. Not a session in its own right; counted as a detail
   of its parent, never listed as top-level. Declared as a type, not yet projected.
+- **usage_day** (`schemas/usage_day.schema.json`, bound) — one calendar day of activity:
+  `prompts` from `history.jsonl` (complete, current), and `messages`/`tool_calls`/
+  `sessions` from `stats-cache.json` where that cache reaches (null past its cutoff). The
+  Usage module's time series.
 - **summary** (`schemas/summary.schema.json`, **contained**) — a generated synthesis of
   one session, one per session, stored in `data/summary/<uuid>.json`. The record carries
   a **watermark** (`source_size`, the transcript's byte size when summarized) so the

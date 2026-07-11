@@ -38,6 +38,7 @@ import json
 import os
 import re
 import time
+from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -52,6 +53,10 @@ VIEWS = ROOT / "views"
 # capabilities/reading-sessions.md.
 CLAUDE_HOME = Path(os.environ.get("CLAUDE_HOME") or (Path.home() / ".claude"))
 PROJECTS = CLAUDE_HOME / "projects"
+HISTORY = CLAUDE_HOME / "history.jsonl"          # every prompt: display, project, sessionId, timestamp(ms)
+STATS_CACHE = CLAUDE_HOME / "stats-cache.json"   # daily message/tool/session counts (may lag behind today)
+PLUGINS = CLAUDE_HOME / "plugins"                # installed plugins + the skills/commands they ship
+COMMANDS = CLAUDE_HOME / "commands"              # user-defined slash commands
 
 # The two grades of "active", defined once (OVERVIEW rule 3). They ride along in every
 # projection's `thresholds` so views never restate the numbers.
@@ -182,6 +187,84 @@ def _subagent_count(path):
     """How many subagent transcripts this session spawned."""
     sub = Path(path).with_suffix("") / "subagents"
     return len(glob.glob(str(sub / "*.jsonl"))) if sub.exists() else 0
+
+
+def _local_date(epoch):
+    """The local calendar date (YYYY-MM-DD) an epoch-seconds instant falls on."""
+    return datetime.fromtimestamp(epoch).date().isoformat()
+
+
+_history_cache = {}   # {"mtime":.., "rows":[{ts, project, session}]} — reparsed on change
+
+
+def _history():
+    """Every prompt ever typed, from history.jsonl: {ts (seconds), project, session}.
+    Cached by mtime — the 3.7MB file is reparsed only when it grows."""
+    try:
+        stat = os.stat(HISTORY)
+    except OSError:
+        return []
+    cached = _history_cache.get("v")
+    if cached and cached["mtime"] == stat.st_mtime:
+        return cached["rows"]
+    rows = []
+    try:
+        with open(HISTORY, encoding="utf-8") as handle:
+            for line in handle:
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                ts = record.get("timestamp")
+                if not ts:
+                    continue
+                rows.append({"ts": ts / 1000.0, "project": record.get("project") or "",
+                             "session": record.get("sessionId")})
+    except OSError:
+        return []
+    _history_cache["v"] = {"mtime": stat.st_mtime, "rows": rows}
+    return rows
+
+
+def _stats_cache():
+    """Claude Code's own daily-activity cache (messages / tool calls / sessions per day).
+    May lag today by weeks — its lastComputedDate travels in the usage payload so views
+    can say so."""
+    try:
+        return json.loads(STATS_CACHE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+_inventory_cache = {}   # {"at":.., "data":{...}} — install counts, refreshed on a TTL
+
+
+def _install_inventory(ttl=60):
+    """Counts of what's installed — skills, plugins, commands, MCP servers needing auth.
+    Globbing the plugin tree on every 2s poll would be wasteful, and installs change
+    rarely, so this is memoized on a short TTL rather than per-request."""
+    cached = _inventory_cache.get("v")
+    if cached and (time.time() - cached["at"]) < ttl:
+        return cached["data"]
+    skills = len(glob.glob(str(PLUGINS / "**" / "skills" / "*" / "SKILL.md"), recursive=True))
+    commands = (len(glob.glob(str(COMMANDS / "*.md")))
+                + len(glob.glob(str(PLUGINS / "**" / "commands" / "*.md"), recursive=True)))
+    plugins = 0
+    try:
+        installed = json.loads((PLUGINS / "installed_plugins.json").read_text(encoding="utf-8"))
+        plugins = len(installed.get("plugins", {}))
+    except (OSError, ValueError):
+        pass
+    mcp_need_auth = 0
+    try:
+        auth = json.loads((CLAUDE_HOME / "mcp-needs-auth-cache.json").read_text(encoding="utf-8"))
+        mcp_need_auth = len(auth) if isinstance(auth, (list, dict)) else 0
+    except (OSError, ValueError):
+        pass
+    data = {"skills": skills, "plugins": plugins, "commands": commands,
+            "mcp_need_auth": mcp_need_auth}
+    _inventory_cache["v"] = {"at": time.time(), "data": data}
+    return data
 
 
 CLIP = 280   # one clip length for every prompt/response field, catalog and detail alike
@@ -477,7 +560,132 @@ def session(session_id=None):
 # Publishing: every query registered here is served at /api/<name> by tools/server.py,
 # and a template named views/<name>.template.html is bound to it automatically. A
 # parameterized query's live page must poll with its own location.search.
-QUERIES = {"sessions": sessions, "session": session, "summaries_due": summaries_due}
+def usage(days=90):
+    """Activity over time (volume only): prompts per day from history.jsonl — complete and
+    current — enriched with Claude Code's own message/tool/session counts from
+    stats-cache.json where that cache reaches (it lags today, so recent days show prompts
+    only). Plus a per-project breakdown. The `days` parameter windows the daily series for
+    the chart; totals are computed over everything."""
+    try:
+        days = max(1, int(days))
+    except (TypeError, ValueError):
+        days = 90
+    now = time.time()
+    cutoff7, cutoff30 = now - 7 * 86400, now - 30 * 86400
+
+    day_prompts = defaultdict(int)
+    active30 = set()
+    prompts_7d = prompts_30d = 0
+    projects = defaultdict(lambda: {"prompts": 0, "prompts_30d": 0, "last_ts": 0.0, "path": ""})
+    for row in _history():
+        date = _local_date(row["ts"])
+        day_prompts[date] += 1
+        name = os.path.basename(row["project"]) if row["project"] else "(none)"
+        proj = projects[name]
+        proj["prompts"] += 1
+        proj["path"] = row["project"]
+        proj["last_ts"] = max(proj["last_ts"], row["ts"])
+        if row["ts"] >= cutoff30:
+            prompts_30d += 1
+            proj["prompts_30d"] += 1
+            active30.add(date)
+        if row["ts"] >= cutoff7:
+            prompts_7d += 1
+
+    stats = _stats_cache()
+    by_date = {a["date"]: a for a in stats.get("dailyActivity", [])}
+    all_dates = sorted(set(day_prompts) | set(by_date))
+    day_rows = [{"date": d,
+                 "prompts": day_prompts.get(d, 0),
+                 "messages": by_date.get(d, {}).get("messageCount"),
+                 "tool_calls": by_date.get(d, {}).get("toolCallCount"),
+                 "sessions": by_date.get(d, {}).get("sessionCount")}
+                for d in all_dates]
+
+    project_rows = sorted(
+        ({"project": name, "path": p["path"], "prompts": p["prompts"],
+          "prompts_30d": p["prompts_30d"],
+          "last_active": _iso(p["last_ts"]) if p["last_ts"] else None}
+         for name, p in projects.items()),
+        key=lambda r: (r["prompts_30d"], r["prompts"]), reverse=True)
+
+    return {
+        "now": _iso(now),
+        "as_of_statscache": stats.get("lastComputedDate"),
+        "span": {"from": all_dates[0] if all_dates else None,
+                 "to": all_dates[-1] if all_dates else None},
+        "totals": {
+            "prompts_7d": prompts_7d,
+            "prompts_30d": prompts_30d,
+            "active_days_30d": len(active30),
+            "messages_all": sum(a.get("messageCount", 0) for a in stats.get("dailyActivity", [])),
+            "tool_calls_all": sum(a.get("toolCallCount", 0) for a in stats.get("dailyActivity", [])),
+        },
+        "days": day_rows[-days:],
+        "projects": project_rows,
+    }
+
+
+def overview():
+    """The cockpit: at-a-glance numbers across every module, plus what needs attention.
+    Deliberately cheap — session counts come from stat() alone (no head/tail parsing),
+    contained state from counting files, install counts from the memoized inventory."""
+    now = time.time()
+    files = _session_files()
+    live = recent = 0
+    stats = []
+    for path in files:
+        try:
+            st = os.stat(path)
+        except OSError:
+            continue
+        idle = now - st.st_mtime
+        live += idle <= CURRENTLY_ACTIVE_S
+        recent += idle <= RECENTLY_ACTIVE_S
+        stats.append((idle, path))
+    stats.sort(key=lambda x: x[0])
+
+    recently_active = []
+    for idle, path in stats[:6]:
+        cwd = _resolve_cwd(path)
+        recently_active.append({
+            "id": Path(path).stem,
+            "project": os.path.basename(cwd) if cwd else Path(path).parent.name,
+            "idle_seconds": round(idle, 1),
+            "currently_active": idle <= CURRENTLY_ACTIVE_S,
+            "recently_active": idle <= RECENTLY_ACTIVE_S,
+        })
+
+    inventory = _install_inventory()
+    use = usage()
+    attention = []
+    if live:
+        attention.append({"kind": "live", "text": f"{live} session{'s' if live != 1 else ''} live right now"})
+    if inventory["mcp_need_auth"]:
+        attention.append({"kind": "mcp", "text": f"{inventory['mcp_need_auth']} MCP server(s) need re-auth"})
+
+    return {
+        "now": _iso(now),
+        "sessions": {
+            "total": len(files),
+            "live": live,
+            "recent": recent,
+            "summarized": len(glob.glob(str(DATA / "summary" / "*.json"))),
+            "archived": len(glob.glob(str(DATA / "archive" / "*.json"))),
+        },
+        "usage": {
+            "prompts_7d": use["totals"]["prompts_7d"],
+            "prompts_30d": use["totals"]["prompts_30d"],
+            "days": use["days"][-30:],
+        },
+        "install": inventory,
+        "recently_active": recently_active,
+        "attention": attention,
+    }
+
+
+QUERIES = {"overview": overview, "usage": usage,
+           "sessions": sessions, "session": session, "summaries_due": summaries_due}
 
 
 # ----------------------------------------------------------------------------

@@ -43,6 +43,14 @@
   body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
          color: var(--ink); padding: 20px 22px 60px; }
   .wrap { width: 100%; }                 /* full width — no max-width cap */
+  .topnav { display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px;
+            margin-bottom: 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .topnav .brand { font-weight: 700; font-size: 1.05rem; margin-right: 4px; }
+  .topnav a { color: var(--ink-2); text-decoration: none; font-size: 0.9rem; }
+  .topnav a:hover { color: var(--accent); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600;
+                                   border-bottom: 2px solid var(--accent); padding-bottom: 3px; }
+  .topnav .soon { color: var(--ink-3); font-size: 0.9rem; cursor: default; }
   h1 { font-size: 1.25rem; margin-bottom: 2px; }
   .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 14px; }
   .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
@@ -142,7 +150,14 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Claude Code — session tracker</h1>
+  <div class="topnav">
+    <span class="brand">Claude Manager</span>
+    <a href="/view/overview">Overview</a>
+    <a href="/view/sessions" aria-current="page">Sessions</a>
+    <a href="/view/usage">Usage</a>
+    <span class="soon" title="coming soon">Skills</span>
+  </div>
+  <h1>Sessions</h1>
   <p class="sub" id="sub">a live lens over ~/.claude</p>
   <div class="tiles" id="tiles"></div>
   <div class="controls">

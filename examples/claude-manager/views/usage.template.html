@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!--
+  usage.template.html — the activity module (grown). Bound to the "usage" query; polls
+  /api/usage. Volume only: prompts/day from history.jsonl (complete, current), enriched
+  with message/tool counts from stats-cache.json where it reaches. Charts are inline SVG
+  — stdlib server, no external libraries.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usage — Claude Manager</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de; --track: #f0efec;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --ink-3: #8b8a80; --accent: #2a78d6; --hover: #f6f9fe;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835; --track: #2c2c2a;
+      --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #8b8a80; --accent: #3987e5; --hover: #262a30;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface); color: var(--ink);
+         padding: 20px 22px 60px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .topnav { display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px;
+            margin-bottom: 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .topnav .brand { font-weight: 700; font-size: 1.05rem; margin-right: 4px; }
+  .topnav a { color: var(--ink-2); text-decoration: none; font-size: 0.9rem; }
+  .topnav a:hover { color: var(--accent); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600;
+                                   border-bottom: 2px solid var(--accent); padding-bottom: 3px; }
+  .topnav .soon { color: var(--ink-3); font-size: 0.9rem; cursor: default; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 11px 15px; }
+  .tile .n { font-size: 1.6rem; font-weight: 700; }
+  .tile .k { color: var(--ink-2); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .tile .sub { color: var(--ink-3); font-size: 0.74rem; margin-top: 1px; }
+
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+           padding: 14px 16px; margin-bottom: 14px; }
+  .panel h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 10px; }
+  svg.bars { width: 100%; display: block; }
+  svg.bars rect { fill: var(--accent); opacity: 0.85; }
+  svg.bars rect:hover { opacity: 1; }
+  .cap { display: flex; justify-content: space-between; color: var(--ink-3); font-size: 0.72rem; margin-top: 4px; }
+  .note { color: var(--ink-3); font-size: 0.78rem; margin-top: 6px; }
+
+  .proj { display: grid; grid-template-columns: 150px 1fr 60px; gap: 10px; align-items: center;
+          padding: 4px 0; font-size: 0.86rem; }
+  .proj .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .proj .bar { background: var(--track); border-radius: 4px; height: 12px; overflow: hidden; }
+  .proj .bar span { display: block; height: 100%; background: var(--accent); opacity: 0.8; }
+  .proj .v { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topnav">
+    <span class="brand">Claude Manager</span>
+    <a href="/view/overview">Overview</a>
+    <a href="/view/sessions">Sessions</a>
+    <a href="/view/usage" aria-current="page">Usage</a>
+    <span class="soon" title="coming soon">Skills</span>
+  </div>
+  <div id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+let payload = __DATA__;
+
+function esc(v) { return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function num(n) { return (n || 0).toLocaleString(); }
+
+function barChart(days, h) {
+  if (!days || !days.length) return '<div class="note">no data</div>';
+  const max = Math.max(1, ...days.map(d => d.prompts));
+  const bw = 100 / days.length, gap = bw > 3 ? 0.5 : 0.15;
+  const bars = days.map((d, i) => {
+    const bh = (d.prompts / max) * 100;
+    const extra = d.messages != null ? ` · ${num(d.messages)} msgs · ${num(d.tool_calls)} tools` : "";
+    return `<rect x="${(i*bw+gap/2).toFixed(2)}" y="${(100-bh).toFixed(2)}" width="${(bw-gap).toFixed(2)}" height="${bh.toFixed(2)}">` +
+           `<title>${esc(d.date)}: ${d.prompts} prompts${extra}</title></rect>`;
+  }).join("");
+  return `<svg class="bars" viewBox="0 0 100 100" preserveAspectRatio="none" style="height:${h}px">${bars}</svg>`;
+}
+
+function render() {
+  const t = payload.totals;
+  const tiles =
+    `<div class="tile"><div class="n">${num(t.prompts_7d)}</div><div class="k">prompts · 7d</div></div>` +
+    `<div class="tile"><div class="n">${num(t.prompts_30d)}</div><div class="k">prompts · 30d</div></div>` +
+    `<div class="tile"><div class="n">${t.active_days_30d}</div><div class="k">active days · 30d</div></div>` +
+    `<div class="tile"><div class="n">${num(t.messages_all)}</div><div class="k">messages</div><div class="sub">thru ${esc(payload.as_of_statscache || "?")}</div></div>` +
+    `<div class="tile"><div class="n">${num(t.tool_calls_all)}</div><div class="k">tool calls</div><div class="sub">thru ${esc(payload.as_of_statscache || "?")}</div></div>`;
+
+  const days = payload.days;
+  const chart =
+    `<div class="panel"><h2>Prompts per day</h2>` +
+      barChart(days, 150) +
+      `<div class="cap"><span>${days.length ? esc(days[0].date) : ""}</span><span>${days.length ? esc(days[days.length-1].date) : ""}</span></div>` +
+      `<div class="note">Prompts are complete and current (history.jsonl). Message and tool counts come from Claude Code's stats cache, last computed ${esc(payload.as_of_statscache || "?")} — hover a recent bar and those read “—”.</div></div>`;
+
+  const maxP = Math.max(1, ...payload.projects.map(p => p.prompts_30d));
+  const projects = payload.projects.filter(p => p.prompts_30d > 0).slice(0, 15).map(p =>
+    `<div class="proj"><span class="name" title="${esc(p.path)}">${esc(p.project)}</span>` +
+    `<span class="bar"><span style="width:${(p.prompts_30d/maxP*100).toFixed(1)}%"></span></span>` +
+    `<span class="v">${num(p.prompts_30d)}</span></div>`).join("");
+
+  document.getElementById("content").innerHTML =
+    `<div class="tiles">${tiles}</div>` + chart +
+    `<div class="panel"><h2>Busiest projects · prompts, last 30 days</h2>` +
+      (projects || '<div class="note">no activity in the last 30 days</div>') + `</div>`;
+}
+
+render();
+if (LIVE) {
+  setInterval(async () => {
+    try {
+      const r = await fetch("/api/usage", {cache: "no-store"});
+      if (!r.ok) return;
+      const fresh = await r.json();
+      if (JSON.stringify(fresh) === JSON.stringify(payload)) return;
+      const x = window.scrollX, y = window.scrollY;
+      payload = fresh; render(); window.scrollTo(x, y);
+    } catch (err) { /* server briefly away */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

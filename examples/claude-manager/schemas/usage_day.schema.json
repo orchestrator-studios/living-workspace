@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "usage_day — one day of Claude Code activity",
+  "description": "A BOUND type: activity is read from ~/.claude, not stored here. `prompts` comes from history.jsonl (complete and current); `messages`/`tool_calls`/`sessions` come from stats-cache.json where it reaches, and are null for days past its lastComputedDate. Validated against the `days` list of the `usage` projection.",
+  "x-kind": "usage_day",
+  "x-substrate": "bound",
+  "x-source": "~/.claude/history.jsonl (prompts) + ~/.claude/stats-cache.json (messages/tools/sessions)",
+  "x-projection": "usage",
+  "x-records": "days",
+  "type": "object",
+  "required": ["date", "prompts"],
+  "additionalProperties": false,
+  "properties": {
+    "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "prompts": { "type": "number", "minimum": 0, "description": "Human prompts typed that day (history.jsonl)." },
+    "messages": { "oneOf": [{ "type": "number" }, { "type": "null" }], "description": "Total messages (stats-cache; null past its cutoff)." },
+    "tool_calls": { "oneOf": [{ "type": "number" }, { "type": "null" }], "description": "Tool calls (stats-cache; null past its cutoff)." },
+    "sessions": { "oneOf": [{ "type": "number" }, { "type": "null" }], "description": "Sessions active that day (stats-cache; null past its cutoff)." }
+  }
+}
