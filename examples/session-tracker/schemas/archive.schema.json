@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "archive — a session the user has set aside",
+  "description": "A CONTAINED kind: like summary, this is workspace-owned state about a bound session (the session itself lives read-only in ~/.claude, so 'archived' cannot live on it). Presence of the record IS the archived state — one per archived session, keyed by the session uuid; unarchiving deletes it. Written only by tools/archive_session.py.",
+  "x-kind": "archive",
+  "type": "object",
+  "required": ["id", "session_id", "archived_at"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "= session_id. One archive record per session; its existence means archived."
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "archived_at": { "type": "string", "description": "ISO local time it was archived." },
+    "reason": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Optional note on why." }
+  }
+}

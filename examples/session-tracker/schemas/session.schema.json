@@ -37,6 +37,8 @@
     "has_summary": { "type": "boolean", "description": "Joined from the summary kind: whether a summary record exists for this session." },
     "summary_stale": { "type": "boolean", "description": "Joined: the transcript has grown past the summary's watermark by the staleness threshold." },
     "summary": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Joined from the summary kind: the synthesis text, shown on the board." },
+    "archived": { "type": "boolean", "description": "Joined from the archive kind: whether the user has set this session aside." },
+    "archived_at": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Joined: when it was archived." },
 
     "git_branch": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Detail projection only." },
     "model": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Detail projection only." },

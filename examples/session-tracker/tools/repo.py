@@ -303,6 +303,7 @@ def sessions():
         sid = Path(path).stem
         tail = _tail_exchange(path, stat.st_mtime, stat.st_size)
         summary = load("summary", sid) if exists("summary", sid) else None
+        archive = load("archive", sid) if exists("archive", sid) else None
         rows.append({
             "id": sid,
             "project": os.path.basename(cwd) if cwd else Path(path).parent.name,
@@ -322,14 +323,19 @@ def sessions():
             "summary_stale": bool(summary) and
                 (stat.st_size - summary.get("source_size", 0)) >= SUMMARY_GROWTH_BYTES,
             "summary": summary.get("text") if summary else None,
+            "archived": archive is not None,
+            "archived_at": archive.get("archived_at") if archive else None,
         })
     rows.sort(key=lambda r: r["idle_seconds"])
+    live_rows = [r for r in rows if not r["archived"]]
     return {
         "now": _iso(now),
         "total": len(rows),
-        "currently_active": sum(r["currently_active"] for r in rows),
-        "recently_active": sum(r["recently_active"] for r in rows),
-        "projects": len({r["path"] for r in rows}),
+        "archived": sum(r["archived"] for r in rows),
+        # tiles count the non-archived board; the archived filter reveals the rest
+        "currently_active": sum(r["currently_active"] for r in live_rows),
+        "recently_active": sum(r["recently_active"] for r in live_rows),
+        "projects": len({r["path"] for r in live_rows}),
         "thresholds": {"currently_s": CURRENTLY_ACTIVE_S, "recently_s": RECENTLY_ACTIVE_S},
         "sessions": rows,
     }
@@ -358,6 +364,8 @@ def summaries_due():
         if idle < SUMMARY_SETTLE_S:          # still warm — let it settle first
             continue
         sid = Path(path).stem
+        if exists("archive", sid):           # archived — set aside, don't queue it
+            continue
         summary = load("summary", sid) if exists("summary", sid) else None
         if summary is None:
             reason, grew = "no summary yet", stat.st_size
@@ -433,9 +441,10 @@ def session(session_id=None):
                     last_response = reply
 
     idle = now - stat.st_mtime
-    # join the contained summary, if one has been generated for this session
+    # join the contained summary and archive state, if any
     summary = load("summary", session_id) if exists("summary", session_id) else None
     summary_stale = bool(summary) and (stat.st_size - summary.get("source_size", 0)) >= SUMMARY_GROWTH_BYTES
+    archive = load("archive", session_id) if exists("archive", session_id) else None
     return {
         "id": session_id,
         "project": os.path.basename(cwd) if cwd else Path(match).parent.name,
@@ -459,6 +468,9 @@ def session(session_id=None):
         "summary": summary.get("text") if summary else None,
         "summarized_at": summary.get("generated_at") if summary else None,
         "summary_stale": summary_stale,
+        "archived": archive is not None,
+        "archived_at": archive.get("archived_at") if archive else None,
+        "archive_reason": archive.get("reason") if archive else None,
     }
 
 

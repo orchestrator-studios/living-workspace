@@ -44,11 +44,17 @@ a contradiction in terms.
   `<uuid>/subagents/agent-*.jsonl`. Not a session in its own right; counted as a detail
   of its parent, never listed as top-level. Declared as a type, not yet projected.
 - **summary** (`schemas/summary.schema.json`, **contained**) — a generated synthesis of
-  one session, one per session, stored in `data/summary/<uuid>.json`. This is the one
-  thing the workspace *owns* and writes — so the tracker is a **bound + contained mix**:
-  it reads sessions from `~/.claude` and writes summaries of them here. The record carries
+  one session, one per session, stored in `data/summary/<uuid>.json`. The record carries
   a **watermark** (`source_size`, the transcript's byte size when summarized) so the
   trigger algo can tell when a summary has gone stale.
+- **archive** (`schemas/archive.schema.json`, **contained**) — a session the user has set
+  aside, one record per archived session in `data/archive/<uuid>.json`. Presence *is* the
+  archived state; unarchiving deletes the record. Because a session is bound (read-only in
+  `~/.claude`), "archived" cannot live on it — it is workspace-owned state, like a summary.
+
+The summary and archive kinds are the things the workspace *owns* and writes — so the
+tracker is a **bound + contained mix**: it reads sessions from `~/.claude` and writes its
+own derived/decision state (summaries, archives) about them here.
 
 ## The rules
 
@@ -81,8 +87,14 @@ a contradiction in terms.
 - **The board:** "What sessions are there?" → the live list, most-recently-active first.
 - **Liveness:** "What's running right now?" → the currently-active pulse; "what's been
   touched lately?" → the recently-active filter.
-- **Filter:** by age (today / this week / older) and by last-active (live / minutes /
-  hours / days), plus search by project or path.
+- **Filter:** by age (today / this week / older), by last-active (live / minutes / hours
+  / days), and by archived (hide / show / only — hidden by default); plus search across
+  project, path, prompts, and summary.
+- **Archive:** "archive this session" / "set that one aside" → `tools/archive_session.py`
+  writes the archive record; the board drops it from the default view and the summary
+  queue. "Unarchive" removes it. (The dashboard is read-only by design — the *action* is a
+  tool run through the conversation; the board reflects it live. In-dashboard buttons would
+  mean a write endpoint in the kit server, which the read-only invariant rules out.)
 - **Drill in:** open one session → its parsed detail (turn counts, first/last prompt, last
   response, model, git branch, subagent count, and its summary if one exists).
 - **Summarize:** "summarize what's due" → the trigger algo `summaries_due()` names the

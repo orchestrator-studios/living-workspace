@@ -127,6 +127,11 @@
   .sumline .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
                   color: var(--ink); }
   .sumline.open .txt { white-space: normal; }
+  .card.archived { opacity: 0.6; background: var(--track); }
+  .card.archived:hover { opacity: 1; }
+  .arch-tag { flex-shrink: 0; font-size: 0.68rem; text-transform: uppercase;
+              letter-spacing: 0.05em; color: var(--ink-3); border: 1px solid var(--border);
+              border-radius: 999px; padding: 0 7px; }
   .empty { background: var(--track); border-radius: 10px; padding: 18px;
            color: var(--ink-2); font-size: 0.88rem; }
 </style>
@@ -151,7 +156,7 @@ const initialPayload = __DATA__;
 
 // ---- ephemeral presentation state (never persisted; never a source of truth) ----
 let sortKey = "idle_seconds", sortDir = 1, search = "";
-let activeFilter = "all", ageFilter = "all";
+let activeFilter = "all", ageFilter = "all", archivedFilter = "hide";
 let payload = initialPayload;
 
 function esc(v) {
@@ -183,6 +188,7 @@ const SORTS = [
   ["idle_seconds", "last active"], ["age_seconds", "age"],
   ["size_bytes", "size"], ["project", "project"],
 ];
+const ARCHIVED_BUCKETS = [["hide", "hide"], ["show", "show"], ["only", "only"]];
 
 function matchActive(s) {
   switch (activeFilter) {
@@ -209,11 +215,18 @@ function matchSearch(s) {
   return [s.project, s.path, s.id, s.first_prompt, s.last_prompt, s.last_response, s.summary]
     .some(v => v && String(v).toLowerCase().includes(n));
 }
+function matchArchived(s) {
+  if (archivedFilter === "only") return s.archived;
+  if (archivedFilter === "show") return true;
+  return !s.archived;                          // "hide" (default)
+}
 
 function renderControls() {
+  const archLabel = payload.archived ? `Archived (${payload.archived})` : "Archived";
   const groups = [
     ["Last active", "active", ACTIVE_BUCKETS, activeFilter],
     ["Age", "age", AGE_BUCKETS, ageFilter],
+    [archLabel, "archived", ARCHIVED_BUCKETS, archivedFilter],
     ["Sort", "sort", SORTS, sortKey],
   ];
   document.getElementById("filters").innerHTML = groups.map(([label, name, opts, cur]) =>
@@ -228,6 +241,7 @@ function renderControls() {
     const {group, val} = btn.dataset;
     if (group === "active") activeFilter = val;
     else if (group === "age") ageFilter = val;
+    else if (group === "archived") archivedFilter = val;
     else if (group === "sort") { if (sortKey === val) sortDir = -sortDir; else { sortKey = val; sortDir = 1; } }
     render();
   });
@@ -250,6 +264,7 @@ function card(s) {
       `<span class="state ${cls}"><span class="dot"></span>${label}</span>` +
       `<a class="proj" href="/view/session?session_id=${esc(s.id)}">${esc(s.project)}</a>` +
       `<span class="path" title="${esc(s.path)}">${esc(s.path)}</span>` +
+      (s.archived ? `<span class="arch-tag" title="archived${s.archived_at ? " " + esc(s.archived_at.slice(0,10)) : ""}">archived</span>` : "") +
       `<span class="meta">${meta}</span>` +
     `</div>`;
   // opening prompt for context; the last exchange for what's current
@@ -261,7 +276,7 @@ function card(s) {
             `<span class="tag">${s.summary_stale ? "stale" : "sum"}</span>` +
             `<span class="txt">${esc(s.summary)}</span></div>`;
   }
-  return `<div class="card">${body}</div>`;
+  return `<div class="card${s.archived ? " archived" : ""}">${body}</div>`;
 }
 
 function render() {
@@ -278,15 +293,16 @@ function render() {
 
   renderControls();
 
-  let rows = payload.sessions.filter(s => matchActive(s) && matchAge(s) && matchSearch(s));
+  let rows = payload.sessions.filter(s => matchArchived(s) && matchActive(s) && matchAge(s) && matchSearch(s));
   rows = [...rows].sort((a, b) => {
     const x = a[sortKey], y = b[sortKey];
     if (typeof x === "number") return (x - y) * sortDir;
     return String(x).localeCompare(String(y)) * sortDir;
   });
 
+  const shown = payload.total - (archivedFilter === "hide" ? payload.archived : 0);
   document.getElementById("readout").textContent =
-    rows.length === payload.total ? `${payload.total} sessions` : `${rows.length} of ${payload.total}`;
+    rows.length === shown ? `${rows.length} sessions` : `${rows.length} of ${shown}`;
 
   document.getElementById("content").innerHTML = rows.length
     ? `<div class="list">${rows.map(card).join("")}</div>`
