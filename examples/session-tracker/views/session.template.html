@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--
+  session.template.html — one session, in full (grown).
+
+  The detail drill-in: the only surface that parses a whole transcript. Parameterized —
+  /view/session?session_id=<uuid> — and bound to the "session" query with the same
+  parameters. When live, polls /api/session + its own location.search (so it repaints
+  with THIS session's data, not another's).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --ink-3: #8b8a80; --track: #f0efec;
+    --accent: #2a78d6; --live: #2e9e5b; --recent: #c8901f; --idle: #a9a89e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #8b8a80; --track: #2c2c2a;
+      --accent: #3987e5; --live: #43b573; --recent: #d9a94e; --idle: #6f6e66;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 24px 20px; }
+  .wrap { max-width: 820px; margin: 0 auto; }
+  a.back { color: var(--accent); text-decoration: none; font-size: 0.84rem; }
+  h1 { font-size: 1.2rem; margin: 6px 0 2px; }
+  .sub { color: var(--ink-2); font-size: 0.82rem; margin-bottom: 16px;
+         font-family: ui-monospace, Consolas, monospace; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+         background: var(--idle); margin-right: 6px; vertical-align: -1px; }
+  .dot.recent { background: var(--recent); }
+  .dot.live { background: var(--live); animation: pulse 1.6s infinite; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(46,158,91,0.55); }
+    70% { box-shadow: 0 0 0 7px rgba(46,158,91,0); }
+    100% { box-shadow: 0 0 0 0 rgba(46,158,91,0); }
+  }
+  .state.live { color: var(--live); font-weight: 700; }
+  .state.recent { color: var(--recent); }
+  .state.idle { color: var(--ink-3); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 10px; margin: 14px 0; }
+  .cell { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+          padding: 10px 12px; }
+  .cell .k { color: var(--ink-3); font-size: 0.72rem; text-transform: uppercase;
+             letter-spacing: 0.04em; }
+  .cell .v { font-size: 1.05rem; font-weight: 600; margin-top: 2px; word-break: break-word; }
+  .cell .v.mono { font-family: ui-monospace, Consolas, monospace; font-size: 0.86rem; font-weight: 400; }
+  .prompt { background: var(--card); border: 1px solid var(--border);
+            border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+            padding: 12px 14px; margin-top: 6px; }
+  .prompt .k { color: var(--ink-3); font-size: 0.72rem; text-transform: uppercase;
+               letter-spacing: 0.04em; margin-bottom: 4px; }
+  .empty { background: var(--track); border-radius: 10px; padding: 18px;
+           color: var(--ink-2); font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><a class="back" href="/view/sessions">&larr; all sessions</a></p>
+  <div id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+const initialPayload = __DATA__;
+
+function esc(v) {
+  return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+function rel(sec) {
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return sec + "s";
+  if (sec < 3600) return Math.floor(sec / 60) + "m";
+  if (sec < 86400) return Math.floor(sec / 3600) + "h";
+  if (sec < 604800) return Math.floor(sec / 86400) + "d";
+  return Math.floor(sec / 604800) + "w";
+}
+function bytes(n) {
+  if (n < 1024) return n + " B";
+  if (n < 1048576) return (n / 1024).toFixed(0) + " KB";
+  return (n / 1048576).toFixed(1) + " MB";
+}
+
+function stateLine(s) {
+  if (s.currently_active) return `<span class="dot live"></span><span class="state live">live now</span>`;
+  if (s.recently_active) return `<span class="dot recent"></span><span class="state recent">active ${rel(s.idle_seconds)} ago</span>`;
+  return `<span class="dot"></span><span class="state idle">last active ${rel(s.idle_seconds)} ago</span>`;
+}
+
+function render(s) {
+  const content = document.getElementById("content");
+  if (!s || s.error) {
+    content.innerHTML = `<div class="empty">${esc(s ? s.error : "no data")}</div>`;
+    return;
+  }
+  document.title = s.project + " — session";
+  const cell = (k, v, mono) =>
+    `<div class="cell"><div class="k">${k}</div><div class="v${mono ? " mono" : ""}">${v}</div></div>`;
+  content.innerHTML =
+    `<h1>${esc(s.project)}</h1>` +
+    `<p class="sub">${esc(s.path || "")}<br>${esc(s.id)}</p>` +
+    `<p>${stateLine(s)}</p>` +
+    `<div class="grid">` +
+      cell("user turns", s.user_turns) +
+      cell("assistant turns", s.assistant_turns) +
+      cell("subagents", s.subagents) +
+      cell("size", bytes(s.size_bytes)) +
+      cell("model", esc(s.model || "—"), true) +
+      cell("git branch", esc(s.git_branch || "—"), true) +
+      cell("started", esc((s.started || "—").replace("T", " ").slice(0, 19)), true) +
+      cell("last active", rel(s.idle_seconds) + " ago", true) +
+    `</div>` +
+    (s.first_prompt
+      ? `<div class="prompt"><div class="k">opening prompt</div>${esc(s.first_prompt)}</div>`
+      : "");
+}
+
+render(initialPayload);
+
+if (LIVE) {
+  let last = JSON.stringify(initialPayload);
+  setInterval(async () => {
+    try {
+      const response = await fetch("/api/session" + location.search, {cache: "no-store"});
+      if (!response.ok) return;
+      const fresh = await response.json();
+      const serialized = JSON.stringify(fresh);
+      if (serialized === last) return;
+      last = serialized;
+      render(fresh);
+    } catch (err) { /* server briefly away — keep the last good render */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

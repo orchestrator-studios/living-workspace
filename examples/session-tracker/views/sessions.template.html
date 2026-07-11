@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<!--
+  sessions.template.html — the session tracker dashboard (grown).
+
+  Every Claude Code session on this machine, a live lens over ~/.claude. Bound to the
+  "sessions" query; polls /api/sessions every 2 seconds — the same window as "currently
+  active", so a session being typed in lights up on the next tick.
+
+  What lives where (the workspace's rules):
+    - The two activity flags and the raw idle/age seconds come from repo.sessions(),
+      computed against 'now' on every ask — one definition of "active" (OVERVIEW rule 3).
+    - Filtering, search, sort, and relative-time formatting are PRESENTATION over that
+      one answer; they live here. Control state sits outside render() so the 2s poll
+      never disturbs the user's filters or steals focus from the search box.
+    - Nothing here writes. This whole workspace is a read-only lens.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Tracker</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de; --head: #f6f5f2;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --ink-3: #8b8a80; --track: #f0efec;
+    --accent: #2a78d6; --zebra: #fafaf8; --hover: #f2f6fb;
+    --live: #2e9e5b; --recent: #c8901f; --idle: #a9a89e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835; --head: #2a2a28;
+      --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #8b8a80; --track: #2c2c2a;
+      --accent: #3987e5; --zebra: #262625; --hover: #2b3440;
+      --live: #43b573; --recent: #d9a94e; --idle: #6f6e66;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 24px 20px; }
+  .wrap { max-width: 1140px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 16px; }
+
+  .tiles { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tile { flex: 1; min-width: 120px; background: var(--card);
+          border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .tile .n { font-size: 1.5rem; font-weight: 700; }
+  .tile.hot .n { color: var(--live); }
+  .tile .k { color: var(--ink-2); font-size: 0.76rem; text-transform: uppercase;
+             letter-spacing: 0.05em; }
+
+  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .toolbar input[type=search] {
+    flex: 1; min-width: 200px; padding: 6px 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--card); color: var(--ink);
+    font: inherit; font-size: 0.86rem; }
+  .toolbar input[type=search]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .readout { color: var(--ink-2); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+
+  .filters { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .fgroup { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .flabel { color: var(--ink-3); font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 0.05em; margin-right: 2px; }
+  .chip-btn { border: 1px solid var(--border); background: var(--card); color: var(--ink-2);
+              border-radius: 999px; padding: 2px 11px; font: inherit; font-size: 0.76rem;
+              cursor: pointer; }
+  .chip-btn:hover { border-color: var(--accent); }
+  .chip-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent);
+                                   color: #fff; }
+
+  .scroller { overflow: auto; max-height: 68vh; background: var(--card);
+              border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 0.86rem; }
+  thead th { position: sticky; top: 0; z-index: 2; text-align: left; padding: 7px 12px;
+             background: var(--head); border-bottom: 2px solid var(--border);
+             white-space: nowrap; cursor: pointer; user-select: none; font-size: 0.72rem;
+             text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-3); }
+  thead th:hover { color: var(--accent); }
+  thead th .arrow { color: var(--accent); margin-left: 3px; }
+  tbody td { padding: 7px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:nth-child(even) { background: var(--zebra); }
+  tbody tr:hover { background: var(--hover); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  a.proj { color: var(--ink); text-decoration: none; font-weight: 600; }
+  a.proj:hover { color: var(--accent); }
+  .path { color: var(--ink-3); font-size: 0.76rem; font-family: ui-monospace, Consolas, monospace; }
+
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+         background: var(--idle); margin-right: 7px; vertical-align: -1px; }
+  .dot.recent { background: var(--recent); }
+  .dot.live { background: var(--live); box-shadow: 0 0 0 0 var(--live);
+              animation: pulse 1.6s infinite; }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(46,158,91,0.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(46,158,91,0); }
+    100% { box-shadow: 0 0 0 0 rgba(46,158,91,0); }
+  }
+  .state { font-size: 0.78rem; }
+  .state.live { color: var(--live); font-weight: 700; }
+  .state.recent { color: var(--recent); }
+  .state.idle { color: var(--ink-3); }
+  .empty { background: var(--track); border-radius: 10px; padding: 18px;
+           color: var(--ink-2); font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Claude Code — session tracker</h1>
+  <p class="sub" id="sub">a live lens over ~/.claude</p>
+  <div class="tiles" id="tiles"></div>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search project or path…" autocomplete="off">
+    <span class="readout" id="readout"></span>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+const initialPayload = __DATA__;
+
+// ---- ephemeral presentation state (never persisted; never a source of truth) ----
+let sortKey = "idle_seconds", sortDir = 1, search = "";
+let activeFilter = "all", ageFilter = "all";
+let payload = initialPayload;
+
+function esc(v) {
+  return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+// seconds → compact relative label ("5s", "3m", "2h", "4d", "3w")
+function rel(sec) {
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return sec + "s";
+  if (sec < 3600) return Math.floor(sec / 60) + "m";
+  if (sec < 86400) return Math.floor(sec / 3600) + "h";
+  if (sec < 604800) return Math.floor(sec / 86400) + "d";
+  return Math.floor(sec / 604800) + "w";
+}
+
+function bytes(n) {
+  if (n < 1024) return n + " B";
+  if (n < 1048576) return (n / 1024).toFixed(0) + " KB";
+  return (n / 1048576).toFixed(1) + " MB";
+}
+
+// The two filter dimensions Cliff asked for: how recently active, and how old.
+const ACTIVE_BUCKETS = [
+  ["all", "all"], ["live", "live now"], ["recent", "< 5 min"],
+  ["hour", "< 1 hr"], ["day", "< 1 day"], ["older", "older"],
+];
+const AGE_BUCKETS = [
+  ["all", "all"], ["today", "today"], ["week", "this week"],
+  ["month", "this month"], ["old", "older"],
+];
+
+function matchActive(s) {
+  switch (activeFilter) {
+    case "live":   return s.currently_active;
+    case "recent": return s.recently_active;
+    case "hour":   return s.idle_seconds < 3600;
+    case "day":    return s.idle_seconds < 86400;
+    case "older":  return s.idle_seconds >= 86400;
+    default:       return true;
+  }
+}
+function matchAge(s) {
+  switch (ageFilter) {
+    case "today": return s.age_seconds < 86400;
+    case "week":  return s.age_seconds < 604800;
+    case "month": return s.age_seconds < 2592000;
+    case "old":   return s.age_seconds >= 2592000;
+    default:      return true;
+  }
+}
+function matchSearch(s) {
+  if (!search) return true;
+  const n = search.toLowerCase();
+  return (s.project || "").toLowerCase().includes(n) ||
+         (s.path || "").toLowerCase().includes(n) ||
+         s.id.toLowerCase().includes(n);
+}
+
+function renderFilters() {
+  const groups = [
+    ["Last active", "activeFilter", ACTIVE_BUCKETS, activeFilter],
+    ["Age", "ageFilter", AGE_BUCKETS, ageFilter],
+  ];
+  document.getElementById("filters").innerHTML = groups.map(([label, name, buckets, cur]) =>
+    `<div class="fgroup"><span class="flabel">${label}</span>` +
+    buckets.map(([val, text]) =>
+      `<button class="chip-btn" aria-pressed="${cur === val}" data-name="${name}" data-val="${val}">${text}</button>`
+    ).join("") + `</div>`
+  ).join("");
+  document.querySelectorAll("#filters .chip-btn").forEach(btn => btn.onclick = () => {
+    if (btn.dataset.name === "activeFilter") activeFilter = btn.dataset.val;
+    else ageFilter = btn.dataset.val;
+    render();
+  });
+}
+
+const COLUMNS = [
+  ["state", "status", false], ["project", "project", false],
+  ["idle_seconds", "last active", true], ["age_seconds", "age", true],
+  ["user_turns", "turns", true], ["subagents", "subs", true],
+  ["size_bytes", "size", true],
+];
+
+function stateCell(s) {
+  if (s.currently_active)
+    return `<td><span class="dot live"></span><span class="state live">live</span></td>`;
+  if (s.recently_active)
+    return `<td><span class="dot recent"></span><span class="state recent">recent</span></td>`;
+  return `<td><span class="dot"></span><span class="state idle">${rel(s.idle_seconds)} ago</span></td>`;
+}
+
+function row(s) {
+  return `<tr>` +
+    stateCell(s) +
+    `<td><a class="proj" href="/view/session?session_id=${esc(s.id)}">${esc(s.project)}</a>` +
+    `<div class="path">${esc(s.path)}</div></td>` +
+    `<td class="num">${rel(s.idle_seconds)}</td>` +
+    `<td class="num">${rel(s.age_seconds)}</td>` +
+    `<td class="num">${s.user_turns == null ? "—" : s.user_turns}</td>` +
+    `<td class="num">${s.subagents || "—"}</td>` +
+    `<td class="num">${bytes(s.size_bytes)}</td>` +
+    `</tr>`;
+}
+
+function render() {
+  if (!payload) return;
+  document.getElementById("sub").innerHTML =
+    `a live lens over ~/.claude · as of ${esc((payload.now || "").replace("T", " ").slice(0, 19))} · ` +
+    `polling every ${payload.thresholds.currently_s}s`;
+
+  document.getElementById("tiles").innerHTML =
+    `<div class="tile hot"><div class="n">${payload.currently_active}</div><div class="k">live now</div></div>` +
+    `<div class="tile"><div class="n">${payload.recently_active}</div><div class="k">active &lt; 5 min</div></div>` +
+    `<div class="tile"><div class="n">${payload.total}</div><div class="k">sessions</div></div>` +
+    `<div class="tile"><div class="n">${payload.projects}</div><div class="k">projects</div></div>`;
+
+  renderFilters();
+
+  let rows = payload.sessions.filter(s => matchActive(s) && matchAge(s) && matchSearch(s));
+  rows = [...rows].sort((a, b) => {
+    const x = a[sortKey], y = b[sortKey];
+    if (typeof x === "number") return (x - y) * sortDir;
+    return String(x).localeCompare(String(y)) * sortDir;
+  });
+
+  document.getElementById("readout").textContent =
+    rows.length === payload.total ? `${payload.total} sessions`
+                                  : `${rows.length} of ${payload.total}`;
+
+  const head = COLUMNS.map(([key, label, sortable]) => {
+    const arrow = key === sortKey ? `<span class="arrow">${sortDir > 0 ? "▲" : "▼"}</span>` : "";
+    return `<th data-key="${key}" data-sortable="${sortable}">${label}${arrow}</th>`;
+  }).join("");
+
+  const body = rows.length
+    ? rows.map(row).join("")
+    : `<tr><td colspan="${COLUMNS.length}" class="path" style="padding:16px">No sessions match — clear the filters.</td></tr>`;
+
+  document.getElementById("content").innerHTML =
+    `<div class="scroller"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+
+  document.querySelectorAll("thead th").forEach(th => {
+    if (th.dataset.sortable !== "true" && th.dataset.key !== "state") {
+      // status sorts by liveness (idle asc); others as declared
+    }
+    th.onclick = () => {
+      const key = th.dataset.key === "state" ? "idle_seconds" : th.dataset.key;
+      if (sortKey === key) sortDir = -sortDir; else { sortKey = key; sortDir = 1; }
+      render();
+    };
+  });
+}
+
+document.getElementById("q").addEventListener("input", e => { search = e.target.value.trim(); render(); });
+
+render();
+
+// Liveness: re-ask /api/sessions every 2 seconds — the currently-active window — and
+// repaint on change. Control state (filters, search, sort) lives outside render(), so a
+// repaint preserves it.
+if (LIVE) {
+  let last = JSON.stringify(initialPayload);
+  setInterval(async () => {
+    try {
+      const response = await fetch("/api/sessions", {cache: "no-store"});
+      if (!response.ok) return;
+      const fresh = await response.json();
+      const serialized = JSON.stringify(fresh);
+      if (serialized === last) return;
+      last = serialized;
+      payload = fresh;
+      render();
+    } catch (err) { /* server briefly away — keep the last good render */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>
