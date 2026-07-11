@@ -24,9 +24,10 @@
     }
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scrollbar-gutter: stable; }      /* reserve the scrollbar so tabs don't shift sideways */
   body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface); color: var(--ink);
          padding: 20px 22px 60px; }
-  .wrap { max-width: 1100px; margin: 0 auto; }
+  .wrap { max-width: 1400px; margin: 0 auto; }   /* one app width, identical on every tab */
   /* shared nav */
   .topnav { display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px;
             margin-bottom: 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
@@ -83,7 +84,7 @@
     <a href="/view/overview" aria-current="page">Overview</a>
     <a href="/view/sessions">Sessions</a>
     <a href="/view/usage">Usage</a>
-    <span class="soon" title="coming soon">Skills</span>
+    <a href="/view/extensions">Extensions</a>
     <span class="now" id="now"></span>
   </div>
   <div id="content"></div>
@@ -121,8 +122,8 @@ function render() {
   const tiles =
     `<a class="tile" href="/view/sessions"><div class="n${s.live ? " live" : ""}">${s.live}</div><div class="k">live now</div><div class="sub">${s.total} sessions · ${s.summarized} summarized</div></a>` +
     `<a class="tile" href="/view/usage"><div class="n">${num(u.prompts_7d)}</div><div class="k">prompts · 7d</div><div class="sub">${num(u.prompts_30d)} in 30 days</div></a>` +
-    `<span class="tile"><div class="n">${inv.skills}</div><div class="k">skills</div><div class="sub">across ${inv.plugins} plugins</div></span>` +
-    `<span class="tile"><div class="n">${inv.commands}</div><div class="k">commands</div><div class="sub">custom + plugin</div></span>` +
+    `<a class="tile" href="/view/extensions"><div class="n">${inv.skills}</div><div class="k">skills</div><div class="sub">across ${inv.plugins} plugins</div></a>` +
+    `<a class="tile" href="/view/extensions"><div class="n">${inv.commands}</div><div class="k">commands</div><div class="sub">custom + plugin</div></a>` +
     `<a class="tile" href="/view/sessions"><div class="n">${s.archived}</div><div class="k">archived</div><div class="sub">set aside</div></a>`;
 
   const attn = payload.attention.length

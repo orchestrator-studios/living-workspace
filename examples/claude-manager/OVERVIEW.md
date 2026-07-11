@@ -18,9 +18,24 @@ Modules today:
   archive.
 - **Usage** — activity over time (volume): prompts per day, busiest projects, and Claude
   Code's own message/tool counts where its stats cache reaches.
+- **Extensions** — everything installed that extends Claude, unified: plugins, skills,
+  agents, commands, and MCP servers. One bound `extension` type (a `kind` tag rather than
+  five near-identical schemas), filterable by kind and installed/available.
 
-Planned next: **Skills** (what's installed, and what earns its keep), then Plugins,
-Commands, MCP servers, and a settings/health read.
+Planned next:
+- **Workspace inspector** — a living-workspace-aware module: point it at a workspace and
+  report its anatomy (capabilities, tools, schemas, views, data). It should tie into a
+  reusable **dev-visualization capability** for living workspaces — the thing to surface
+  precisely when the next move is *grow capability* rather than *take a step* (the move
+  rule's "grow it" branch), while developing a space.
+- **Extension usage** — how often each skill/agent/command is actually invoked (a cached
+  transcript scan, once the invocation format is pinned down) — "what earns its keep."
+- Deeper: token/cost (parse transcript usage records), plugin enable/disable **actions**,
+  a settings/health read.
+
+Dashboard-technology asks (kit-level, not this workspace alone): make the **multi-tabbed
+surface** first-class (the shared nav is a hand-rolled preview of it), and support
+**collaboration surfaces** projected from the substrate.
 
 ## The substrate is bound, not contained
 

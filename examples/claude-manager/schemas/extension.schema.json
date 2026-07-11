@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "extension — something installed that extends Claude",
+  "description": "A BOUND type, unified across kinds: a plugin, skill, agent, command, or MCP server discovered under ~/.claude. One shape with a `kind` tag rather than five near-identical schemas — the Extensions module shows them together and filters by kind. Validated against the `extensions` projection.",
+  "x-kind": "extension",
+  "x-substrate": "bound",
+  "x-source": "~/.claude/plugins/** (plugins, skills, agents, commands), ~/.claude/commands (user commands), ~/.claude/mcp-needs-auth-cache.json (MCP)",
+  "x-projection": "extensions",
+  "x-records": "extensions",
+  "type": "object",
+  "required": ["kind", "name", "installed"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "enum": ["plugin", "skill", "agent", "command", "mcp"] },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+    "source": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "The owning plugin, marketplace, or 'user'." },
+    "installed": { "type": "boolean", "description": "Lives under plugins/cache (installed) vs plugins/marketplaces (available)." },
+    "enabled": { "oneOf": [{ "type": "boolean" }, { "type": "null" }], "description": "Plugins only: enabled in settings." },
+    "version": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Plugins only." },
+    "model": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Agents only: their pinned model." },
+    "status": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "e.g. an MCP server needing re-auth." },
+    "path": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+  }
+}

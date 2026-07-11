@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!--
+  extensions.template.html — the Extensions module (grown). Bound to the "extensions"
+  query; polls /api/extensions. Everything that extends Claude on this machine — plugins,
+  skills, agents, commands, MCP servers — in one place, filterable by kind and by
+  installed/available. Kind filtering and search are presentation (client-side).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extensions — Claude Manager</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de; --track: #f0efec;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --ink-3: #8b8a80; --accent: #2a78d6; --hover: #f6f9fe;
+    --plugin: #2a78d6; --skill: #2e9e5b; --agent: #8250c8; --command: #c8901f; --mcp: #b4534b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835; --track: #2c2c2a;
+      --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #8b8a80; --accent: #3987e5; --hover: #262a30;
+      --plugin: #4f97e8; --skill: #43b573; --agent: #a37fe0; --command: #d9a94e; --mcp: #d0736b;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scrollbar-gutter: stable; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface); color: var(--ink);
+         padding: 20px 22px 60px; }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  .topnav { display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px;
+            margin-bottom: 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .topnav .brand { font-weight: 700; font-size: 1.05rem; margin-right: 4px; }
+  .topnav a { color: var(--ink-2); text-decoration: none; font-size: 0.9rem; }
+  .topnav a:hover { color: var(--accent); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600;
+                                   border-bottom: 2px solid var(--accent); padding-bottom: 3px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; }
+  .tile .n { font-size: 1.5rem; font-weight: 700; }
+  .tile .k { color: var(--ink-2); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .toolbar input[type=search] { flex: 1; min-width: 200px; padding: 6px 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--card); color: var(--ink); font: inherit; font-size: 0.86rem; }
+  .toolbar input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .readout { color: var(--ink-2); font-size: 0.8rem; }
+  .filters { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .fgroup { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .flabel { color: var(--ink-3); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 2px; }
+  .chip-btn { border: 1px solid var(--border); background: var(--card); color: var(--ink-2);
+    border-radius: 999px; padding: 2px 11px; font: inherit; font-size: 0.76rem; cursor: pointer; }
+  .chip-btn:hover { border-color: var(--accent); }
+  .chip-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .list { display: flex; flex-direction: column; gap: 7px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 13px; }
+  .card:hover { border-color: var(--accent); background: var(--hover); }
+  .card.avail { opacity: 0.72; }
+  .card.avail:hover { opacity: 1; }
+  .chead { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .kind { flex-shrink: 0; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+          border-radius: 4px; padding: 1px 7px; color: #fff; }
+  .kind.plugin { background: var(--plugin); } .kind.skill { background: var(--skill); }
+  .kind.agent { background: var(--agent); } .kind.command { background: var(--command); }
+  .kind.mcp { background: var(--mcp); }
+  .name { font-weight: 600; }
+  .src { color: var(--ink-3); font-size: 0.78rem; font-family: ui-monospace, Consolas, monospace; }
+  .badge { font-size: 0.68rem; border: 1px solid var(--border); border-radius: 999px; padding: 0 7px; color: var(--ink-3); }
+  .badge.warn { color: var(--mcp); border-color: var(--mcp); }
+  .badge.off { color: var(--ink-3); }
+  .meta { margin-left: auto; color: var(--ink-3); font-size: 0.76rem; white-space: nowrap; }
+  .desc { color: var(--ink-2); font-size: 0.83rem; margin-top: 3px; overflow: hidden;
+          text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .desc.open { white-space: normal; }
+  .desc .none { color: var(--ink-3); }
+  .empty { background: var(--track); border-radius: 10px; padding: 18px; color: var(--ink-2); font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topnav">
+    <span class="brand">Claude Manager</span>
+    <a href="/view/overview">Overview</a>
+    <a href="/view/sessions">Sessions</a>
+    <a href="/view/usage">Usage</a>
+    <a href="/view/extensions" aria-current="page">Extensions</a>
+  </div>
+  <div class="tiles" id="tiles"></div>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search name, description, source…" autocomplete="off">
+    <span class="readout" id="readout"></span>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+let payload = __DATA__;
+let kindFilter = "all", instFilter = "all", search = "";
+
+function esc(v) { return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function matchKind(e) { return kindFilter === "all" || e.kind === kindFilter; }
+function matchInst(e) { return instFilter === "all" || (instFilter === "installed" ? e.installed : !e.installed); }
+function matchSearch(e) {
+  if (!search) return true;
+  const n = search.toLowerCase();
+  return [e.name, e.description, e.source, e.kind].some(v => v && String(v).toLowerCase().includes(n));
+}
+
+function renderFilters() {
+  const kinds = [["all", `all (${payload.total})`]].concat(
+    payload.kinds.map(k => [k, `${k} (${payload.by_kind[k] || 0})`]));
+  const groups = [
+    ["Kind", "kind", kinds, kindFilter],
+    ["Show", "inst", [["all", "all"], ["installed", "installed"], ["available", "available"]], instFilter],
+  ];
+  document.getElementById("filters").innerHTML = groups.map(([label, name, opts, cur]) =>
+    `<div class="fgroup"><span class="flabel">${label}</span>` +
+    opts.map(([val, text]) => `<button class="chip-btn" aria-pressed="${cur === val}" data-g="${name}" data-v="${val}">${esc(text)}</button>`).join("") +
+    `</div>`).join("");
+  document.querySelectorAll("#filters .chip-btn").forEach(b => b.onclick = () => {
+    if (b.dataset.g === "kind") kindFilter = b.dataset.v; else instFilter = b.dataset.v;
+    render();
+  });
+}
+
+function extras(e) {
+  const bits = [];
+  if (e.kind === "plugin" && e.version) bits.push(`v${esc(e.version)}`);
+  if (e.enabled === false) bits.push(`<span class="badge off">disabled</span>`);
+  if (e.model) bits.push(`<span class="badge">${esc(e.model)}</span>`);
+  if (e.status) bits.push(`<span class="badge warn">${esc(e.status)}</span>`);
+  if (!e.installed) bits.push(`<span class="badge">available</span>`);
+  return bits.join(" ");
+}
+
+function card(e) {
+  return `<div class="card${e.installed ? "" : " avail"}">` +
+    `<div class="chead"><span class="kind ${esc(e.kind)}">${esc(e.kind)}</span>` +
+    `<span class="name">${esc(e.name)}</span>` +
+    (e.source ? `<span class="src">${esc(e.source)}</span>` : "") +
+    `<span class="meta">${extras(e)}</span></div>` +
+    `<div class="desc" onclick="this.classList.toggle('open')">` +
+    (e.description ? esc(e.description) : `<span class="none">— no description —</span>`) + `</div>` +
+    `</div>`;
+}
+
+function render() {
+  const bk = payload.by_kind;
+  document.getElementById("tiles").innerHTML =
+    `<div class="tile"><div class="n">${payload.total}</div><div class="k">extensions</div></div>` +
+    payload.kinds.map(k => `<div class="tile"><div class="n">${bk[k] || 0}</div><div class="k">${k}s</div></div>`).join("");
+
+  renderFilters();
+  const rows = payload.extensions.filter(e => matchKind(e) && matchInst(e) && matchSearch(e));
+  document.getElementById("readout").textContent =
+    rows.length === payload.total ? `${payload.total} extensions` : `${rows.length} of ${payload.total}`;
+  document.getElementById("content").innerHTML = rows.length
+    ? `<div class="list">${rows.map(card).join("")}</div>`
+    : `<div class="empty">Nothing matches — clear the filters.</div>`;
+}
+
+document.getElementById("q").addEventListener("input", e => { search = e.target.value.trim(); render(); });
+render();
+if (LIVE) {
+  setInterval(async () => {
+    try {
+      const r = await fetch("/api/extensions", {cache: "no-store"});
+      if (!r.ok) return;
+      const fresh = await r.json();
+      if (JSON.stringify(fresh) === JSON.stringify(payload)) return;
+      const x = window.scrollX, y = window.scrollY;
+      payload = fresh; render(); window.scrollTo(x, y);
+    } catch (err) { /* server briefly away */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

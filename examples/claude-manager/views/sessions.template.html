@@ -40,9 +40,10 @@
     }
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scrollbar-gutter: stable; }      /* reserve the scrollbar so tabs don't shift sideways */
   body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
          color: var(--ink); padding: 20px 22px 60px; }
-  .wrap { width: 100%; }                 /* full width — no max-width cap */
+  .wrap { max-width: 1400px; margin: 0 auto; }   /* one app width, identical on every tab */
   .topnav { display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px;
             margin-bottom: 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .topnav .brand { font-weight: 700; font-size: 1.05rem; margin-right: 4px; }
@@ -155,7 +156,7 @@
     <a href="/view/overview">Overview</a>
     <a href="/view/sessions" aria-current="page">Sessions</a>
     <a href="/view/usage">Usage</a>
-    <span class="soon" title="coming soon">Skills</span>
+    <a href="/view/extensions">Extensions</a>
   </div>
   <h1>Sessions</h1>
   <p class="sub" id="sub">a live lens over ~/.claude</p>

@@ -226,6 +226,34 @@ def _history():
     return rows
 
 
+_hist_proj_cache = {}   # {"mtime":.., "map":{sessionId: project path}}
+
+
+def _history_projects():
+    """sessionId → its project path, from history.jsonl. The authoritative fallback when a
+    transcript's own cwd can't be read (e.g. a brand-new session): the encoded folder name
+    is lossy, but history records the real path per session. Cached with the file."""
+    try:
+        stat = os.stat(HISTORY)
+    except OSError:
+        return {}
+    cached = _hist_proj_cache.get("v")
+    if cached and cached["mtime"] == stat.st_mtime:
+        return cached["map"]
+    mapping = {}
+    for row in _history():
+        if row.get("session") and row.get("project"):
+            mapping[row["session"]] = row["project"]   # last one wins (project is stable)
+    _hist_proj_cache["v"] = {"mtime": stat.st_mtime, "map": mapping}
+    return mapping
+
+
+def _project_for(path, session_id):
+    """The real project path of a session: its transcript cwd, else history's record for
+    that session id, else None. Never the lossy encoded folder name."""
+    return _resolve_cwd(path) or _history_projects().get(session_id)
+
+
 def _stats_cache():
     """Claude Code's own daily-activity cache (messages / tool calls / sessions per day).
     May lag today by weeks — its lastComputedDate travels in the usage payload so views
@@ -382,8 +410,8 @@ def sessions():
         except OSError:
             continue
         idle = now - stat.st_mtime
-        cwd = _resolve_cwd(path)
         sid = Path(path).stem
+        cwd = _project_for(path, sid)
         tail = _tail_exchange(path, stat.st_mtime, stat.st_size)
         summary = load("summary", sid) if exists("summary", sid) else None
         archive = load("archive", sid) if exists("archive", sid) else None
@@ -524,6 +552,7 @@ def session(session_id=None):
                     last_response = reply
 
     idle = now - stat.st_mtime
+    cwd = cwd or _history_projects().get(session_id)   # history fallback for an unread cwd
     # join the contained summary and archive state, if any
     summary = load("summary", session_id) if exists("summary", session_id) else None
     summary_stale = bool(summary) and (stat.st_size - summary.get("source_size", 0)) >= SUMMARY_GROWTH_BYTES
@@ -560,6 +589,130 @@ def session(session_id=None):
 # Publishing: every query registered here is served at /api/<name> by tools/server.py,
 # and a template named views/<name>.template.html is bound to it automatically. A
 # parameterized query's live page must poll with its own location.search.
+_FRONTMATTER = re.compile(r"^﻿?---\s*\n(.*?)\n---", re.S)
+_VERSIONDIR = re.compile(r"^\d+(\.\d+)+")
+
+
+def _frontmatter(text):
+    """A minimal YAML-frontmatter reader — enough for SKILL.md / agent / command headers:
+    top-level `key: value` pairs. Not a full YAML parser; nested/list values are skipped."""
+    match = _FRONTMATTER.match(text)
+    fields = {}
+    if not match:
+        return fields
+    for line in match.group(1).splitlines():
+        if line[:1] in (" ", "\t", "-"):        # continuation or list item — skip
+            continue
+        pair = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", line)
+        if pair:
+            fields[pair.group(1).lower()] = pair.group(2).strip()
+    return fields
+
+
+def _plugin_and_marketplace(path, anchor_folder):
+    """From a path like plugins/cache/<mkt>/<plugin>/<ver>/<anchor>/... or
+    plugins/marketplaces/<mkt>/**/<plugin>/<anchor>/..., pull (plugin, marketplace,
+    installed). Installed = it lives under cache/ (an installed plugin's real files)."""
+    parts = Path(path).parts
+    try:
+        ai = parts.index(anchor_folder)
+    except ValueError:
+        return None, None, False
+    plugin = parts[ai - 1]
+    if _VERSIONDIR.match(plugin):               # cache path: skills sit under <ver>/skills
+        plugin = parts[ai - 2]
+    marketplace = None
+    for root in ("cache", "marketplaces"):
+        if root in parts:
+            i = parts.index(root)
+            marketplace = parts[i + 1] if i + 1 < len(parts) else None
+            break
+    installed = "cache" in parts
+    return plugin, marketplace, installed
+
+
+def _collect_extensions():
+    """Everything installed or available that extends Claude, unified: plugins, skills,
+    agents, commands, MCP servers. Each item: {kind, name, description, source, installed,
+    ...kind extras}. Deduped by (kind, source, name), an installed instance winning over a
+    marketplace one."""
+    items = {}
+
+    def add(rec):
+        key = (rec["kind"], rec.get("source"), rec["name"])
+        if key not in items or (rec["installed"] and not items[key]["installed"]):
+            items[key] = rec
+
+    enabled = {}
+    try:
+        enabled = json.loads((CLAUDE_HOME / "settings.json").read_text(encoding="utf-8")).get("enabledPlugins", {})
+    except (OSError, ValueError):
+        pass
+
+    # plugins (authoritative inventory)
+    try:
+        installed = json.loads((PLUGINS / "installed_plugins.json").read_text(encoding="utf-8"))
+        for ref, entries in installed.get("plugins", {}).items():
+            name, _, marketplace = ref.partition("@")
+            entry = (entries or [{}])[0]
+            add({"kind": "plugin", "name": name, "description": None, "source": marketplace,
+                 "installed": True, "enabled": bool(enabled.get(ref, True)),
+                 "version": entry.get("version"), "model": None, "status": None,
+                 "path": entry.get("installPath")})
+    except (OSError, ValueError):
+        pass
+
+    # skills and agents (frontmatter-bearing markdown under a plugin folder)
+    for kind, anchor in (("skill", "skills"), ("agent", "agents")):
+        for path in glob.glob(str(PLUGINS / "**" / anchor / "*" / "*.md"), recursive=True) \
+                + glob.glob(str(PLUGINS / "**" / anchor / "*.md"), recursive=True):
+            if os.path.basename(path) not in ("SKILL.md",) and anchor == "skills":
+                continue
+            try:
+                fm = _frontmatter(Path(path).read_text(encoding="utf-8"))
+            except OSError:
+                continue
+            plugin, marketplace, installed = _plugin_and_marketplace(path, anchor)
+            add({"kind": kind, "name": fm.get("name") or Path(path).parent.name,
+                 "description": fm.get("description"), "source": plugin,
+                 "installed": installed, "enabled": None,
+                 "version": None, "model": fm.get("model"), "status": None, "path": path})
+
+    # commands (user-defined + plugin)
+    for path in glob.glob(str(COMMANDS / "*.md")):
+        try:
+            fm = _frontmatter(Path(path).read_text(encoding="utf-8"))
+        except OSError:
+            fm = {}
+        add({"kind": "command", "name": Path(path).stem, "description": fm.get("description"),
+             "source": "user", "installed": True, "enabled": None, "version": None,
+             "model": None, "status": None, "path": path})
+    for path in glob.glob(str(PLUGINS / "**" / "commands" / "*.md"), recursive=True):
+        plugin, marketplace, installed = _plugin_and_marketplace(path, "commands")
+        try:
+            fm = _frontmatter(Path(path).read_text(encoding="utf-8"))
+        except OSError:
+            fm = {}
+        add({"kind": "command", "name": Path(path).stem, "description": fm.get("description"),
+             "source": plugin, "installed": installed, "enabled": None, "version": None,
+             "model": None, "status": None, "path": path})
+
+    # MCP servers (only those the auth cache knows about — a full inventory isn't on disk)
+    try:
+        auth = json.loads((CLAUDE_HOME / "mcp-needs-auth-cache.json").read_text(encoding="utf-8"))
+        for name in (auth if isinstance(auth, dict) else []):
+            add({"kind": "mcp", "name": name, "description": None, "source": None,
+                 "installed": True, "enabled": None, "version": None, "model": None,
+                 "status": "needs re-auth", "path": None})
+    except (OSError, ValueError):
+        pass
+
+    return list(items.values())
+
+
+_ext_cache = {}   # {"at":.., "data":[...]} — the extension scan, refreshed on a TTL
+
+
 def usage(days=90):
     """Activity over time (volume only): prompts per day from history.jsonl — complete and
     current — enriched with Claude Code's own message/tool/session counts from
@@ -647,7 +800,7 @@ def overview():
 
     recently_active = []
     for idle, path in stats[:6]:
-        cwd = _resolve_cwd(path)
+        cwd = _project_for(path, Path(path).stem)
         recently_active.append({
             "id": Path(path).stem,
             "project": os.path.basename(cwd) if cwd else Path(path).parent.name,
@@ -684,7 +837,33 @@ def overview():
     }
 
 
-QUERIES = {"overview": overview, "usage": usage,
+def extensions():
+    """Everything that extends Claude on this machine — plugins, skills, agents, commands,
+    MCP servers — in one unified list, sorted by kind. Cached (the scan reads ~100 header
+    files); the Extensions module filters it by kind and installed/available client-side."""
+    cached = _ext_cache.get("v")
+    if cached and (time.time() - cached["at"]) < 60:
+        rows = cached["data"]
+    else:
+        rows = _collect_extensions()
+        _ext_cache["v"] = {"at": time.time(), "data": rows}
+    order = {"plugin": 0, "skill": 1, "agent": 2, "command": 3, "mcp": 4}
+    rows = sorted(rows, key=lambda r: (order.get(r["kind"], 9), not r["installed"],
+                                       (r["source"] or ""), r["name"].lower()))
+    by_kind = {}
+    for r in rows:
+        by_kind[r["kind"]] = by_kind.get(r["kind"], 0) + 1
+    return {
+        "now": _iso(time.time()),
+        "total": len(rows),
+        "installed": sum(1 for r in rows if r["installed"]),
+        "kinds": ["plugin", "skill", "agent", "command", "mcp"],
+        "by_kind": by_kind,
+        "extensions": rows,
+    }
+
+
+QUERIES = {"overview": overview, "usage": usage, "extensions": extensions,
            "sessions": sessions, "session": session, "summaries_due": summaries_due}
 
 
