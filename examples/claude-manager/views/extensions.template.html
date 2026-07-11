@@ -57,8 +57,10 @@
   .list { display: flex; flex-direction: column; gap: 7px; }
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 13px; }
   .card:hover { border-color: var(--accent); background: var(--hover); }
-  .card.avail { opacity: 0.72; }
+  .card.avail { opacity: 0.68; }
   .card.avail:hover { opacity: 1; }
+  .card.disabled { opacity: 0.82; border-style: dashed; }
+  .card.disabled:hover { opacity: 1; }
   .chead { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
   .kind { flex-shrink: 0; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
           border-radius: 4px; padding: 1px 7px; color: #fff; }
@@ -98,12 +100,16 @@
 <script>
 const LIVE = __LIVE__;
 let payload = __DATA__;
-let kindFilter = "all", instFilter = "all", search = "";
+let kindFilter = "all", stateFilter = "installed", search = "";
 
 function esc(v) { return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 function matchKind(e) { return kindFilter === "all" || e.kind === kindFilter; }
-function matchInst(e) { return instFilter === "all" || (instFilter === "installed" ? e.installed : !e.installed); }
+function matchState(e) {
+  if (stateFilter === "all") return true;
+  if (stateFilter === "installed") return e.state !== "available";   // active + disabled
+  return e.state === stateFilter;                                    // active | disabled | available
+}
 function matchSearch(e) {
   if (!search) return true;
   const n = search.toLowerCase();
@@ -111,18 +117,26 @@ function matchSearch(e) {
 }
 
 function renderFilters() {
+  const bs = payload.by_state || {};
   const kinds = [["all", `all (${payload.total})`]].concat(
     payload.kinds.map(k => [k, `${k} (${payload.by_kind[k] || 0})`]));
+  const states = [
+    ["installed", `installed (${payload.installed})`],
+    ["active", `active (${bs.active || 0})`],
+    ["disabled", `disabled (${bs.disabled || 0})`],
+    ["available", `available (${payload.available})`],
+    ["all", "all"],
+  ];
   const groups = [
+    ["Show", "state", states, stateFilter],
     ["Kind", "kind", kinds, kindFilter],
-    ["Show", "inst", [["all", "all"], ["installed", "installed"], ["available", "available"]], instFilter],
   ];
   document.getElementById("filters").innerHTML = groups.map(([label, name, opts, cur]) =>
     `<div class="fgroup"><span class="flabel">${label}</span>` +
     opts.map(([val, text]) => `<button class="chip-btn" aria-pressed="${cur === val}" data-g="${name}" data-v="${val}">${esc(text)}</button>`).join("") +
     `</div>`).join("");
   document.querySelectorAll("#filters .chip-btn").forEach(b => b.onclick = () => {
-    if (b.dataset.g === "kind") kindFilter = b.dataset.v; else instFilter = b.dataset.v;
+    if (b.dataset.g === "kind") kindFilter = b.dataset.v; else stateFilter = b.dataset.v;
     render();
   });
 }
@@ -138,7 +152,8 @@ function extras(e) {
 }
 
 function card(e) {
-  return `<div class="card${e.installed ? "" : " avail"}">` +
+  const scls = e.state === "available" ? " avail" : e.state === "disabled" ? " disabled" : "";
+  return `<div class="card${scls}">` +
     `<div class="chead"><span class="kind ${esc(e.kind)}">${esc(e.kind)}</span>` +
     `<span class="name">${esc(e.name)}</span>` +
     (e.source ? `<span class="src">${esc(e.source)}</span>` : "") +
@@ -149,13 +164,15 @@ function card(e) {
 }
 
 function render() {
-  const bk = payload.by_kind;
+  const bk = payload.by_kind, bs = payload.by_state || {};
   document.getElementById("tiles").innerHTML =
-    `<div class="tile"><div class="n">${payload.total}</div><div class="k">extensions</div></div>` +
+    `<div class="tile"><div class="n" style="color:var(--skill)">${bs.active || 0}</div><div class="k">active</div></div>` +
+    `<div class="tile"><div class="n" style="color:var(--command)">${bs.disabled || 0}</div><div class="k">disabled</div></div>` +
+    `<div class="tile"><div class="n">${payload.available}</div><div class="k">available</div></div>` +
     payload.kinds.map(k => `<div class="tile"><div class="n">${bk[k] || 0}</div><div class="k">${k}s</div></div>`).join("");
 
   renderFilters();
-  const rows = payload.extensions.filter(e => matchKind(e) && matchInst(e) && matchSearch(e));
+  const rows = payload.extensions.filter(e => matchKind(e) && matchState(e) && matchSearch(e));
   document.getElementById("readout").textContent =
     rows.length === payload.total ? `${payload.total} extensions` : `${rows.length} of ${payload.total}`;
   document.getElementById("content").innerHTML = rows.length

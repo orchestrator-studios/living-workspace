@@ -648,6 +648,9 @@ def _collect_extensions():
         enabled = json.loads((CLAUDE_HOME / "settings.json").read_text(encoding="utf-8")).get("enabledPlugins", {})
     except (OSError, ValueError):
         pass
+    # plugin ref is "name@marketplace"; index enabled by bare plugin name so a skill/agent
+    # shipped by a disabled plugin reads as disabled, not active.
+    enabled_by_name = {ref.partition("@")[0]: bool(v) for ref, v in enabled.items()}
 
     # plugins (authoritative inventory)
     try:
@@ -675,7 +678,8 @@ def _collect_extensions():
             plugin, marketplace, installed = _plugin_and_marketplace(path, anchor)
             add({"kind": kind, "name": fm.get("name") or Path(path).parent.name,
                  "description": fm.get("description"), "source": plugin,
-                 "installed": installed, "enabled": None,
+                 "installed": installed,
+                 "enabled": enabled_by_name.get(plugin, True) if installed else None,
                  "version": None, "model": fm.get("model"), "status": None, "path": path})
 
     # commands (user-defined + plugin)
@@ -694,8 +698,9 @@ def _collect_extensions():
         except OSError:
             fm = {}
         add({"kind": "command", "name": Path(path).stem, "description": fm.get("description"),
-             "source": plugin, "installed": installed, "enabled": None, "version": None,
-             "model": None, "status": None, "path": path})
+             "source": plugin, "installed": installed,
+             "enabled": enabled_by_name.get(plugin, True) if installed else None,
+             "version": None, "model": None, "status": None, "path": path})
 
     # MCP servers (only those the auth cache knows about — a full inventory isn't on disk)
     try:
@@ -707,6 +712,11 @@ def _collect_extensions():
     except (OSError, ValueError):
         pass
 
+    # derive state: what's actually affecting Claude vs the marketplace catalog
+    for rec in items.values():
+        rec["state"] = ("available" if not rec["installed"]
+                        else "disabled" if rec.get("enabled") is False
+                        else "active")
     return list(items.values())
 
 
@@ -847,18 +857,24 @@ def extensions():
     else:
         rows = _collect_extensions()
         _ext_cache["v"] = {"at": time.time(), "data": rows}
-    order = {"plugin": 0, "skill": 1, "agent": 2, "command": 3, "mcp": 4}
-    rows = sorted(rows, key=lambda r: (order.get(r["kind"], 9), not r["installed"],
+    kind_order = {"plugin": 0, "skill": 1, "agent": 2, "command": 3, "mcp": 4}
+    state_order = {"active": 0, "disabled": 1, "available": 2}
+    rows = sorted(rows, key=lambda r: (state_order.get(r["state"], 3),
+                                       kind_order.get(r["kind"], 9),
                                        (r["source"] or ""), r["name"].lower()))
-    by_kind = {}
+    by_kind, by_state = {}, {}
     for r in rows:
         by_kind[r["kind"]] = by_kind.get(r["kind"], 0) + 1
+        by_state[r["state"]] = by_state.get(r["state"], 0) + 1
     return {
         "now": _iso(time.time()),
         "total": len(rows),
         "installed": sum(1 for r in rows if r["installed"]),
+        "available": sum(1 for r in rows if not r["installed"]),
         "kinds": ["plugin", "skill", "agent", "command", "mcp"],
+        "states": ["active", "disabled", "available"],
         "by_kind": by_kind,
+        "by_state": by_state,
         "extensions": rows,
     }
 
