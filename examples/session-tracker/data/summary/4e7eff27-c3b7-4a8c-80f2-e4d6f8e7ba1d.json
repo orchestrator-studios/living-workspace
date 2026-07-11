@@ -1,0 +1,10 @@
+{
+  "id": "4e7eff27-c3b7-4a8c-80f2-e4d6f8e7ba1d",
+  "session_id": "4e7eff27-c3b7-4a8c-80f2-e4d6f8e7ba1d",
+  "text": "Worked on the openreview literature-review app, spanning a real research query about whether cannabis use (acute, chronic, and medicinal THC/CBD) is associated with changes in human memory function, run through the app's screening pipeline. Repositioned the UI tabs back under the top item of the stack where they had originally lived, per the user's correction. Explained what the \"prep full text\" step does, reviewed study status (noting items had been stuck in screening a long time), and deleted one study at the user's request. Late in the session, created several new tools and then brought CLAUDE.md and everything upstream of those tools up to date so the tooling's existence is acknowledged. Ended with a wrap-up as the user retired this Claude instance.",
+  "generated_at": "2026-07-10T21:57:21-06:00",
+  "source_size": 1866275,
+  "source_last_active": "2026-07-07T23:00:13-06:00",
+  "user_turns_at_gen": 186,
+  "model": "claude-fable-5"
+}

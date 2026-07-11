@@ -15,7 +15,7 @@ Two documents and five folders. That's the whole skeleton, and each piece serves
 | Folder | Holds | Serves |
 |---|---|---|
 | `data/` | The persistent objects — the system of record. One file per record. | substrate |
-| `schemas/` | The structure and validity of everything in `data/`. Each schema is its kind's **single declaration**: `x-kind` names the `data/` folder, the id pattern fixes the id format, and the kit derives everything else from it. | understanding |
+| `schemas/` | The structure and validity of **every type the workspace reasons about** — whether its records are *contained* in `data/` or *bound* in an external system. Each schema is its kind's **single declaration**: `x-kind` names the kind, and for a contained kind the id pattern fixes the id format and names its `data/` folder. A bound kind adds `x-source` (where its records really live) and has no `data/` folder — the schema is still its meaning (see [contained and bound](#contained-and-bound-substrates)). | understanding |
 | `tools/` | Deterministic operations: create, update, validate, query, transform, assemble. Three residents: the **data-access layer** (`repo.py`, shipped — see [one definition of every number](#one-definition-of-every-number)), **muscle** (pure operations, grown) and **enforcers** (operations that carry rules — the dedup check, the citation gate; grown). The kit's `server.py` and `validate.py` live here too. | access · enforcement |
 | `capabilities/` | Procedure in language — how to use the tools correctly, what to watch for, how to judge. The judgment part of the workspace's rules: what no enforcer tool can check (see [where a rule lives](#where-a-rule-lives)). Each declares **how it runs**: in the conversation's context, or delegated to a fresh one (see [in-context and delegated](#in-context-and-delegated)). The kit ships one: `dashboard.md`. | understanding |
 | `views/` | View **logic** — templates, never rendered output, never a second source of truth. The kit ships `index.template.html`; domain views are grown (see [the anatomy of a view](#the-anatomy-of-a-view)). | presentation |
@@ -226,6 +226,32 @@ equally covers *bound* substrates: the records live in a CRM, a drive, a databas
 workspace holds the reach (a tool), the meaning (schemas and capabilities describing what the
 external data means here), and the named queries. Most real workspaces mix both — the worked
 example seeds its contained data *from* a bound source (the client's file in `seed/`).
+
+**A bound type still gets a schema.** The schema is the declaration of a *type* — the shape
+and validity of a thing the workspace reasons about — and that is worth writing down
+whether or not a record of it ever lands in `data/`. So a bound kind belongs in `schemas/`
+exactly like a contained one; it simply declares where its records really live and has no
+`data/` folder:
+
+```json
+{ "x-kind": "session",
+  "x-source": "~/.claude/projects/<project>/<uuid>.jsonl (read-only)",
+  "x-projection": "sessions",
+  ...the fields, with types... }
+```
+
+Three consequences. **The type is complete:** every kind the capabilities touch has a
+declaration, so a reader learns the whole vocabulary from `schemas/`, not half from
+`schemas/` and half from a query's return shape. **The id pattern is contained-only:** a
+bound kind's ids come from the foreign system (a uuid, a row key), so it carries no
+`data/`-style id pattern and the kit never mints ids for it. **The schema can still bite:**
+where a contained kind is validated against the files in `data/`, a bound kind is validated
+against *what the reach returns* — `x-projection` names the query that materializes it, and
+`validate.py` can check each projected record against the schema. The rule "schemas are law"
+holds on both sides of the boundary; only the thing being checked differs — files here,
+the projection there. The [session-tracker example](../examples/session-tracker/) is the
+pure case: no `data/`, no contained kind, and two bound schemas (`session`, `subagent`)
+that are the entire meaning layer.
 
 ## Deliverables are assembled, never authored
 

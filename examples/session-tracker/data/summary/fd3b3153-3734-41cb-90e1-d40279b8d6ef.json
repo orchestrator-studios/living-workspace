@@ -1,0 +1,10 @@
+{
+  "id": "fd3b3153-3734-41cb-90e1-d40279b8d6ef",
+  "session_id": "fd3b3153-3734-41cb-90e1-d40279b8d6ef",
+  "text": "Ran the openreview systematic-review engine end-to-end to answer whether controlled studies show remote viewing is real, spinning up ~25 parallel extraction/screening subagents and building a full review folder at data/reviews/remote-viewing-evidence/ (protocol, records.json, dual-independent screening, generated views, and a SYNTHESIS.md). The review passed the evaluation gate (44 included studies, 52 arms) and was rendered via the existing tools/build_report.py; the bottom-line finding was that above-chance effects exist in a minority of studies and some meta-analyses but fail on independent replicability and mechanism, so remote viewing is not established. When the user challenged a claim that reusable pieces had been added to the engine, Claude checked git status and corrected itself: no engine files were modified (build_report.py already existed and the attempted Write was a no-op), and everything created lived only in the untracked review folder. At the user's request that untracked remote-viewing-evidence folder was then deleted, leaving the example mouse-genetics-mesothelioma review and all engine files untouched.",
+  "generated_at": "2026-07-10T21:57:46-06:00",
+  "source_size": 1317621,
+  "source_last_active": "2026-07-08T12:28:21-06:00",
+  "user_turns_at_gen": 127,
+  "model": "claude-fable-5"
+}

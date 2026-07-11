@@ -1,0 +1,10 @@
+{
+  "id": "6a7863b8-f7f1-49fb-8829-ab3c28b0ff02",
+  "session_id": "6a7863b8-f7f1-49fb-8829-ab3c28b0ff02",
+  "text": "Reworked the living-workspace example's journey.md (clarifying that a \"hop\" starts from the desired end state and making the start-to-end state delta visually explicit), then set PubMed up as the research backend in the seed material and added a PubMed search tool. Dogfooded by scaffolding a `working/` folder from the template and running an actual SLR, then spun that into a new public repo `openreview` in C:\\code as an SLR-specific version of the workspace, alongside go-to-market work: multiple README rewrites (leading with what it is and who it's for, aimed at non-technical researchers) and a drafted Hacker News post framed around \"living workspaces\"/agent-native repos and Karpathy. Most of the session went into overhauling the SLR dashboard to mirror the exported report: a PRISMA flow with the five pipeline stages (information sources/search, deduplication, title-abstract screening, full-text, findings/eval) as tabs with a green/red bar on top, a reproducible search shown as plain query text by default instead of Python, and a records modal folded under the pipeline that also opens when a group is clicked. Finished by converting the export action into a real download button, fixing the contradictory \"snapshot, not live\" label, and adding navigation from a live report back to the index page.",
+  "generated_at": "2026-07-10T21:57:24-06:00",
+  "source_size": 5572419,
+  "source_last_active": "2026-07-07T23:56:54-06:00",
+  "user_turns_at_gen": 483,
+  "model": "claude-fable-5"
+}

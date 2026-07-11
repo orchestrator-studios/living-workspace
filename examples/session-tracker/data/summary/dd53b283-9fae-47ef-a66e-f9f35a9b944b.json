@@ -1,0 +1,10 @@
+{
+  "id": "dd53b283-9fae-47ef-a66e-f9f35a9b944b",
+  "session_id": "dd53b283-9fae-47ef-a66e-f9f35a9b944b",
+  "text": "Built out the `working` SLR living-workspace by dogfooding a real systematic literature review on how genetic mutations in mice affect malignant mesothelioma susceptibility after asbestos exposure. The bulk of the work was making the process transparent and auditable: generating an HTML report that walks through every query, filter, and inclusion/exclusion step so the exact methodology is reproducible. Turned the repo into a reusable instance by adding a reset/new-instance capability and authored a README in WORKING that frames the system around SLR visibility. Fixed a real bug where views were being emitted to the views folder instead of the per-study folder, clarifying that a view has two parts, and pinned down the distinction between \"build report\" and \"build views.\" Ended on a documentation-design discussion of how a fresh Claude session is meant to discover and correctly use these tools.",
+  "generated_at": "2026-07-10T21:57:21-06:00",
+  "source_size": 3920709,
+  "source_last_active": "2026-07-07T18:27:45-06:00",
+  "user_turns_at_gen": 177,
+  "model": "claude-fable-5"
+}

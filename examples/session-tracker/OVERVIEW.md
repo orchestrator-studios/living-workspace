@@ -16,11 +16,16 @@ instant).
 
 This workspace **owns no data**. The system of record is Claude Code's own state
 directory, `~/.claude/`, and the tracker is a *live lens* over it — it reads, never
-writes, and never copies. `data/` and `schemas/` stay empty on purpose. Everything this
-workspace knows lives in the **reach** (the read layer in `tools/repo.py`) and the
-**meaning** (`capabilities/reading-sessions.md`). This is the bound-substrate case from
-[canon/anatomy.md](../../canon/anatomy.md#contained-and-bound-substrates), in its purest
-form: nothing contained, all reach.
+writes, and never copies. `data/` stays empty on purpose. But `schemas/` is **not** empty:
+the types this workspace reasons about — `session` and `subagent` — are declared there
+even though their records live in `~/.claude`, because a schema is the declaration of a
+*type*, worth writing whether or not a record ever lands in `data/`
+([canon/anatomy.md](../../canon/anatomy.md#contained-and-bound-substrates)). Those schemas
+are marked bound (`x-substrate: bound`, `x-source`), carry no `data/`-style id, and are
+validated against **what the reach returns** — `session.schema.json` names its projection
+(`sessions`) and `tools/validate.py` checks every projected row against it. So the
+workspace's knowledge lives in the **meaning** (`schemas/` + `capabilities/`) and the
+**reach** (`tools/repo.py`); only contained *records* are absent.
 
 Copying would be the wrong architecture twice over: it would go stale the instant it was
 written, and "currently active" is *only* knowable from the live file — a cached mtime is
@@ -28,14 +33,22 @@ a contradiction in terms.
 
 ## The things
 
-- **session** — one Claude Code session: a transcript at
-  `~/.claude/projects/<encoded-project>/<uuid>.jsonl`. Its id is the uuid; its true
-  project path is the `cwd` recorded *inside* the transcript (the folder name is a lossy
-  encoding — never decode it when the content is authoritative); its last-active time is
-  the file's mtime; its age is the file's creation time.
-- **subagent transcript** — a child of a session, under
+- **session** (`schemas/session.schema.json`, bound) — one Claude Code session: a
+  transcript at `~/.claude/projects/<encoded-project>/<uuid>.jsonl`. Its id is the uuid;
+  its true project path is the `cwd` recorded *inside* the transcript (the folder name is
+  a lossy encoding — never decode it when the content is authoritative); its last-active
+  time is the file's mtime; its age is the file's creation time. It also carries its
+  **opening prompt, last prompt, and last response** (read from the head and tail of the
+  transcript).
+- **subagent** (`schemas/subagent.schema.json`, bound) — a child of a session, under
   `<uuid>/subagents/agent-*.jsonl`. Not a session in its own right; counted as a detail
-  of its parent, never listed as top-level.
+  of its parent, never listed as top-level. Declared as a type, not yet projected.
+- **summary** (`schemas/summary.schema.json`, **contained**) — a generated synthesis of
+  one session, one per session, stored in `data/summary/<uuid>.json`. This is the one
+  thing the workspace *owns* and writes — so the tracker is a **bound + contained mix**:
+  it reads sessions from `~/.claude` and writes summaries of them here. The record carries
+  a **watermark** (`source_size`, the transcript's byte size when summarized) so the
+  trigger algo can tell when a summary has gone stale.
 
 ## The rules
 
@@ -70,7 +83,16 @@ a contradiction in terms.
   touched lately?" → the recently-active filter.
 - **Filter:** by age (today / this week / older) and by last-active (live / minutes /
   hours / days), plus search by project or path.
-- **Drill in:** open one session → its parsed detail (turn counts, first prompt, model,
-  git branch, subagent count).
+- **Drill in:** open one session → its parsed detail (turn counts, first/last prompt, last
+  response, model, git branch, subagent count, and its summary if one exists).
+- **Summarize:** "summarize what's due" → the trigger algo `summaries_due()` names the
+  settled, materially-changed sessions; the **delegated** `summarize-session` capability
+  reads each transcript in its own context and writes the summary through
+  `tools/write_summary.py`. The algo decides *when* (deterministic), the agent does *what*
+  (judgment) — and because the summary is delegated, reading hundreds of megabytes of
+  transcript never touches the conversation you are working in. Staleness knobs:
+  `SUMMARY_SETTLE_S` (don't summarize until idle this long) and `SUMMARY_GROWTH_BYTES`
+  (resummarize once the transcript grows this much past the watermark), both in `repo.py`.
 - **Later (grow on demand):** join `history.jsonl` for the opening prompt without parsing
-  the transcript; per-project rollups; a "currently active across all projects" ticker.
+  the transcript; per-project rollups; a "currently active across all projects" ticker;
+  project the `subagent` kind.

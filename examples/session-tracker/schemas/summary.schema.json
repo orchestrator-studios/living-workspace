@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "summary — a generated synthesis of one session",
+  "description": "A CONTAINED kind: unlike session/subagent (bound, read from ~/.claude), a summary is derived state this workspace owns, stored in data/summary/. One per session, so its id IS the session's uuid (a foreign key, not a minted id — the kit never mints for this kind). Written only by tools/write_summary.py, which stamps source_size as the watermark the trigger algo (repo.summaries_due) compares against to decide staleness.",
+  "x-kind": "summary",
+  "type": "object",
+  "required": ["id", "session_id", "text", "generated_at", "source_size"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "= session_id. One summary per session, keyed by the session uuid."
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "text": { "type": "string", "minLength": 1, "description": "The synthesis — a few plain sentences." },
+    "generated_at": { "type": "string", "description": "ISO local time the summary was written." },
+    "source_size": {
+      "type": "number", "minimum": 0,
+      "description": "The transcript's byte size when summarized — the watermark summaries_due() compares live size against."
+    },
+    "source_last_active": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "The transcript mtime at summary time." },
+    "user_turns_at_gen": { "oneOf": [{ "type": "number" }, { "type": "null" }], "description": "Human turns counted when summarized (context, not the staleness signal)." },
+    "model": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Who wrote the summary." }
+  }
+}

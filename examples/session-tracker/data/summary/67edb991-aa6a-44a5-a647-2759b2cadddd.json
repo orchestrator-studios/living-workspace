@@ -1,0 +1,10 @@
+{
+  "id": "67edb991-aa6a-44a5-a647-2759b2cadddd",
+  "session_id": "67edb991-aa6a-44a5-a647-2759b2cadddd",
+  "text": "Work on the lexintel pipeline plugin centered on formalizing run state and the case/hypothesis apparatus: defining pipeline- and step-level run states (not-ready, ready, running, complete, error, stale), aligning run folder structure and the case registry format, and a workspace-clear command that resets all steps to not-run. Substantial dashboard work on pipeline.html \u00e2\u20ac\u201d fixed a 404 in the _status polling endpoint, addressed severe UI lag in the event/polling loop, added a role-level shading scheme with a legend for staleness, a collapsible per-contract dependency graph (collapsed by default, folded into an expandable description), and a Zoomable full-graph view with a collapsible right panel. Introduced proper typing in the engine so step-returning methods yield real Step runtime objects, and restructured the Step data type into explicit front-matter vs. sections (description, input, tools, outputs, instructions) after the user pushed back hard on ad-hoc variable-bag validation. Ran pipeline steps A1-A5 on the HOTEL case and regenerated the memo, and prepped onboarding for a collaborator (Michael) including the git pull-request flow. Ended mid-diagnosis of a stale-data bug: the dashboard reads a step's output sidecar JSON that belongs to a prior run because a step was re-run before the old output was deleted and the deletion never happened \u00e2\u20ac\u201d the user was calling out this ordering/cleanup rookie error when the session cut off.",
+  "generated_at": "2026-07-10T21:57:21-06:00",
+  "source_size": 4791313,
+  "source_last_active": "2026-07-08T12:14:46-06:00",
+  "user_turns_at_gen": 531,
+  "model": "claude-fable-5"
+}

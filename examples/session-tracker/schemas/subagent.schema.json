@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "subagent — a subagent transcript spawned by a session",
+  "description": "A BOUND type: a child transcript under a session's <uuid>/subagents/ folder, not a session in its own right. The capabilities are concerned with it only as a per-session count today, so it has no projection of its own yet (no x-projection) — the schema declares the type so the vocabulary in schemas/ is complete. When a subagent view is grown, add x-projection and the query that materializes it. See canon/anatomy.md § contained and bound substrates.",
+  "x-kind": "subagent",
+  "x-substrate": "bound",
+  "x-source": "~/.claude/projects/<encoded-project>/<uuid>/subagents/agent-*.jsonl (read-only)",
+  "type": "object",
+  "required": ["id", "session_id"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^agent-[0-9a-f]+$",
+      "description": "The subagent transcript id (agent-<hex>). Foreign id."
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "The parent session's uuid."
+    },
+    "size_bytes": { "type": "number", "minimum": 0 },
+    "last_active": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+  }
+}

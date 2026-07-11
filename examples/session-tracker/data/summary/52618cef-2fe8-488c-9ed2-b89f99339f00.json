@@ -1,0 +1,10 @@
+{
+  "id": "52618cef-2fe8-488c-9ed2-b89f99339f00",
+  "session_id": "52618cef-2fe8-488c-9ed2-b89f99339f00",
+  "text": "Audited the eight articles deployed to orchestratorstudios.com production (the articles/ zone per deploy.sh \u00e2\u20ac\u201d Anatomy of a Chat Agent Session, Building Cogent Agents, A Diagnostic Framework for Agent Failure, Principled Orchestration, The Delegation Tree, The Two Roles of LLMs, LLMs and the Structure of Knowledge Work, plus an unlinked Investigate-to-Memo) to find any inbound links from the web at large. Web searches on the domain, the /articles path, and exact/distinctive title phrases returned only noise (Oracle JD Edwards Orchestrator Studio, music-orchestration firms) and a site:orchestratorstudios.com query returned zero pages, so the finding was that no backlinks exist and the site isn't in any search index at all, even though the live site fetches fine. Diagnosed the causes as zero inbound links (the LinkedIn post drafts in working/ appear unposted), no robots.txt (404 live), and no sitemap.xml. Recommended fixes: verify the domain in Google Search Console and Bing Webmaster Tools, add a sitemap.xml covering the index plus the seven nav-linked articles to the deploy and request indexing, and publish the LinkedIn drafts to create first real inbound links; noted a dedicated backlink tool like Ahrefs/Semrush as a more thorough check.",
+  "generated_at": "2026-07-10T21:58:22-06:00",
+  "source_size": 171667,
+  "source_last_active": "2026-07-06T09:29:59-06:00",
+  "user_turns_at_gen": 22,
+  "model": "claude-fable-5"
+}

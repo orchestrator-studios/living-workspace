@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "session — one Claude Code session",
+  "description": "A BOUND type: records live in ~/.claude, not in data/. The schema is the meaning layer — the shape of a session as this workspace models it. Validated not against files in data/ but against what the reach returns: repo.sessions() (the catalog, a light projection) and repo.session() (the full detail). Both are subsets of the fields below, so both conform to this one type. See canon/anatomy.md § contained and bound substrates.",
+  "x-kind": "session",
+  "x-substrate": "bound",
+  "x-source": "~/.claude/projects/<encoded-project>/<uuid>.jsonl (read-only)",
+  "x-projection": "sessions",
+  "x-records": "sessions",
+  "type": "object",
+  "required": [
+    "id", "project", "path", "last_active", "created",
+    "idle_seconds", "age_seconds", "size_bytes", "subagents",
+    "currently_active", "recently_active",
+    "first_prompt", "last_prompt", "last_response"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "The session uuid — its transcript filename. Foreign id: minted by Claude Code, never by this workspace."
+    },
+    "project": { "type": "string", "description": "Basename of the project path." },
+    "path": { "type": "string", "description": "The authoritative cwd read from the transcript; folder names are lossy." },
+    "last_active": { "type": "string", "description": "ISO local time of the transcript's mtime." },
+    "created": { "type": "string", "description": "ISO local time of the transcript's creation." },
+    "idle_seconds": { "type": "number", "minimum": 0, "description": "Seconds since last_active, at ask time." },
+    "age_seconds": { "type": "number", "minimum": 0, "description": "Seconds since created, at ask time." },
+    "size_bytes": { "type": "number", "minimum": 0 },
+    "subagents": { "type": "number", "minimum": 0, "description": "Count of subagent transcripts under <uuid>/subagents/." },
+    "currently_active": { "type": "boolean", "description": "mtime within CURRENTLY_ACTIVE_S (2s) — live right now." },
+    "recently_active": { "type": "boolean", "description": "mtime within RECENTLY_ACTIVE_S (5m)." },
+    "first_prompt": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "The opening human prompt (clipped)." },
+    "last_prompt": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "The most recent human prompt (clipped)." },
+    "last_response": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "The most recent assistant text reply (clipped)." },
+    "has_summary": { "type": "boolean", "description": "Joined from the summary kind: whether a summary record exists for this session." },
+    "summary_stale": { "type": "boolean", "description": "Joined: the transcript has grown past the summary's watermark by the staleness threshold." },
+    "summary": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Joined from the summary kind: the synthesis text, shown on the board." },
+
+    "git_branch": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Detail projection only." },
+    "model": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Detail projection only." },
+    "started": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "First message timestamp — detail projection only." },
+    "last_message": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Last message timestamp — detail projection only." },
+    "user_turns": { "type": "number", "minimum": 0, "description": "Detail projection only." },
+    "assistant_turns": { "type": "number", "minimum": 0, "description": "Detail projection only." }
+  }
+}

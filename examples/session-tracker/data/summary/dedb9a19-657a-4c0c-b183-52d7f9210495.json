@@ -1,0 +1,10 @@
+{
+  "id": "dedb9a19-657a-4c0c-b183-52d7f9210495",
+  "session_id": "dedb9a19-657a-4c0c-b183-52d7f9210495",
+  "text": "Stood up a new systematic-review study in the working workspace on whether the fascial/connective-tissue system (tension, sensory innervation, myofascial state) is associated with emotional and psychological outcomes in humans. After orienting in the existing engine (schemas, screen.py, validate.py, build_views.py, build_report.py, and a prior mesothelioma review), the human's PICO question was refined and scope locked to interventions-only, any human, fascia-explicit, under the slug fascia-emotion. Wrote and schema-validated protocol.json, then ran four complementary PubMed queries via pubmed_search.py (broad, physiological markers, named modalities, anxiety/stress) for recall \u00e2\u20ac\u201d the broad query returned 350 records. Work ended mid-search-tuning: the named-modalities query was a firehose (16,967 hits, truncated at 500), so it was being re-run tightened to specific modality names (Rolfing, structural integration, Bowen technique) to get a complete non-truncated set. No screening, extraction, views, or report was reached.",
+  "generated_at": "2026-07-10T21:58:30-06:00",
+  "source_size": 215854,
+  "source_last_active": "2026-07-07T18:26:25-06:00",
+  "user_turns_at_gen": 26,
+  "model": "claude-fable-5"
+}

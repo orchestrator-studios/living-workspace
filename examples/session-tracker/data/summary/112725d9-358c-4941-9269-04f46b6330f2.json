@@ -1,0 +1,10 @@
+{
+  "id": "112725d9-358c-4941-9269-04f46b6330f2",
+  "session_id": "112725d9-358c-4941-9269-04f46b6330f2",
+  "text": "Analyzed three PDF agreements (from ISS/Lumanity) to determine what competitive and other restrictions they impose on David, who plans to leave Lumanity in two weeks to join Knowledge Horizon. Characterized each document's constraints, then drafted a cover letter to an outside lawyer laying out the concern (whether David is free and clear to join KH) and the materials the lawyer needs to review. Queued that letter as a Gmail draft in the user's Ironcliff (Google) account. Built the argument that Knowledge Horizon was developed independently of the user's prior Data Trove business (a largely-human curated newsletter service) and distinguished the two businesses, then constructed a curated \"excerpts\" attachment pulling only the passages deemed relevant rather than dumping full documents \u00e2\u20ac\u201d iterating after the user pushed back on over-inclusion (e.g. unnecessary Section 2 material). Ended by researching recent legal developments that could affect interpretation of the competitive restrictions.",
+  "generated_at": "2026-07-10T21:57:18-06:00",
+  "source_size": 6384212,
+  "source_last_active": "2026-07-08T12:11:09-06:00",
+  "user_turns_at_gen": 94,
+  "model": "claude-fable-5"
+}

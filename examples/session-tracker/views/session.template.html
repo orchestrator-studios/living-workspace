@@ -58,6 +58,13 @@
             padding: 12px 14px; margin-top: 6px; }
   .prompt .k { color: var(--ink-3); font-size: 0.72rem; text-transform: uppercase;
                letter-spacing: 0.04em; margin-bottom: 4px; }
+  .summary { background: var(--card); border: 1px solid var(--border);
+             border-left: 3px solid var(--live); border-radius: 0 8px 8px 0;
+             padding: 12px 14px; margin: 6px 0; }
+  .summary.stale { border-left-color: var(--recent); }
+  .summary .k { color: var(--ink-3); font-size: 0.72rem; text-transform: uppercase;
+                letter-spacing: 0.04em; margin-bottom: 4px; }
+  .summary .k .tag { color: var(--recent); }
   .empty { background: var(--track); border-radius: 10px; padding: 18px;
            color: var(--ink-2); font-size: 0.88rem; }
 </style>
@@ -107,6 +114,13 @@ function render(s) {
     `<h1>${esc(s.project)}</h1>` +
     `<p class="sub">${esc(s.path || "")}<br>${esc(s.id)}</p>` +
     `<p>${stateLine(s)}</p>` +
+    (s.summary
+      ? `<div class="summary${s.summary_stale ? " stale" : ""}">` +
+        `<div class="k">summary` +
+        (s.summarized_at ? ` · ${esc(s.summarized_at.replace("T", " ").slice(0, 16))}` : "") +
+        (s.summary_stale ? ` · <span class="tag">stale, transcript moved on</span>` : "") +
+        `</div>${esc(s.summary)}</div>`
+      : "") +
     `<div class="grid">` +
       cell("user turns", s.user_turns) +
       cell("assistant turns", s.assistant_turns) +
@@ -119,6 +133,12 @@ function render(s) {
     `</div>` +
     (s.first_prompt
       ? `<div class="prompt"><div class="k">opening prompt</div>${esc(s.first_prompt)}</div>`
+      : "") +
+    (s.last_prompt && s.last_prompt !== s.first_prompt
+      ? `<div class="prompt"><div class="k">last prompt</div>${esc(s.last_prompt)}</div>`
+      : "") +
+    (s.last_response
+      ? `<div class="prompt"><div class="k">last response</div>${esc(s.last_response)}</div>`
       : "");
 }
 

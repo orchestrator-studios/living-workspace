@@ -1,0 +1,10 @@
+{
+  "id": "b5c99447-de21-4dfd-863a-deb5393250dc",
+  "session_id": "b5c99447-de21-4dfd-863a-deb5393250dc",
+  "text": "Ahead of tagging lexintel's first release, traced the fresh-clone new-user journey end to end \u00e2\u20ac\u201d from README through getting-started to a completed research run \u00e2\u20ac\u201d to find where the \"magic\" breaks down, without editing any code (read-only analysis of README, serve.py, the dashboard's first paint, the engine's missing-key behavior, and the run manifest timings). Established that the release actually ships built (the full 39-step spec with compiled .py files and two ready-to-run hypotheses, HOTEL and REDBULL, checked into git), so the shortest path to the payoff is just install deps, set one key, start the server, ask Claude to \"run HOTEL end to end,\" and watch the dashboard fill \u00e2\u20ac\u201d meaning the weak links are in expectation-setting, not machinery. Delivered a ranked set of friction points: (1) the README buries the first magic moment under \"build-out\" language that implies users must author 39 steps first, so it should lead with \"the pipeline ships complete \u00e2\u20ac\u201d your first run is one sentence away\"; (2) no time or cost expectations are set (A1-A5 alone took ~3m12s; a full run is 39 steps / 31 LLM calls on claude-opus-4-8, plausibly 30-60+ minutes and real spend), so state duration/cost up front and script a short \"run A1-A5 and watch them light up\" hello-world beat first; (3) missing optional Google search keys silently gut the \"genuinely tool-computed, not LLM-guessed\" promise because web_search returns no_results_or_no_key and agent steps proceed on estimates. Ended with recommendations only \u00e2\u20ac\u201d no files were changed.",
+  "generated_at": "2026-07-10T21:58:33-06:00",
+  "source_size": 220204,
+  "source_last_active": "2026-07-08T00:10:50-06:00",
+  "user_turns_at_gen": 20,
+  "model": "claude-fable-5"
+}

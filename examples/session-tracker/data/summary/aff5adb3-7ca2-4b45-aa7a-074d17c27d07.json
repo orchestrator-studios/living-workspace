@@ -1,0 +1,10 @@
+{
+  "id": "aff5adb3-7ca2-4b45-aa7a-074d17c27d07",
+  "session_id": "aff5adb3-7ca2-4b45-aa7a-074d17c27d07",
+  "text": "Drove the openreview systematic-review engine end to end as a happy-path smoke test, standing up a fresh dozen-record pilot review (mouse-genetics-mesothelioma-mini) that reused the existing mouse-genetics-mesothelioma extraction_profile rather than the topic. After an early miscue where the broadest capped query (--retmax 12) returned recent clinical/omics papers instead of animal-genetics studies, the search was re-scoped to BAP1/asbestos-mesothelioma mouse work. Ran the full mechanics \u00e2\u20ac\u201d capped PubMed search, dual-reviewer title/abstract screening, PMC full-text retrieval, full-text screening, and arm-level extraction on the two included studies (Bap1+/- germline mice, 38592450, showing increased susceptibility; Hmgb1 conditional knockouts, 37729199, mesothelial-specific KO protective). All validation and evaluation-gate checks passed and the review went live on the local dashboard at http://127.0.0.1:8765/ next to the original. At the user's request the pilot review was then deleted, leaving only the original example, with the workspace clean and validation still green.",
+  "generated_at": "2026-07-10T21:57:55-06:00",
+  "source_size": 783272,
+  "source_last_active": "2026-07-08T21:41:55-06:00",
+  "user_turns_at_gen": 63,
+  "model": "claude-fable-5"
+}

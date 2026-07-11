@@ -1,0 +1,10 @@
+{
+  "id": "cf03b931-60d2-41d9-b852-34a272ee6e88",
+  "session_id": "cf03b931-60d2-41d9-b852-34a272ee6e88",
+  "text": "Extended collaborative writing and architecture session developing the \"living workspace\" concept for an Orchestrator Studios article series (site deep-dive plus LinkedIn teaser), grounded in the orchestra repo and Orchestrator Studios website. The conversation worked through core ideas \u00e2\u20ac\u201d applications as user-facing exes over a collapsed application/data \"substrate,\" AI-in-the-loop chatbots on the substrate, and the \"let there be light\" magic moments of building live on-site \u00e2\u20ac\u201d and distilled them into a manifesto (\"The Repo Is the Application\"), a concepts catalog doc, and a README anchored on a concrete definition starting from an empty folder structure. It then restructured the living-workspace repo into three cleanly separated parts (canon of how the system works, a worked example, and a fresh starter template), set up git with the correct Orchestra Studios GitHub org remote origin, and rejected using commits-as-history in favor of an in-repo visible timeline. Much of the later work centered on getting journey.md right \u00e2\u20ac\u201d reframing the example as a structured literature-review research project told in \"hops,\" prioritizing crystal-clear plain writing over style, and accounting for steps that create schemas and tools \u00e2\u20ac\u201d ending mid-effort on a full journey.md redo that starts by pinning down the final deliverable and where it belongs in the repo.",
+  "generated_at": "2026-07-10T21:57:20-06:00",
+  "source_size": 3670802,
+  "source_last_active": "2026-07-08T00:10:50-06:00",
+  "user_turns_at_gen": 234,
+  "model": "claude-fable-5"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "9ef878ec-f5b1-4004-93bc-44cbdc23e162",
+  "session_id": "9ef878ec-f5b1-4004-93bc-44cbdc23e162",
+  "text": "A marketing/audience-research conversation about where to post the openreview repo on Reddit, targeting PubMed researchers who are open to Claude Code or better tooling. Claude initially suggested on-topic subs like r/systematic_review and r/EvidenceBasedMedicine, but the user pushed back that those are effectively dead, prompting a more rigorous data-backed analysis. Using GummySearch membership and growth figures (Reddit itself blocked direct tool access), Claude confirmed the perfectly-named subs are dead and delivered a top-five recommendation with per-sub activity steps: r/bioinformatics (161k, +17.7%), r/labrats (718k), r/Zotero (13k, +50%, LLM-curious), r/ClaudeCode (showcase), and r/epidemiology (28k). The core takeaway was that the ideal audience isn't clustered in a \"systematic review\" community but scattered across tool-and-domain subs, so the strategy is to reach them where they already gather, with honorable mentions (r/HealthInformatics, r/statistics) and subs to avoid (r/medicine, flair-gated).",
+  "generated_at": "2026-07-10T21:58:13-06:00",
+  "source_size": 235689,
+  "source_last_active": "2026-07-08T23:01:00-06:00",
+  "user_turns_at_gen": 46,
+  "model": "claude-fable-5"
+}

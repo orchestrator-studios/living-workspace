@@ -1,0 +1,10 @@
+{
+  "id": "bf54620f-701a-4636-a3a2-1eeb5f7bf39b",
+  "session_id": "bf54620f-701a-4636-a3a2-1eeb5f7bf39b",
+  "text": "Formalized the dashboard/projection subsystem \u00e2\u20ac\u201d steel-manned a design (drawing on the BotBeam repo), settled the vocabulary that a \"projection\" is just a query result in a streaming format, and documented why the platform deliberately avoids websockets in favor of polling. Clarified repo's role as the regulator of schema-conforming data access and the requirement that repo KINDS stay aligned with the schemas/ folder, then cleaned up server.py and repo, spiffed up the template HTML with comments and clearer variable names, and drafted README language around the \"Living Workspace\" concept. Spent the back half fixing the newsletter example workspace, which was badly structured (newsletter N001 written to the workspace root instead of data/, missing schema) and debugging runtime errors in the issues dashboard view (Cannot read properties of null reading 'issues', plus a broken setInterval poll that showed \"no data bound\" but never rendered the actual content). Began reworking the newsletter pipeline into a skill-defined workflow (run a query, then a semantic filter, KH-style) and, by the end, pivoted the example away from the talc/asbestos life-science stream toward a new AI news newsletter focused on model capabilities.",
+  "generated_at": "2026-07-10T21:57:24-06:00",
+  "source_size": 3790359,
+  "source_last_active": "2026-07-10T19:13:51-06:00",
+  "user_turns_at_gen": 312,
+  "model": "claude-fable-5"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "10673b9a-76cc-4364-a11e-c5d6e27d62eb",
+  "session_id": "10673b9a-76cc-4364-a11e-c5d6e27d62eb",
+  "text": "Release-hardening pass on the openreview repo ahead of tagging its first public release, driven by the user repeatedly walking the \"happy path\" and reporting friction. Work centered on the dashboard/server UX and the README: reframing the README around steady-state operation (dashboard open in a browser while Claude runs a study) with added visuals and clearer explanation that the whole repo lives \"in the data,\" plus guidance in skills so users know to ask Claude to start a study while the dashboard runs. Added user alerts for when the card first appears and when the eval is ready, handling for a study being deleted out from under an open dashboard, and cleaned up the top navigation into the four core areas (protocol, pipeline, findings, eval) while tidying the download/other clutter. The quality-gate eval section under findings was made collapsed-by-default (showing just pass, expanded on failure), the findings extraction table was made interactive so each row expands to full Record Explorer detail including links, and a chunk of the session dug into monitoring and communicating the browser-to-server connection state to the user. Ended with the user asking about the remaining weak link before posting release links on Reddit for Claude Code researchers.",
+  "generated_at": "2026-07-10T21:57:26-06:00",
+  "source_size": 2622987,
+  "source_last_active": "2026-07-08T20:12:19-06:00",
+  "user_turns_at_gen": 213,
+  "model": "claude-fable-5"
+}

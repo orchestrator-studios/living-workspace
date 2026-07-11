@@ -1,0 +1,10 @@
+{
+  "id": "9f80f996-6a03-4fa8-a089-6015b326f581",
+  "session_id": "9f80f996-6a03-4fa8-a089-6015b326f581",
+  "text": "Work centered on the openreview systematic-review workspace's dashboard and study-creation flow, driven by repeated \"start fresh and walk the happy path\" testing. An initial attempt to run a review on studies claiming anger is stored in fat cells surfaced a Unicode/cp1252 encoding error in the tooling, prompting discussion of whether the skills or tools (server.py, build_report.py, and related scripts) needed hardening. Subsequent cycles reproduced and chased a dashboard bug where the link to a newly created study returned {\"error\": \"IndexError: list index out of range\"}, with data being deleted and the report rebuilt from scratch between runs. The session ended on a still-open regression: after a protocol is written the dashboard now shows the study card but no longer auto-navigates the user into the newly created study, behavior the README documents and that had worked earlier.",
+  "generated_at": "2026-07-10T21:57:59-06:00",
+  "source_size": 552104,
+  "source_last_active": "2026-07-08T13:16:48-06:00",
+  "user_turns_at_gen": 77,
+  "model": "claude-fable-5"
+}

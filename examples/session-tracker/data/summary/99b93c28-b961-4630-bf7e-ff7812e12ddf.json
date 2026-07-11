@@ -1,0 +1,10 @@
+{
+  "id": "99b93c28-b961-4630-bf7e-ff7812e12ddf",
+  "session_id": "99b93c28-b961-4630-bf7e-ff7812e12ddf",
+  "text": "Ran the lexintel plugin's multi-step legal-memo pipeline for the HOTEL workspace, stepping through the A-section research stages up to A20 and then pushing the whole thing end-to-end. Diagnosed failures at steps A8, A10, and A19, all traced to auto-recompiles: the compiler regenerates each tool's @beta_tool wrapper using a naming convention (wrapper name == module name), but govuk_enforcement.py broke the convention by naming its wrapper enforcement_search, so the regenerated A8-evidence.py and A10-enforcement.py called the wrong function. Chose the fastest path to a full run via a --stale pass, which reran only the 27 dirty/upstream-stale steps in dependency order (A12-A18, A20, the sixteen B-section drafts, then C1 QA, C2, and C3 reassembly) while skipping the 12 already-fresh expensive agent steps. The background run finished clean in about 17 minutes, leaving 39/39 steps fresh and memo.md fully regenerated at pipeline/workspaces/HOTEL/memo.md; the only remaining issue is a cosmetic validate.py warning about A20's gate output being produced but never consumed.",
+  "generated_at": "2026-07-10T21:58:01-06:00",
+  "source_size": 315621,
+  "source_last_active": "2026-07-04T15:36:22-06:00",
+  "user_turns_at_gen": 40,
+  "model": "claude-fable-5"
+}

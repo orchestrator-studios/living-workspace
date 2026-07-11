@@ -6,12 +6,17 @@
   "sessions" query; polls /api/sessions every 2 seconds — the same window as "currently
   active", so a session being typed in lights up on the next tick.
 
+  Layout is a full-width CARD LIST, not a wide table: a table with the opening prompt,
+  last prompt, last response, and summary would never fit one screen without horizontal
+  scroll. Each session is a compact card that spends vertical space on its text, so
+  everything is visible at once. No inner scroll container — the page scrolls, and the
+  poll preserves scroll position, so a refresh never yanks you back to the top.
+
   What lives where (the workspace's rules):
-    - The two activity flags and the raw idle/age seconds come from repo.sessions(),
-      computed against 'now' on every ask — one definition of "active" (OVERVIEW rule 3).
+    - The activity flags, idle/age seconds, and the joined summary all come from
+      repo.sessions(), computed against 'now' on every ask — one definition (OVERVIEW).
     - Filtering, search, sort, and relative-time formatting are PRESENTATION over that
-      one answer; they live here. Control state sits outside render() so the 2s poll
-      never disturbs the user's filters or steals focus from the search box.
+      one answer; they live here, in ephemeral JS state outside render().
     - Nothing here writes. This whole workspace is a read-only lens.
 -->
 <html lang="en">
@@ -23,83 +28,105 @@
   :root {
     --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de; --head: #f6f5f2;
     --ink: #1c1c1a; --ink-2: #5f5e57; --ink-3: #8b8a80; --track: #f0efec;
-    --accent: #2a78d6; --zebra: #fafaf8; --hover: #f2f6fb;
+    --accent: #2a78d6; --hover: #f6f9fe;
     --live: #2e9e5b; --recent: #c8901f; --idle: #a9a89e;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --surface: #1a1a19; --card: #232322; --border: #383835; --head: #2a2a28;
       --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #8b8a80; --track: #2c2c2a;
-      --accent: #3987e5; --zebra: #262625; --hover: #2b3440;
+      --accent: #3987e5; --hover: #262a30;
       --live: #43b573; --recent: #d9a94e; --idle: #6f6e66;
     }
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
-         color: var(--ink); padding: 24px 20px; }
-  .wrap { max-width: 1140px; margin: 0 auto; }
+         color: var(--ink); padding: 20px 22px 60px; }
+  .wrap { width: 100%; }                 /* full width — no max-width cap */
   h1 { font-size: 1.25rem; margin-bottom: 2px; }
-  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 16px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 14px; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+              background: var(--live); margin-right: 4px; }
 
-  .tiles { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .tile { flex: 1; min-width: 120px; background: var(--card);
-          border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
-  .tile .n { font-size: 1.5rem; font-weight: 700; }
+  .tiles { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+          padding: 8px 16px; min-width: 108px; }
+  .tile .n { font-size: 1.4rem; font-weight: 700; }
   .tile.hot .n { color: var(--live); }
-  .tile .k { color: var(--ink-2); font-size: 0.76rem; text-transform: uppercase;
+  .tile .k { color: var(--ink-2); font-size: 0.74rem; text-transform: uppercase;
              letter-spacing: 0.05em; }
 
+  .controls { position: sticky; top: 0; z-index: 5; background: var(--surface);
+              padding: 6px 0 10px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
   .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
   .toolbar input[type=search] {
     flex: 1; min-width: 200px; padding: 6px 10px; border-radius: 7px;
     border: 1px solid var(--border); background: var(--card); color: var(--ink);
     font: inherit; font-size: 0.86rem; }
   .toolbar input[type=search]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  .readout { color: var(--ink-2); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
-
-  .filters { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .readout { color: var(--ink-2); font-size: 0.8rem; font-variant-numeric: tabular-nums;
+             white-space: nowrap; }
+  .filters { display: flex; gap: 16px; flex-wrap: wrap; }
   .fgroup { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-  .flabel { color: var(--ink-3); font-size: 0.72rem; text-transform: uppercase;
+  .flabel { color: var(--ink-3); font-size: 0.7rem; text-transform: uppercase;
             letter-spacing: 0.05em; margin-right: 2px; }
   .chip-btn { border: 1px solid var(--border); background: var(--card); color: var(--ink-2);
               border-radius: 999px; padding: 2px 11px; font: inherit; font-size: 0.76rem;
-              cursor: pointer; }
+              cursor: pointer; white-space: nowrap; }
   .chip-btn:hover { border-color: var(--accent); }
   .chip-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent);
                                    color: #fff; }
+  .chip-btn .dir { opacity: 0.8; margin-left: 3px; }
 
-  .scroller { overflow: auto; max-height: 68vh; background: var(--card);
-              border: 1px solid var(--border); border-radius: 8px; }
-  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 0.86rem; }
-  thead th { position: sticky; top: 0; z-index: 2; text-align: left; padding: 7px 12px;
-             background: var(--head); border-bottom: 2px solid var(--border);
-             white-space: nowrap; cursor: pointer; user-select: none; font-size: 0.72rem;
-             text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-3); }
-  thead th:hover { color: var(--accent); }
-  thead th .arrow { color: var(--accent); margin-left: 3px; }
-  tbody td { padding: 7px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  tbody tr:nth-child(even) { background: var(--zebra); }
-  tbody tr:hover { background: var(--hover); }
-  tbody tr:last-child td { border-bottom: none; }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
-  a.proj { color: var(--ink); text-decoration: none; font-weight: 600; }
-  a.proj:hover { color: var(--accent); }
-  .path { color: var(--ink-3); font-size: 0.76rem; font-family: ui-monospace, Consolas, monospace; }
-
-  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%;
-         background: var(--idle); margin-right: 7px; vertical-align: -1px; }
-  .dot.recent { background: var(--recent); }
-  .dot.live { background: var(--live); box-shadow: 0 0 0 0 var(--live);
-              animation: pulse 1.6s infinite; }
-  @keyframes pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(46,158,91,0.55); }
-    70%  { box-shadow: 0 0 0 7px rgba(46,158,91,0); }
-    100% { box-shadow: 0 0 0 0 rgba(46,158,91,0); }
-  }
-  .state { font-size: 0.78rem; }
+  /* the card list */
+  .list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+          padding: 8px 13px; }
+  .card:hover { border-color: var(--accent); background: var(--hover); }
+  .chead { display: flex; align-items: baseline; gap: 10px; }
+  .state { flex-shrink: 0; width: 84px; font-size: 0.78rem; }
+  .state .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+                background: var(--idle); margin-right: 6px; vertical-align: 0; }
+  .state.recent .dot { background: var(--recent); }
+  .state.live .dot { background: var(--live); animation: pulse 1.6s infinite; }
   .state.live { color: var(--live); font-weight: 700; }
   .state.recent { color: var(--recent); }
   .state.idle { color: var(--ink-3); }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(46,158,91,0.5); }
+    70% { box-shadow: 0 0 0 6px rgba(46,158,91,0); }
+    100% { box-shadow: 0 0 0 0 rgba(46,158,91,0); }
+  }
+  .chead .proj { font-weight: 600; color: var(--ink); text-decoration: none;
+                 white-space: nowrap; flex-shrink: 0; }
+  .chead .proj:hover { color: var(--accent); }
+  .chead .path { color: var(--ink-3); font-size: 0.76rem;
+                 font-family: ui-monospace, Consolas, monospace;
+                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                 flex: 1 1 auto; min-width: 30px; }
+  .chead .meta { color: var(--ink-2); font-size: 0.78rem; white-space: nowrap;
+                 font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .chead .meta b { color: var(--ink); font-weight: 600; }
+
+  .line { display: flex; gap: 7px; margin-top: 3px; font-size: 0.83rem;
+          color: var(--ink-2); cursor: pointer; }
+  .line .tag { flex-shrink: 0; width: 46px; color: var(--ink-3); font-size: 0.7rem;
+               text-transform: uppercase; letter-spacing: 0.04em; padding-top: 1px; }
+  .line .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .line.open .txt { white-space: normal; }
+  .line.a .txt { color: var(--ink); }
+
+  .sumline { display: flex; gap: 7px; margin-top: 6px; padding: 5px 9px;
+             background: var(--track); border-left: 2px solid var(--live);
+             border-radius: 0 6px 6px 0; font-size: 0.83rem; cursor: pointer; }
+  .sumline.stale { border-left-color: var(--recent); }
+  .sumline .tag { flex-shrink: 0; width: 46px; color: var(--live); font-size: 0.7rem;
+                  text-transform: uppercase; letter-spacing: 0.04em; padding-top: 1px;
+                  font-weight: 700; }
+  .sumline.stale .tag { color: var(--recent); }
+  .sumline .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                  color: var(--ink); }
+  .sumline.open .txt { white-space: normal; }
   .empty { background: var(--track); border-radius: 10px; padding: 18px;
            color: var(--ink-2); font-size: 0.88rem; }
 </style>
@@ -109,11 +136,13 @@
   <h1>Claude Code — session tracker</h1>
   <p class="sub" id="sub">a live lens over ~/.claude</p>
   <div class="tiles" id="tiles"></div>
-  <div class="toolbar">
-    <input type="search" id="q" placeholder="Search project or path…" autocomplete="off">
-    <span class="readout" id="readout"></span>
+  <div class="controls">
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Search project, path, or text…" autocomplete="off">
+      <span class="readout" id="readout"></span>
+    </div>
+    <div class="filters" id="filters"></div>
   </div>
-  <div class="filters" id="filters"></div>
   <div id="content"></div>
 </div>
 <script>
@@ -128,8 +157,6 @@ let payload = initialPayload;
 function esc(v) {
   return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 }
-
-// seconds → compact relative label ("5s", "3m", "2h", "4d", "3w")
 function rel(sec) {
   sec = Math.max(0, Math.round(sec));
   if (sec < 60) return sec + "s";
@@ -138,14 +165,12 @@ function rel(sec) {
   if (sec < 604800) return Math.floor(sec / 86400) + "d";
   return Math.floor(sec / 604800) + "w";
 }
-
 function bytes(n) {
   if (n < 1024) return n + " B";
   if (n < 1048576) return (n / 1024).toFixed(0) + " KB";
   return (n / 1048576).toFixed(1) + " MB";
 }
 
-// The two filter dimensions Cliff asked for: how recently active, and how old.
 const ACTIVE_BUCKETS = [
   ["all", "all"], ["live", "live now"], ["recent", "< 5 min"],
   ["hour", "< 1 hr"], ["day", "< 1 day"], ["older", "older"],
@@ -153,6 +178,10 @@ const ACTIVE_BUCKETS = [
 const AGE_BUCKETS = [
   ["all", "all"], ["today", "today"], ["week", "this week"],
   ["month", "this month"], ["old", "older"],
+];
+const SORTS = [
+  ["idle_seconds", "last active"], ["age_seconds", "age"],
+  ["size_bytes", "size"], ["project", "project"],
 ];
 
 function matchActive(s) {
@@ -177,62 +206,69 @@ function matchAge(s) {
 function matchSearch(s) {
   if (!search) return true;
   const n = search.toLowerCase();
-  return (s.project || "").toLowerCase().includes(n) ||
-         (s.path || "").toLowerCase().includes(n) ||
-         s.id.toLowerCase().includes(n);
+  return [s.project, s.path, s.id, s.first_prompt, s.last_prompt, s.last_response, s.summary]
+    .some(v => v && String(v).toLowerCase().includes(n));
 }
 
-function renderFilters() {
+function renderControls() {
   const groups = [
-    ["Last active", "activeFilter", ACTIVE_BUCKETS, activeFilter],
-    ["Age", "ageFilter", AGE_BUCKETS, ageFilter],
+    ["Last active", "active", ACTIVE_BUCKETS, activeFilter],
+    ["Age", "age", AGE_BUCKETS, ageFilter],
+    ["Sort", "sort", SORTS, sortKey],
   ];
-  document.getElementById("filters").innerHTML = groups.map(([label, name, buckets, cur]) =>
+  document.getElementById("filters").innerHTML = groups.map(([label, name, opts, cur]) =>
     `<div class="fgroup"><span class="flabel">${label}</span>` +
-    buckets.map(([val, text]) =>
-      `<button class="chip-btn" aria-pressed="${cur === val}" data-name="${name}" data-val="${val}">${text}</button>`
-    ).join("") + `</div>`
+    opts.map(([val, text]) => {
+      const on = cur === val;
+      const dir = (name === "sort" && on) ? `<span class="dir">${sortDir > 0 ? "↑" : "↓"}</span>` : "";
+      return `<button class="chip-btn" aria-pressed="${on}" data-group="${name}" data-val="${val}">${text}${dir}</button>`;
+    }).join("") + `</div>`
   ).join("");
   document.querySelectorAll("#filters .chip-btn").forEach(btn => btn.onclick = () => {
-    if (btn.dataset.name === "activeFilter") activeFilter = btn.dataset.val;
-    else ageFilter = btn.dataset.val;
+    const {group, val} = btn.dataset;
+    if (group === "active") activeFilter = val;
+    else if (group === "age") ageFilter = val;
+    else if (group === "sort") { if (sortKey === val) sortDir = -sortDir; else { sortKey = val; sortDir = 1; } }
     render();
   });
 }
 
-const COLUMNS = [
-  ["state", "status", false], ["project", "project", false],
-  ["idle_seconds", "last active", true], ["age_seconds", "age", true],
-  ["user_turns", "turns", true], ["subagents", "subs", true],
-  ["size_bytes", "size", true],
-];
-
-function stateCell(s) {
-  if (s.currently_active)
-    return `<td><span class="dot live"></span><span class="state live">live</span></td>`;
-  if (s.recently_active)
-    return `<td><span class="dot recent"></span><span class="state recent">recent</span></td>`;
-  return `<td><span class="dot"></span><span class="state idle">${rel(s.idle_seconds)} ago</span></td>`;
+// One clipped, click-to-expand text line.
+function line(tag, value, cls) {
+  if (!value) return "";
+  return `<div class="line ${cls || ""}" onclick="this.classList.toggle('open')">` +
+         `<span class="tag">${tag}</span><span class="txt">${esc(value)}</span></div>`;
 }
 
-function row(s) {
-  return `<tr>` +
-    stateCell(s) +
-    `<td><a class="proj" href="/view/session?session_id=${esc(s.id)}">${esc(s.project)}</a>` +
-    `<div class="path">${esc(s.path)}</div></td>` +
-    `<td class="num">${rel(s.idle_seconds)}</td>` +
-    `<td class="num">${rel(s.age_seconds)}</td>` +
-    `<td class="num">${s.user_turns == null ? "—" : s.user_turns}</td>` +
-    `<td class="num">${s.subagents || "—"}</td>` +
-    `<td class="num">${bytes(s.size_bytes)}</td>` +
-    `</tr>`;
+function card(s) {
+  const cls = s.currently_active ? "live" : s.recently_active ? "recent" : "idle";
+  const label = s.currently_active ? "live" : s.recently_active ? "recent" : rel(s.idle_seconds) + " ago";
+  const meta = `<b>${rel(s.idle_seconds)}</b> active · ${rel(s.age_seconds)} old · ` +
+               `${bytes(s.size_bytes)}` + (s.subagents ? ` · ${s.subagents}▸` : "");
+  let body =
+    `<div class="chead">` +
+      `<span class="state ${cls}"><span class="dot"></span>${label}</span>` +
+      `<a class="proj" href="/view/session?session_id=${esc(s.id)}">${esc(s.project)}</a>` +
+      `<span class="path" title="${esc(s.path)}">${esc(s.path)}</span>` +
+      `<span class="meta">${meta}</span>` +
+    `</div>`;
+  // opening prompt for context; the last exchange for what's current
+  body += line("opened", s.first_prompt);
+  if (s.last_prompt && s.last_prompt !== s.first_prompt) body += line("Q", s.last_prompt);
+  body += line("A", s.last_response, "a");
+  if (s.summary) {
+    body += `<div class="sumline ${s.summary_stale ? "stale" : ""}" onclick="this.classList.toggle('open')">` +
+            `<span class="tag">${s.summary_stale ? "stale" : "sum"}</span>` +
+            `<span class="txt">${esc(s.summary)}</span></div>`;
+  }
+  return `<div class="card">${body}</div>`;
 }
 
 function render() {
   if (!payload) return;
   document.getElementById("sub").innerHTML =
-    `a live lens over ~/.claude · as of ${esc((payload.now || "").replace("T", " ").slice(0, 19))} · ` +
-    `polling every ${payload.thresholds.currently_s}s`;
+    `<span class="live-dot"></span>a live lens over ~/.claude · as of ` +
+    `${esc((payload.now || "").replace("T", " ").slice(0, 19))} · polling every ${payload.thresholds.currently_s}s`;
 
   document.getElementById("tiles").innerHTML =
     `<div class="tile hot"><div class="n">${payload.currently_active}</div><div class="k">live now</div></div>` +
@@ -240,7 +276,7 @@ function render() {
     `<div class="tile"><div class="n">${payload.total}</div><div class="k">sessions</div></div>` +
     `<div class="tile"><div class="n">${payload.projects}</div><div class="k">projects</div></div>`;
 
-  renderFilters();
+  renderControls();
 
   let rows = payload.sessions.filter(s => matchActive(s) && matchAge(s) && matchSearch(s));
   rows = [...rows].sort((a, b) => {
@@ -250,40 +286,21 @@ function render() {
   });
 
   document.getElementById("readout").textContent =
-    rows.length === payload.total ? `${payload.total} sessions`
-                                  : `${rows.length} of ${payload.total}`;
+    rows.length === payload.total ? `${payload.total} sessions` : `${rows.length} of ${payload.total}`;
 
-  const head = COLUMNS.map(([key, label, sortable]) => {
-    const arrow = key === sortKey ? `<span class="arrow">${sortDir > 0 ? "▲" : "▼"}</span>` : "";
-    return `<th data-key="${key}" data-sortable="${sortable}">${label}${arrow}</th>`;
-  }).join("");
-
-  const body = rows.length
-    ? rows.map(row).join("")
-    : `<tr><td colspan="${COLUMNS.length}" class="path" style="padding:16px">No sessions match — clear the filters.</td></tr>`;
-
-  document.getElementById("content").innerHTML =
-    `<div class="scroller"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
-
-  document.querySelectorAll("thead th").forEach(th => {
-    if (th.dataset.sortable !== "true" && th.dataset.key !== "state") {
-      // status sorts by liveness (idle asc); others as declared
-    }
-    th.onclick = () => {
-      const key = th.dataset.key === "state" ? "idle_seconds" : th.dataset.key;
-      if (sortKey === key) sortDir = -sortDir; else { sortKey = key; sortDir = 1; }
-      render();
-    };
-  });
+  document.getElementById("content").innerHTML = rows.length
+    ? `<div class="list">${rows.map(card).join("")}</div>`
+    : `<div class="empty">No sessions match — clear the filters.</div>`;
 }
 
 document.getElementById("q").addEventListener("input", e => { search = e.target.value.trim(); render(); });
 
 render();
 
-// Liveness: re-ask /api/sessions every 2 seconds — the currently-active window — and
-// repaint on change. Control state (filters, search, sort) lives outside render(), so a
-// repaint preserves it.
+// Liveness: re-ask /api/sessions every 2 seconds and repaint on change. Scroll position
+// is captured and restored around the repaint, so a refresh never snaps you back to the
+// top (or, when there was horizontal overflow, to the left). Control state lives outside
+// render(), so filters, sort, and search survive too.
 if (LIVE) {
   let last = JSON.stringify(initialPayload);
   setInterval(async () => {
@@ -294,8 +311,10 @@ if (LIVE) {
       const serialized = JSON.stringify(fresh);
       if (serialized === last) return;
       last = serialized;
+      const x = window.scrollX, y = window.scrollY;
       payload = fresh;
       render();
+      window.scrollTo(x, y);
     } catch (err) { /* server briefly away — keep the last good render */ }
   }, 2000);
 }

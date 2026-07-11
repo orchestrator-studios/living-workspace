@@ -95,10 +95,40 @@ def alignment_checks(errors):
 
 
 def integrity_checks(errors):
-    # (grown: the workspace's cross-record rules — dedup, referential integrity,
-    #  closure guarantees. Validation reads the raw files on purpose — it checks the
-    #  substrate itself, not a query's answer — but paths still come from repo.)
-    pass
+    """This workspace is bound: there are no records in data/ to check. Instead, every
+    bound kind is validated against *what the reach returns* — 'schemas are law' on the
+    far side of the boundary too (canon/anatomy.md § contained and bound substrates).
+
+    For each schema marked x-substrate=bound with an x-projection, call that query and
+    check every projected record (found under the x-records key) against the schema. A
+    bound kind with no projection yet (subagent — only counted today) declares its type
+    but has nothing to validate."""
+    checked = 0
+    for kind, schema_file in sorted(repo.SCHEMA_FOR_KIND.items()):
+        schema = load(repo.SCHEMAS / schema_file)
+        if schema.get("x-substrate") != "bound":
+            continue
+        projection = schema.get("x-projection")
+        if not projection:
+            continue
+        query = repo.QUERIES.get(projection)
+        if query is None:
+            errors.append(f"schemas/{schema_file}: x-projection '{projection}' "
+                          f"is not a published query")
+            continue
+        payload = query()
+        records_key = schema.get("x-records")
+        if isinstance(payload, dict) and records_key:
+            records = payload.get(records_key, [])
+        elif isinstance(payload, list):
+            records = payload
+        else:
+            records = []
+        for record in records:
+            check(record, schema, f"{kind}:{record.get('id', '?')}", errors)
+            checked += 1
+    if checked and not errors:
+        print(f"bound: {checked} projected records conform to their schemas.")
 
 
 def main() -> int:

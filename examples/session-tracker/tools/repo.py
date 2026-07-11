@@ -58,6 +58,13 @@ PROJECTS = CLAUDE_HOME / "projects"
 CURRENTLY_ACTIVE_S = 2      # mtime within 2s  → someone is in this session right now
 RECENTLY_ACTIVE_S = 300     # mtime within 5m  → touched lately, probably still warm
 
+# Summary staleness — the trigger algo's knobs (OVERVIEW: "when to (re)summarize"). A
+# session is due for a summary when it has SETTLED (so we never summarize mid-turn) and
+# has changed materially since its last summary's watermark. Size is the cheap proxy for
+# "materially changed" — the algo stays stat-only, no parsing. Tune here, once.
+SUMMARY_SETTLE_S = 120        # leave a session alone until it's been idle this long
+SUMMARY_GROWTH_BYTES = 20000  # resummarize once the transcript grew this much past the mark
+
 # A schema is its kind's single declaration: "x-kind" names the data/ folder, and the
 # id pattern (e.g. ^S-[0-9]{3}$) carries the id prefix and pad width. Everything below
 # is derived from schemas/ — growing a kind is one act: writing the schema.
@@ -177,6 +184,103 @@ def _subagent_count(path):
     return len(glob.glob(str(sub / "*.jsonl"))) if sub.exists() else 0
 
 
+CLIP = 280   # one clip length for every prompt/response field, catalog and detail alike
+
+
+def _clip(text):
+    if not text:
+        return None
+    text = " ".join(text.split())
+    return text[:CLIP] + "…" if len(text) > CLIP else text
+
+
+def _human_text(message):
+    """A human prompt is a user message whose content is a plain string. User messages
+    carrying a list are tool results, not prompts."""
+    content = message.get("content")
+    return content.strip() if isinstance(content, str) and content.strip() else None
+
+
+def _assistant_text(message):
+    """The human-facing reply: the text blocks of an assistant message. A turn that only
+    calls tools has no text and is not a 'response'."""
+    content = message.get("content")
+    if isinstance(content, str):
+        return content.strip() or None
+    if isinstance(content, list):
+        parts = [b.get("text", "") for b in content
+                 if isinstance(b, dict) and b.get("type") == "text"]
+        joined = " ".join(p.strip() for p in parts if p.strip())
+        return joined or None
+    return None
+
+
+_first_cache = {}    # path → first_prompt (immutable per transcript)
+_tail_cache = {}     # path → {"mtime": ..., "last_prompt": ..., "last_response": ...}
+
+
+def _first_prompt(path):
+    """The opening human prompt. Near the top of the file and immutable — read once."""
+    if path in _first_cache:
+        return _first_cache[path]
+    prompt = None
+    try:
+        with open(path, encoding="utf-8") as handle:
+            for _ in range(400):                 # opening prompt is early, but after setup lines
+                line = handle.readline()
+                if not line:
+                    break
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                if record.get("type") == "user":
+                    prompt = _human_text(record.get("message") or {})
+                    if prompt:
+                        break
+    except OSError:
+        pass
+    _first_cache[path] = prompt
+    return prompt
+
+
+def _tail_exchange(path, mtime, size, budget=524288):
+    """The last human prompt and last assistant reply. These live at the end of the file
+    and change as a session runs, so the cache is keyed by mtime — an idle session is
+    free, only a session that just wrote is re-read. Reads only the trailing `budget`
+    bytes (512 KB); in a session with more tool traffic than that since the last human
+    turn, the catalog's last_prompt reads as null — the detail query, which parses the
+    whole transcript, always resolves it. A cheap approximation in the list, exact in
+    the drill-in."""
+    cached = _tail_cache.get(path)
+    if cached and cached["mtime"] == mtime:
+        return cached
+    last_prompt = last_response = None
+    try:
+        with open(path, "rb") as handle:
+            if size > budget:
+                handle.seek(size - budget)
+                handle.readline()                # drop the partial first line
+            lines = handle.read().decode("utf-8", "replace").splitlines()
+        for line in reversed(lines):
+            if last_prompt and last_response:
+                break
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            kind, message = record.get("type"), record.get("message") or {}
+            if last_response is None and kind == "assistant":
+                last_response = _assistant_text(message)
+            elif last_prompt is None and kind == "user":
+                last_prompt = _human_text(message)
+    except OSError:
+        pass
+    result = {"mtime": mtime, "last_prompt": last_prompt, "last_response": last_response}
+    _tail_cache[path] = result
+    return result
+
+
 # ----------------------------------------------------------------------------
 # 3. named queries — each question about the record, answered here, once
 # ----------------------------------------------------------------------------
@@ -196,8 +300,11 @@ def sessions():
             continue
         idle = now - stat.st_mtime
         cwd = _resolve_cwd(path)
+        sid = Path(path).stem
+        tail = _tail_exchange(path, stat.st_mtime, stat.st_size)
+        summary = load("summary", sid) if exists("summary", sid) else None
         rows.append({
-            "id": Path(path).stem,
+            "id": sid,
             "project": os.path.basename(cwd) if cwd else Path(path).parent.name,
             "path": cwd or f"(unresolved: {Path(path).parent.name})",
             "last_active": _iso(stat.st_mtime),
@@ -208,6 +315,13 @@ def sessions():
             "subagents": _subagent_count(path),
             "currently_active": idle <= CURRENTLY_ACTIVE_S,
             "recently_active": idle <= RECENTLY_ACTIVE_S,
+            "first_prompt": _clip(_first_prompt(path)),
+            "last_prompt": _clip(tail["last_prompt"]),
+            "last_response": _clip(tail["last_response"]),
+            "has_summary": summary is not None,
+            "summary_stale": bool(summary) and
+                (stat.st_size - summary.get("source_size", 0)) >= SUMMARY_GROWTH_BYTES,
+            "summary": summary.get("text") if summary else None,
         })
     rows.sort(key=lambda r: r["idle_seconds"])
     return {
@@ -218,6 +332,57 @@ def sessions():
         "projects": len({r["path"] for r in rows}),
         "thresholds": {"currently_s": CURRENTLY_ACTIVE_S, "recently_s": RECENTLY_ACTIVE_S},
         "sessions": rows,
+    }
+
+
+def _summary_path_for(session_id):
+    match = next((f for f in _session_files() if Path(f).stem == session_id), None)
+    return match
+
+
+def summaries_due():
+    """The trigger algo (deterministic): which sessions need a (re)summary, and why. A
+    session is DUE when it is settled (idle ≥ SUMMARY_SETTLE_S — never summarize a session
+    mid-turn) AND either has no summary yet, or its transcript has grown at least
+    SUMMARY_GROWTH_BYTES past the watermark its last summary recorded. Stat-only over the
+    transcripts plus a read of the small summary records — cheap enough to poll. It decides
+    *when*; the delegated `summarize-session` capability does the *what*."""
+    now = time.time()
+    due = []
+    for path in _session_files():
+        try:
+            stat = os.stat(path)
+        except OSError:
+            continue
+        idle = now - stat.st_mtime
+        if idle < SUMMARY_SETTLE_S:          # still warm — let it settle first
+            continue
+        sid = Path(path).stem
+        summary = load("summary", sid) if exists("summary", sid) else None
+        if summary is None:
+            reason, grew = "no summary yet", stat.st_size
+        else:
+            grew = stat.st_size - summary.get("source_size", 0)
+            if grew < SUMMARY_GROWTH_BYTES:
+                continue                     # summary still current enough
+            reason = f"grew {grew:,} bytes since last summary"
+        cwd = _resolve_cwd(path)
+        due.append({
+            "id": sid,
+            "project": os.path.basename(cwd) if cwd else Path(path).parent.name,
+            "path": cwd,
+            "reason": reason,
+            "grew_bytes": grew,
+            "size_bytes": stat.st_size,
+            "idle_seconds": round(idle, 1),
+        })
+    due.sort(key=lambda d: d["grew_bytes"], reverse=True)
+    return {
+        "now": _iso(now),
+        "settle_s": SUMMARY_SETTLE_S,
+        "growth_bytes": SUMMARY_GROWTH_BYTES,
+        "count": len(due),
+        "due": due,
     }
 
 
@@ -237,7 +402,8 @@ def session(session_id=None):
     now = time.time()
     stat = os.stat(match)
     user_turns = assistant_turns = 0
-    first_prompt = model = branch = cwd = first_ts = last_ts = None
+    first_prompt = last_prompt = last_response = None
+    model = branch = cwd = first_ts = last_ts = None
     with open(match, encoding="utf-8") as handle:
         for line in handle:
             try:
@@ -254,22 +420,31 @@ def session(session_id=None):
             message = record.get("message") or {}
             if kind == "user":
                 user_turns += 1
-                content = message.get("content")
-                if first_prompt is None and isinstance(content, str) and content.strip():
-                    first_prompt = content.strip()[:400]
+                human = _human_text(message)
+                if human:
+                    first_prompt = first_prompt or human
+                    last_prompt = human
             elif kind == "assistant":
                 assistant_turns += 1
                 if isinstance(message.get("model"), str):
                     model = message["model"]
+                reply = _assistant_text(message)
+                if reply:
+                    last_response = reply
 
     idle = now - stat.st_mtime
+    # join the contained summary, if one has been generated for this session
+    summary = load("summary", session_id) if exists("summary", session_id) else None
+    summary_stale = bool(summary) and (stat.st_size - summary.get("source_size", 0)) >= SUMMARY_GROWTH_BYTES
     return {
         "id": session_id,
         "project": os.path.basename(cwd) if cwd else Path(match).parent.name,
         "path": cwd,
         "git_branch": branch,
         "model": model,
-        "first_prompt": first_prompt,
+        "first_prompt": _clip(first_prompt),
+        "last_prompt": _clip(last_prompt),
+        "last_response": _clip(last_response),
         "started": first_ts,
         "last_message": last_ts,
         "last_active": _iso(stat.st_mtime),
@@ -281,10 +456,13 @@ def session(session_id=None):
         "subagents": _subagent_count(match),
         "currently_active": idle <= CURRENTLY_ACTIVE_S,
         "recently_active": idle <= RECENTLY_ACTIVE_S,
+        "summary": summary.get("text") if summary else None,
+        "summarized_at": summary.get("generated_at") if summary else None,
+        "summary_stale": summary_stale,
     }
 
 
 # Publishing: every query registered here is served at /api/<name> by tools/server.py,
 # and a template named views/<name>.template.html is bound to it automatically. A
 # parameterized query's live page must poll with its own location.search.
-QUERIES = {"sessions": sessions, "session": session}
+QUERIES = {"sessions": sessions, "session": session, "summaries_due": summaries_due}

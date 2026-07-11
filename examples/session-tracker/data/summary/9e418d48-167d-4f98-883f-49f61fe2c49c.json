@@ -1,0 +1,10 @@
+{
+  "id": "9e418d48-167d-4f98-883f-49f61fe2c49c",
+  "session_id": "9e418d48-167d-4f98-883f-49f61fe2c49c",
+  "text": "No substantive work occurred in this session in the openreview project (C:\\code\\openreview). The transcript contains only a local-command caveat and a /clear command, with two user turns and zero assistant turns. Nothing was discussed, decided, or changed \u00e2\u20ac\u201d the session was cleared before any real interaction took place.",
+  "generated_at": "2026-07-10T21:58:32-06:00",
+  "source_size": 1969,
+  "source_last_active": "2026-07-10T21:12:19-06:00",
+  "user_turns_at_gen": 2,
+  "model": "claude-fable-5"
+}

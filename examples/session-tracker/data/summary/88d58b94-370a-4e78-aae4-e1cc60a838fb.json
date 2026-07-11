@@ -1,0 +1,10 @@
+{
+  "id": "88d58b94-370a-4e78-aae4-e1cc60a838fb",
+  "session_id": "88d58b94-370a-4e78-aae4-e1cc60a838fb",
+  "text": "A deep-research request on fascia's role in chronic pain, run inside the openreview workspace. Claude read the workspace canon and schemas, classified the task as deep-research mode (fast cited synthesis rather than PRISMA-style systematic screening), confirmed the live dashboard was already up, and scaffolded a new study at data/reviews/fascia-chronic-pain/ with a brief.json decomposing the question into sub-questions on mechanism (innervation/nociception, inflammation/fibrosis, mechanotransduction, densification/sensitization), implicated conditions (e.g. fibromyalgia, plantar fasciitis), targeted treatments and their evidence, and active research directions. After validating the brief it fanned out eight WebSearches to gather sources. The session was interrupted mid-collection (\"let me search the remaining angles\") before sources were persisted or the synthesized report was produced.",
+  "generated_at": "2026-07-10T21:58:30-06:00",
+  "source_size": 273535,
+  "source_last_active": "2026-07-09T00:01:00-06:00",
+  "user_turns_at_gen": 26,
+  "model": "claude-fable-5"
+}

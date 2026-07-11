@@ -1,0 +1,10 @@
+{
+  "id": "60d45721-2279-4761-9dd5-2e72ba07d012",
+  "session_id": "60d45721-2279-4761-9dd5-2e72ba07d012",
+  "text": "Walked through the lexintel plugin's pipeline engine: first tracing every invocation path for engine/compile_step.py (concluding there are exactly two plus a non-path \u00e2\u20ac\u201d the automatic one being the run_pipeline.py runner calling compile_step.compile_contract() in-process mid-run when it reaches a step whose contract is stale). Then built a shareable visual guide artifact from a fresh read of all six engine modules plus _runlib.py and reference/model.md, laying out the engine/instance split and its four crossing seams, the spec_lib dataclass and on-disk JSON schemas, component relationship/import/subprocess edge tables (including the only four LLM call sites), and vertical sequence diagrams of the run loop's six gates, the compile gate, per-mode step lanes, and status derivation. Finally kicked off a pipeline run on the HOTEL workspace: archived the completed prior state into pipeline/workspaces/HOTEL/archive/ (41 files) and launched a background --stale repair run covering A1 (edited spec) plus its 38 downstream steps to regenerate memo.md, watchable live on the dashboard at http://127.0.0.1:8191. The final background task ended in a killed state.",
+  "generated_at": "2026-07-10T21:58:04-06:00",
+  "source_size": 559389,
+  "source_last_active": "2026-07-04T09:21:17-06:00",
+  "user_turns_at_gen": 30,
+  "model": "claude-fable-5"
+}

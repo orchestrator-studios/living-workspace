@@ -1,0 +1,10 @@
+{
+  "id": "8bf792d9-61f2-46e0-a793-30b1b7576e29",
+  "session_id": "8bf792d9-61f2-46e0-a793-30b1b7576e29",
+  "text": "Worked through harvesting proven patterns from the spun-off openreview repo (and the working directory) back into the core living-workspace, focused on the dashboard and its server. The central decision was that the dashboard server belongs with the dashboard skill as one unit \u00e2\u20ac\u201d the skill/server should ship together as a reusable \"kit\" rather than being split apart. After the user asked to see and approved the proposed structure, the standard kit was built into template/: tools/repo.py as a data-access skeleton (path/load/save/next-id conventions with empty KINDS and PROJECTIONS registries marked as grow-here points) and tools/server.py as the generic dashboard server exposing index at /, templates at /view/<name>, registered projections at /api/<name>, plus /api/_index and /health. Finished with a repo-wide consistency sweep verifying the canon-wraps-narrower relationship held word-identical across template, canon, and example, and left a memory note for future sessions.",
+  "generated_at": "2026-07-10T21:57:30-06:00",
+  "source_size": 1646080,
+  "source_last_active": "2026-07-09T08:13:51-06:00",
+  "user_turns_at_gen": 133,
+  "model": "claude-fable-5"
+}
