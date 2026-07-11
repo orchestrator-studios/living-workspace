@@ -90,11 +90,13 @@ own derived/decision state (summaries, archives) about them here.
 - **Filter:** by age (today / this week / older), by last-active (live / minutes / hours
   / days), and by archived (hide / show / only — hidden by default); plus search across
   project, path, prompts, and summary.
-- **Archive:** "archive this session" / "set that one aside" → `tools/archive_session.py`
-  writes the archive record; the board drops it from the default view and the summary
-  queue. "Unarchive" removes it. (The dashboard is read-only by design — the *action* is a
-  tool run through the conversation; the board reflects it live. In-dashboard buttons would
-  mean a write endpoint in the kit server, which the read-only invariant rules out.)
+- **Archive:** set a session aside — from the board (each card's **archive/unarchive**
+  button) or in conversation (`tools/archive_session.py`, or just ask). Both call the same
+  `repo.archive`/`repo.unarchive`, so the rule has one home; the board drops archived
+  sessions from the default view and the summary queue. This is the workspace's **one
+  write surface**: the archive/unarchive actions are published in `repo.ACTIONS` and served
+  over `POST /action/<name>` by the kit server (the write counterpart of queries, empty in
+  every other workspace). Everything else here stays a read-only lens.
 - **Drill in:** open one session → its parsed detail (turn counts, first/last prompt, last
   response, model, git branch, subagent count, and its summary if one exists).
 - **Summarize:** "summarize what's due" → the trigger algo `summaries_due()` names the

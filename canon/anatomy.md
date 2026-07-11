@@ -29,7 +29,7 @@ nothing and costs the user real time. That set ships with the template:
 | Ships | What it is |
 |---|---|
 | `tools/repo.py` | The data-access layer, as a skeleton: paths, the CRUD primitives (load/save/next-id conventions), the kind table derived from `schemas/` at import, and an empty query registry. |
-| `tools/server.py` | The dashboard server: the index at `/`, any template at `/view/<name>`, any published query at `/api/<name>`, `/health`. URL parameters reach the query as keyword arguments. Stdlib only, read-only, holds no state. |
+| `tools/server.py` | The dashboard server: the index at `/`, any template at `/view/<name>`, any published query at `/api/<name>`, `/health`. URL parameters reach the query as keyword arguments. Reads over GET; a workspace may also publish write **actions** served over `POST /action/<name>` (empty by default — see [actions](#actions-when-the-dashboard-should-do)). Stdlib only, holds no state of its own. |
 | `tools/validate.py` | The generic schema checker plus the alignment backstop (every schema declares its kind; every `data/` folder is governed by a schema); the workspace grows its cross-record integrity rules into it, in place. |
 | `capabilities/dashboard.md` | The keep-the-server-up recipe: probe, background-launch, hand over the link once. |
 | `views/index.template.html` | The dashboard's index page — views and queries appear on it as they come into existence. |
@@ -185,9 +185,11 @@ Two kinds of view fall out of the instance row:
   that case and lets its poll recover — it never crashes on it. A live view **cannot go
   stale** — every ask recomputes
   the answer from the files; it is the logical endpoint of "regenerate views after data
-  changes", not an exception to it. And the page adds nothing to the truth: the server
+  changes", not an exception to it. And the page adds nothing to the truth: a live view
   holds no state of its own, writes nothing, and creates no second source — the files
-  remain the ground truth under it.
+  remain the ground truth under it. (Writing, where a workspace wants it, is a separate
+  opt-in surface — see [actions](#actions-when-the-dashboard-should-do) — never something
+  a view does.)
 - **Static views** are for content that must outlive a page — the report, the
   newsletter, the deliverable. A grown build tool assembles the content from the same
   queries and stores it **on the record itself**, in a schema-governed field,
@@ -216,8 +218,29 @@ harmless.
 If a workspace ever outgrows this, the sanctioned escalations, in order: first a
 freshness short-circuit (the server answers "unchanged" from the record's modification
 times without recomputing), then server-sent events — one-directional, plain HTTP. Not
-websockets: their distinguishing feature is a channel *back* from the page, and this
-surface is read-only by design.
+websockets: their distinguishing feature is a persistent channel held open *back* from the
+page, and liveness needs none — reads are polled, and the write actions a workspace may
+grow are ordinary request/response POSTs, not a standing back-channel.
+
+## Actions — when the dashboard should do
+
+The dashboard is a projection: it shows the record, and by default it only shows. But some
+work wants a verb on the page — *set this aside*, *mark that done* — rather than a trip back
+to the conversation for every change. For that a workspace grows an **action**: the write
+counterpart of a query.
+
+An action is an ordinary workspace write operation. It goes through the same `repo` door and
+the same schema rules an enforcer tool would — and the rule should live in **one** place a
+CLI tool and the button both call, so nothing restates it. Publishing it in `repo.ACTIONS`
+also exposes it over `POST /action/<name>`, called with the request's JSON body as keyword
+arguments. The registry is empty by default, so most dashboards write nothing and are
+read-only in effect; GET never reaches an action, so a stray read can't mutate.
+
+What actions do **not** change: the server still holds no state of its own and adds no second
+source of truth. An action mutates the files through `repo`, exactly as the conversation
+would — the button is a shortcut to a tool, not a new authority. The
+[session-tracker](../examples/session-tracker/) grows `archive` and `unarchive` this way: a
+card button POSTs the action, the contained record changes, and the next poll shows it.
 
 ## Contained and bound substrates
 

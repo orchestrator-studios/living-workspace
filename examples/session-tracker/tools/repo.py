@@ -478,3 +478,36 @@ def session(session_id=None):
 # and a template named views/<name>.template.html is bound to it automatically. A
 # parameterized query's live page must poll with its own location.search.
 QUERIES = {"sessions": sessions, "session": session, "summaries_due": summaries_due}
+
+
+# ----------------------------------------------------------------------------
+# 4. actions — the write counterpart of queries
+# ----------------------------------------------------------------------------
+# The tracker reads sessions from ~/.claude (never writes there), but it OWNS its
+# contained state and may write that. Archiving is the one write the dashboard drives: a
+# card button POSTs to /action/archive. These are the single home of the archive rule —
+# tools/archive_session.py (the CLI) calls the same functions, so nothing restates it.
+
+def archive(session_id=None, reason=None):
+    """Set a session aside. Idempotent — archiving an archived session is a no-op."""
+    if not session_id:
+        return {"ok": False, "error": "session_id required"}
+    if session_id not in {Path(f).stem for f in _session_files()}:
+        return {"ok": False, "error": f"no session '{session_id}'"}
+    if not exists("archive", session_id):
+        save("archive", {"id": session_id, "session_id": session_id,
+                         "archived_at": _iso(time.time()), "reason": reason})
+    return {"ok": True, "session_id": session_id, "archived": True}
+
+
+def unarchive(session_id=None):
+    """Bring a session back. Idempotent — removes the archive record if present."""
+    if not session_id:
+        return {"ok": False, "error": "session_id required"}
+    path = path_for("archive", session_id)
+    if path.exists():
+        path.unlink()
+    return {"ok": True, "session_id": session_id, "archived": False}
+
+
+ACTIONS = {"archive": archive, "unarchive": unarchive}

@@ -139,3 +139,20 @@ def next_id(kind):
 # and a template named views/<name>.template.html is bound to it automatically. A
 # parameterized query's live page must poll with its own location.search.
 QUERIES = {}
+
+
+# ----------------------------------------------------------------------------
+# 4. actions — the write counterpart of queries (grown; empty by default)
+# ----------------------------------------------------------------------------
+# Most workspaces publish none, and their server is read-only in effect. Grow one only
+# when the dashboard should *do*, not just show — a button that mutates the record. An
+# action is an ordinary workspace write operation (it goes through the same repo door and
+# schema rules an enforcer tool would); publishing it here also exposes it over
+# POST /action/<name>, called with the JSON request body as keyword arguments. Prefer a
+# thin action that a CLI tool and the button both call, so the rule has one home.
+#
+#     def archive(session_id=None, reason=None):
+#         ...validate, write through repo, return a small result dict...
+#
+# ACTIONS = {"archive": archive, "unarchive": unarchive}
+ACTIONS = {}

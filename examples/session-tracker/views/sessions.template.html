@@ -132,6 +132,10 @@
   .arch-tag { flex-shrink: 0; font-size: 0.68rem; text-transform: uppercase;
               letter-spacing: 0.05em; color: var(--ink-3); border: 1px solid var(--border);
               border-radius: 999px; padding: 0 7px; }
+  .act { flex-shrink: 0; font: inherit; font-size: 0.72rem; cursor: pointer;
+         color: var(--ink-3); background: transparent; border: 1px solid var(--border);
+         border-radius: 6px; padding: 1px 9px; }
+  .act:hover { border-color: var(--accent); color: var(--accent); }
   .empty { background: var(--track); border-radius: 10px; padding: 18px;
            color: var(--ink-2); font-size: 0.88rem; }
 </style>
@@ -158,6 +162,36 @@ const initialPayload = __DATA__;
 let sortKey = "idle_seconds", sortDir = 1, search = "";
 let activeFilter = "all", ageFilter = "all", archivedFilter = "hide";
 let payload = initialPayload;
+let lastSerialized = JSON.stringify(initialPayload);
+
+// Re-fetch the board and repaint, preserving scroll. Shared by the poll and by actions.
+async function refresh() {
+  const response = await fetch("/api/sessions", {cache: "no-store"});
+  if (!response.ok) return;
+  const fresh = await response.json();
+  const serialized = JSON.stringify(fresh);
+  if (serialized === lastSerialized) return;
+  lastSerialized = serialized;
+  const x = window.scrollX, y = window.scrollY;
+  payload = fresh;
+  render();
+  window.scrollTo(x, y);
+}
+
+// Archive / unarchive: POST the action, then refresh so the board reflects it at once.
+// The dashboard's one write surface — everything else here is read-only.
+async function archiveSession(id, isArchived) {
+  try {
+    const r = await fetch("/action/" + (isArchived ? "unarchive" : "archive"), {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({session_id: id}),
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok || out.ok === false) { console.warn("archive action failed", out); return; }
+    await refresh();
+  } catch (err) { console.warn("archive action error", err); }
+}
 
 function esc(v) {
   return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -266,6 +300,9 @@ function card(s) {
       `<span class="path" title="${esc(s.path)}">${esc(s.path)}</span>` +
       (s.archived ? `<span class="arch-tag" title="archived${s.archived_at ? " " + esc(s.archived_at.slice(0,10)) : ""}">archived</span>` : "") +
       `<span class="meta">${meta}</span>` +
+      `<button class="act" onclick="event.stopPropagation();archiveSession('${esc(s.id)}',${s.archived})" ` +
+      `title="${s.archived ? "bring this session back" : "set this session aside"}">` +
+      `${s.archived ? "unarchive" : "archive"}</button>` +
     `</div>`;
   // opening prompt for context; the last exchange for what's current
   body += line("opened", s.first_prompt);
@@ -318,21 +355,7 @@ render();
 // top (or, when there was horizontal overflow, to the left). Control state lives outside
 // render(), so filters, sort, and search survive too.
 if (LIVE) {
-  let last = JSON.stringify(initialPayload);
-  setInterval(async () => {
-    try {
-      const response = await fetch("/api/sessions", {cache: "no-store"});
-      if (!response.ok) return;
-      const fresh = await response.json();
-      const serialized = JSON.stringify(fresh);
-      if (serialized === last) return;
-      last = serialized;
-      const x = window.scrollX, y = window.scrollY;
-      payload = fresh;
-      render();
-      window.scrollTo(x, y);
-    } catch (err) { /* server briefly away — keep the last good render */ }
-  }, 2000);
+  setInterval(() => { refresh().catch(() => {/* server briefly away */}); }, 2000);
 }
 </script>
 </body>

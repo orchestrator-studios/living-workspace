@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
 """server.py — the dashboard server. Part of the standard kit.
 
-A small read-only HTTP server that makes the workspace visible while it works. It never
-touches data/ directly: every response is answered fresh through tools/repo.py — the
-same named queries every other surface renders — so the dashboard shows, by
-construction, the same numbers as everything else. The server holds no state and writes
-nothing; the files stay the ground truth under it.
+A small HTTP server that makes the workspace visible while it works. It never touches
+data/ directly: every response is answered fresh through tools/repo.py — the same named
+queries every other surface renders — so the dashboard shows, by construction, the same
+numbers as everything else. The server holds **no state of its own** and adds no second
+source of truth; the files stay the ground truth under it.
+
+Reads are the default and the bulk of it. A workspace may also grow **actions** — the
+write counterpart of queries — for the cases where the dashboard should *do*, not just
+show. An action is a workspace function published in repo.ACTIONS; the server exposes it
+over POST and calls it exactly as a CLI tool would, through the same repo door, under the
+same schema rules. Most workspaces publish none, and their server is read-only in effect.
 
 Routes
-    GET /               → the index: every view and published query the workspace has,
-                          live — new ones appear on the page as they are grown
-    GET /view/<name>    → views/<name>.template.html, bound to its query, served live
-    GET /api/<name>     → the query published as <name> in repo.QUERIES, asked fresh
-    GET /api/_index     → {workspace, views, queries} (the index page polls this)
-    GET /health         → {ok: true}
+    GET  /               → the index: every view and published query the workspace has,
+                           live — new ones appear on the page as they are grown
+    GET  /view/<name>    → views/<name>.template.html, bound to its query, served live
+    GET  /api/<name>     → the query published as <name> in repo.QUERIES, asked fresh
+    GET  /api/_index     → {workspace, views, queries, actions} (the index page polls this)
+    GET  /health         → {ok: true}
+    POST /action/<name>  → the action published as <name> in repo.ACTIONS, called with the
+                           JSON request body as keyword arguments; returns the action's
+                           result. 404 if no such action; the registry is empty by default.
 
 Template binding — the whole wiring convention: a template named <name>.template.html
 gets __DATA__ replaced by repo.QUERIES[<name>]() when a query of that name is published
@@ -101,7 +110,8 @@ def view_names():
 def index_payload():
     return {"workspace": repo.ROOT.name,
             "views": view_names(),
-            "queries": sorted(repo.QUERIES)}
+            "queries": sorted(repo.QUERIES),
+            "actions": sorted(getattr(repo, "ACTIONS", {}))}
 
 
 def render(name, params=None):
@@ -136,6 +146,32 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         self.do_GET()
+
+    def do_POST(self):
+        refresh_repo()  # serve the workspace's current definition, never a stale one
+        path = urlparse(self.path).path.rstrip("/") or "/"
+        parts = [p for p in path.split("/") if p]
+        actions = getattr(repo, "ACTIONS", {})
+        try:
+            if not (len(parts) == 2 and parts[0] == "action"):
+                return self._send(404, {"error": f"no action route for {path}"})
+            action = actions.get(parts[1])
+            if action is None:
+                return self._send(404, {"error": f"no action '{parts[1]}'"})
+            length = int(self.headers.get("Content-Length") or 0)
+            raw = self.rfile.read(length) if length else b""
+            try:
+                params = json.loads(raw) if raw else {}
+            except ValueError:
+                return self._send(400, {"error": "request body is not valid JSON"})
+            if not isinstance(params, dict):
+                return self._send(400, {"error": "request body must be a JSON object"})
+            try:
+                return self._send(200, action(**params))
+            except TypeError as e:  # a parameter this action doesn't take, or a missing one
+                return self._send(400, {"error": f"bad parameters: {e}"})
+        except Exception as e:  # never leak a stack trace to the client
+            return self._send(500, {"error": f"{type(e).__name__}: {e}"})
 
     def do_GET(self):
         refresh_repo()  # serve the workspace's current definition, never a stale one
