@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--
+  board.template.html — the whole tree, live (a grown view): every area, its
+  projects, their actions — stalled projects flagged, staleness shown per action.
+
+  A view is a named query plus this presentation. The serving contract
+  (tools/server.py) stamps two placeholders into the script below at serve time:
+  the initial answer of repo.QUERIES["board"](), and the live flag. When live,
+  the page re-asks the query at /api/board every 2 seconds (with its own
+  location.search — the query takes ?date=) and repaints on change.
+
+  This file owns markup and rendering only. Every number shown is computed by
+  the query in tools/repo.py — never derived here (one definition of every number).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Board</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --track: #f0efec; --accent: #2a78d6;
+    --warn: #b3541e; --warn-bg: #fbeee4; --ok: #2e9e5b; --dim: #8a897f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --track: #2c2c2a; --accent: #3987e5;
+      --warn: #e8874f; --warn-bg: #3a2b20; --ok: #4dbb7e; --dim: #807f74;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 28px 22px; }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 22px; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+              background: var(--ok); margin-right: 4px; }
+  .areas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .area { background: var(--track); border-radius: 10px; padding: 12px; }
+  .area h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+             color: var(--ink-2); margin: 2px 4px 2px; }
+  .shape { font-size: 0.72rem; color: var(--dim); font-style: italic; margin: 0 4px 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+           padding: 10px 12px; margin-bottom: 8px; }
+  .pid { font-family: ui-monospace, Consolas, monospace; font-size: 0.7rem;
+          color: var(--accent); font-weight: 700; }
+  .ttl { font-size: 0.84rem; font-weight: 600; line-height: 1.35; margin: 2px 0 2px; }
+  .badge { font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
+           letter-spacing: 0.05em; border-radius: 999px; padding: 1px 8px; float: right; }
+  .badge.stalled { color: var(--warn); background: var(--warn-bg); }
+  .badge.someday { color: var(--ink-2); background: var(--track); }
+  .badge.done { color: var(--ok); background: var(--track); }
+  .acts { margin-top: 6px; border-top: 1px solid var(--border); padding-top: 5px; }
+  .act { font-size: 0.76rem; padding: 2px 0; }
+  .act .aid { font-family: ui-monospace, Consolas, monospace; font-size: 0.66rem;
+              color: var(--ink-2); }
+  .act .when { font-size: 0.68rem; color: var(--dim); }
+  .act.done-act { color: var(--dim); text-decoration: line-through; }
+  .empty { color: var(--ink-2); font-size: 0.8rem; padding: 4px; }
+  @media (max-width: 760px) { .areas { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Life Board</h1>
+  <p class="sub" id="sub"></p>
+  <div class="areas" id="areas"></div>
+</div>
+<script>
+// Both constants below are placeholders stamped in by the server at serve time
+// (see "Template binding" in tools/server.py).
+const LIVE = __LIVE__;              // true when served live; false in a static instance
+const initialAnswer = __DATA__;     // the query's answer at the moment the page was served
+
+// Escape a value for safe interpolation into HTML.
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+}
+
+// One action as a line: id, description, and its time signal — follow-up if set,
+// staleness otherwise (both computed by the query, never here).
+function actHtml(act) {
+  if (act.status === "done")
+    return `<div class="act done-act"><span class="aid">${esc(act.id)}</span> ` +
+           `${esc(act.description)} <span class="when">done ${esc(act.done)}</span></div>`;
+  const when = act.follow_up ? `follow up ${esc(act.follow_up)}`
+                             : `${act.days_stale}d since last touch`;
+  return `<div class="act"><span class="aid">${esc(act.id)}</span> ` +
+         `${esc(act.description)} <span class="when">· ${when}</span></div>`;
+}
+
+// One project as a card: title, status badge (stalled beats open — it is the
+// board's whole point), and its actions.
+function projectHtml(project) {
+  const badge = project.stalled ? '<span class="badge stalled">stalled</span>'
+              : project.status !== "open" ? `<span class="badge ${project.status}">${project.status}</span>`
+              : "";
+  const acts = project.actions.length
+    ? `<div class="acts">${project.actions.map(actHtml).join("\n")}</div>` : "";
+  return `<div class="card">${badge}<div class="pid">${esc(project.id)}</div>` +
+         `<div class="ttl">${esc(project.title)}</div>${acts}</div>`;
+}
+
+// Repaint the whole board from one query answer. No number is computed here.
+function render(answer) {
+  // The binding contract allows a null answer (a server whose registry doesn't
+  // know this query yet). Render a note; the poll repaints when the server answers.
+  if (!answer) {
+    document.getElementById("sub").textContent =
+      "no data bound — the running server predates this view; it will recover on " +
+      "the next poll, or restart tools/server.py";
+    document.getElementById("areas").innerHTML = "";
+    return;
+  }
+  const totals = answer.totals;
+  document.getElementById("sub").innerHTML =
+    (LIVE ? '<span class="live-dot"></span>live — updates as work lands · ' : "") +
+    `as of ${esc(answer.as_of)} · ${totals.projects_open} open projects ` +
+    `(<b>${totals.stalled} stalled</b>) · ${totals.actions_open} open actions · ` +
+    `one query, from <code>tools/repo.py</code>`;
+  document.getElementById("areas").innerHTML = answer.areas.map(area =>
+    `<section class="area"><h2>${esc(area.name)}</h2>` +
+    `<p class="shape">${esc(area.good_shape)}</p>` +
+    (area.projects.map(projectHtml).join("\n") || '<p class="empty">nothing here</p>') +
+    `</section>`
+  ).join("\n");
+}
+
+render(initialAnswer);
+
+// Liveness: re-ask the query every 2 seconds (carrying this page's own ?date=,
+// if any) and repaint only when the answer actually changed. Polling on purpose —
+// see canon/anatomy.md, "Why the live page polls".
+if (LIVE) {
+  let lastRendered = JSON.stringify(initialAnswer);
+  setInterval(async () => {
+    try {
+      const response = await fetch("/api/board" + location.search, {cache: "no-store"});
+      if (!response.ok) return;
+      const freshAnswer = await response.json();
+      const serialized = JSON.stringify(freshAnswer);
+      if (serialized === lastRendered) return;
+      lastRendered = serialized;
+      render(freshAnswer);
+    } catch (err) { /* server briefly away — keep the last good render */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

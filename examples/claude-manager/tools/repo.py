@@ -58,6 +58,10 @@ STATS_CACHE = CLAUDE_HOME / "stats-cache.json"   # daily message/tool/session co
 PLUGINS = CLAUDE_HOME / "plugins"                # installed plugins + the skills/commands they ship
 COMMANDS = CLAUDE_HOME / "commands"              # user-defined slash commands
 
+# The living-workspace repo this manager lives in (examples/<self>/../..). The workspace
+# inspector reports on the living workspaces under it. Override with CLAUDE_WS_ROOT.
+WORKSPACES_ROOT = Path(os.environ.get("CLAUDE_WS_ROOT") or ROOT.parent.parent)
+
 # The two grades of "active", defined once (OVERVIEW rule 3). They ride along in every
 # projection's `thresholds` so views never restate the numbers.
 CURRENTLY_ACTIVE_S = 2      # mtime within 2s  → someone is in this session right now
@@ -847,6 +851,266 @@ def overview():
     }
 
 
+# ----------------------------------------------------------------------------
+# workspace inspector — the manager is living-workspace-aware
+# ----------------------------------------------------------------------------
+_KIT_TOOLS = {"repo.py", "server.py", "validate.py"}
+
+
+def _is_workspace(directory):
+    """The kit signature: a CLAUDE.md and a tools/repo.py."""
+    return (directory / "CLAUDE.md").exists() and (directory / "tools" / "repo.py").exists()
+
+
+def _discover_workspaces():
+    """Every living workspace under the repo root: template/ and examples/*."""
+    found = []
+    template = WORKSPACES_ROOT / "template"
+    if _is_workspace(template):
+        found.append(template)
+    examples = WORKSPACES_ROOT / "examples"
+    if examples.exists():
+        for directory in sorted(examples.iterdir()):
+            if directory.is_dir() and _is_workspace(directory):
+                found.append(directory)
+    return found
+
+
+def _registry_keys(source, name):
+    """Extract the quoted keys of a `name = { ... }` dict literal from repo.py source —
+    without importing it (a foreign repo.py, different sys.path). Good enough for a dev
+    view: QUERIES/ACTIONS values are function refs, so there are no braces to confuse the
+    non-greedy match."""
+    # anchor to line start (re.M) so a commented example like "# ACTIONS = {...}" — which
+    # is indented behind the '#' — isn't mistaken for the real assignment at column 0.
+    match = re.search(r"^" + name + r"\s*=\s*\{(.*?)\}", source, re.S | re.M)
+    if not match:
+        return []
+    return re.findall(r'["\']([A-Za-z0-9_]+)["\']\s*:', match.group(1))
+
+
+def _anatomy(path):
+    """The five folders plus the registry, read fresh (this is a dev tool — it should
+    update as you edit)."""
+    schemas = []
+    if (path / "schemas").exists():
+        for p in sorted((path / "schemas").glob("*.schema.json")):
+            try:
+                s = json.loads(p.read_text(encoding="utf-8-sig"))
+            except (OSError, ValueError):
+                continue
+            schemas.append({"file": p.name, "kind": s.get("x-kind"),
+                            "substrate": s.get("x-substrate", "contained"),
+                            "source": s.get("x-source"), "projection": s.get("x-projection")})
+
+    tools = [{"name": p.name, "role": "kit" if p.name in _KIT_TOOLS else "grown"}
+             for p in sorted((path / "tools").glob("*.py"))] if (path / "tools").exists() else []
+
+    capabilities = []
+    if (path / "capabilities").exists():
+        for p in sorted((path / "capabilities").glob("*.md")):
+            try:
+                fm = _frontmatter(p.read_text(encoding="utf-8"))
+            except OSError:
+                fm = {}
+            capabilities.append({"name": fm.get("name") or p.stem, "file": p.name,
+                                 "description": fm.get("description"),
+                                 "runs": fm.get("runs", "in-context")})
+
+    try:
+        source = (path / "tools" / "repo.py").read_text(encoding="utf-8")
+    except OSError:
+        source = ""
+    queries = _registry_keys(source, "QUERIES")
+    actions = _registry_keys(source, "ACTIONS")
+    qset = set(queries)
+
+    views = []
+    if (path / "views").exists():
+        for p in sorted((path / "views").glob("*.template.html")):
+            vn = p.name[:-len(".template.html")]
+            views.append({"name": vn, "role": "kit" if vn == "index" else "grown",
+                          "query": vn if vn in qset else None})
+
+    data = []
+    if (path / "data").exists():
+        for d in sorted((path / "data").iterdir()):
+            if d.is_dir():
+                data.append({"kind": d.name, "records": len(list(d.glob("*.json")))})
+
+    return {"schemas": schemas, "tools": tools, "capabilities": capabilities,
+            "views": views, "queries": queries, "actions": actions, "data": data}
+
+
+def _graph(path, anat):
+    """The reach graph — how the agent gets anything done. Nodes are capabilities, tools,
+    schemas (kinds), views, queries; edges are the reaches between them. The skeleton is
+    deterministic: structural wiring we already know (view→query binding, schema→projection)
+    plus references *parsed from capability prose* — [[wikilinks]] and capabilities/x.md
+    (cap→cap), tools/x.py and `x.py` and repo.fn (cap→tool/query), backticked kind names
+    (cap→schema). Semantic edges a machine can't see are added on demand by the delegated
+    map-workspace-references capability, stored as a contained wsgraph record and merged in."""
+    caps = {c["name"] for c in anat["capabilities"]}
+    tool_files = {t["name"] for t in anat["tools"]}
+    queries = set(anat["queries"])
+    kinds = {s["kind"] for s in anat["schemas"] if s["kind"]}
+
+    nodes, edges, seen = [], [], set()
+
+    def node(nid, ntype, label, extra=None):
+        nodes.append({"id": nid, "type": ntype, "label": label, **(extra or {})})
+
+    def edge(a, b, kind, source, evidence):
+        key = (a, b, kind)
+        if a != b and key not in seen:
+            seen.add(key)
+            edges.append({"from": a, "to": b, "kind": kind,
+                          "source": source, "evidence": evidence})
+
+    def line_at(text, idx):   # the source line a regex match sits on — an edge's evidence
+        start = text.rfind("\n", 0, idx) + 1
+        end = text.find("\n", idx)
+        return text[start:(end if end != -1 else len(text))].strip()
+
+    for c in anat["capabilities"]:
+        node("cap:" + c["name"], "capability", c["name"], {"runs": c["runs"]})
+    for t in anat["tools"]:
+        node("tool:" + t["name"], "tool", t["name"], {"role": t["role"]})
+    for s in anat["schemas"]:
+        if s["kind"]:
+            node("schema:" + s["kind"], "schema", s["kind"], {"substrate": s["substrate"]})
+    for v in anat["views"]:
+        node("view:" + v["name"], "view", v["name"], {"role": v["role"]})
+    for q in anat["queries"]:
+        node("query:" + q, "query", q)
+
+    # 1. STRUCTURAL wiring — declared by the workspace's own file naming and schemas, not
+    #    by prose. These are facts, not heuristics.
+    for v in anat["views"]:
+        if v["query"]:
+            edge("view:" + v["name"], "query:" + v["query"], "binds", "structural",
+                 f"view '{v['name']}.template.html' shares its name with published query "
+                 f"'{v['query']}'")
+    for s in anat["schemas"]:
+        if s.get("projection") and s["projection"] in queries:
+            edge("schema:" + s["kind"], "query:" + s["projection"], "projects", "structural",
+                 f"{s['file']} declares x-projection: {s['projection']}")
+
+    # 2. REGEX references parsed from capability prose. Each pattern is gated on membership
+    #    in a known set (so it can only point at a node that exists — no phantoms), and
+    #    every edge keeps the exact source line it matched, so it is auditable. The known
+    #    weakness: a match in a negating or hypothetical sentence still yields an edge —
+    #    which is why the evidence line travels with it, and why the agent pass exists.
+    patterns = [
+        (r"\[\[([a-z0-9][a-z0-9-]*)\]\]", "cap", "ref", caps, "[[wikilink]]"),
+        (r"capabilities/([a-z0-9-]+)\.md", "cap", "ref", caps, "capabilities/*.md path"),
+        (r"tools/([a-z0-9_]+\.py)", "tool", "uses", tool_files, "tools/*.py path"),
+        (r"`([a-z0-9_]+\.py)`", "tool", "uses", tool_files, "backticked *.py"),
+        (r"\brepo\.([a-z0-9_]+)", "query", "uses", queries, "repo.<query>() call"),
+        (r"`([a-z0-9_]+)`", "schema", "about", kinds, "backticked kind name"),
+    ]
+    capdir = path / "capabilities"
+    for c in anat["capabilities"]:
+        try:
+            text = (capdir / c["file"]).read_text(encoding="utf-8")
+        except OSError:
+            continue
+        src = "cap:" + c["name"]
+        for pattern, prefix, kind, allowed, how in patterns:
+            for m in re.finditer(pattern, text):
+                if m.group(1) in allowed:
+                    edge(src, prefix + ":" + m.group(1), kind, "regex",
+                         f"{c['file']} ({how}): {line_at(text, m.start())[:130]}")
+
+    return {"nodes": nodes, "edges": edges}
+
+
+def _health(anat):
+    """Static anatomy checks — no subprocess: bound schemas whose projection isn't
+    published, grown views that bind to no query, data folders with no schema."""
+    issues = []
+    qset = set(anat["queries"])
+    kinds = {s["kind"] for s in anat["schemas"] if s["kind"]}
+    for s in anat["schemas"]:
+        if s["substrate"] == "bound" and s.get("projection") and s["projection"] not in qset:
+            issues.append({"sev": "warn", "text": f"schema {s['file']}: x-projection "
+                           f"'{s['projection']}' is not a published query"})
+    for v in anat["views"]:
+        if v["role"] == "grown" and not v["query"]:
+            issues.append({"sev": "info", "text": f"view '{v['name']}' binds to no "
+                           f"query of the same name"})
+    for d in anat["data"]:
+        if d["kind"] not in kinds:
+            issues.append({"sev": "warn", "text": f"data/{d['kind']}/ has no schema "
+                           f"declaring it"})
+    return issues
+
+
+def _workspace_kind(path):
+    if path.resolve() == ROOT.resolve():
+        return "self"
+    return "template" if path.name == "template" else "example"
+
+
+def workspaces():
+    """The catalog of living workspaces under the repo, each with its anatomy at a glance
+    and a static health verdict. The manager, aware of the system it's part of."""
+    rows = []
+    for path in _discover_workspaces():
+        anat = _anatomy(path)
+        issues = _health(anat)
+        rows.append({
+            "id": path.name, "name": path.name, "path": str(path),
+            "kind": _workspace_kind(path),
+            "counts": {
+                "schemas": len(anat["schemas"]),
+                "tools_grown": sum(1 for t in anat["tools"] if t["role"] == "grown"),
+                "capabilities": len(anat["capabilities"]),
+                "views": sum(1 for v in anat["views"] if v["role"] == "grown"),
+                "queries": len(anat["queries"]), "actions": len(anat["actions"]),
+                "records": sum(d["records"] for d in anat["data"]),
+            },
+            "substrate": {"bound": sum(1 for s in anat["schemas"] if s["substrate"] == "bound"),
+                          "contained": sum(1 for s in anat["schemas"] if s["substrate"] != "bound")},
+            "health": {"ok": not issues, "issues": len(issues)},
+        })
+    return {"now": _iso(time.time()), "root": str(WORKSPACES_ROOT),
+            "total": len(rows), "workspaces": rows}
+
+
+def workspace(workspace_id=None):
+    """One living workspace, in full: its schemas (with substrate + projection), tools
+    (kit vs grown), capabilities (with how each runs), views (and the query each binds),
+    data record counts, and health. The dev-friendly anatomy — parameterized, asked bare
+    it lists the workspaces."""
+    found = {p.name: p for p in _discover_workspaces()}
+    if not workspace_id:
+        return {"error": "which workspace? pass ?workspace_id=<name>",
+                "workspaces": sorted(found)}
+    path = found.get(workspace_id)
+    if path is None:
+        return {"error": f"no workspace '{workspace_id}'"}
+    anat = _anatomy(path)
+    issues = _health(anat)
+    graph = _graph(path, anat)
+    # merge agent-derived (semantic) edges, if the on-demand pass has run for this workspace
+    stored = load("wsgraph", workspace_id) if exists("wsgraph", workspace_id) else None
+    if stored:
+        node_ids = {n["id"] for n in graph["nodes"]}
+        present = {(e["from"], e["to"], e["kind"]) for e in graph["edges"]}
+        for e in stored.get("edges", []):
+            key = (e.get("from"), e.get("to"), e.get("kind"))
+            if e.get("from") in node_ids and e.get("to") in node_ids and key not in present:
+                present.add(key)
+                graph["edges"].append({"from": e["from"], "to": e["to"], "kind": e["kind"],
+                                       "source": "agent",
+                                       "evidence": e.get("note") or "agent-mapped from prose"})
+        graph["agent_mapped_at"] = stored.get("generated_at")
+    return {"now": _iso(time.time()), "id": path.name, "name": path.name,
+            "path": str(path), "kind": _workspace_kind(path), **anat,
+            "graph": graph, "health": {"ok": not issues, "issues": issues}}
+
+
 def extensions():
     """Everything that extends Claude on this machine — plugins, skills, agents, commands,
     MCP servers — in one unified list, sorted by kind. Cached (the scan reads ~100 header
@@ -880,6 +1144,7 @@ def extensions():
 
 
 QUERIES = {"overview": overview, "usage": usage, "extensions": extensions,
+           "workspaces": workspaces, "workspace": workspace,
            "sessions": sessions, "session": session, "summaries_due": summaries_due}
 
 

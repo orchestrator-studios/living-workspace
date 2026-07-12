@@ -11,7 +11,15 @@ A global Claude Code manager: a bound lens over `~/.claude` (and, increasingly, 
 - **Usage** — activity over time, volume only: prompts/day from `history.jsonl`, enriched
   with `stats-cache.json` message/tool counts where it reaches.
 - **Extensions** — plugins / skills / agents / commands / MCP in one bound `extension`
-  type. **Needs a second pass — see below.**
+  type, by **state** (active / disabled / available). Reorganized (2026-07-11): leads with
+  installed, catalog behind a filter, cross-refs plugin enabled-state.
+- **Workspaces** — living-workspace-aware inspector: catalog + per-workspace anatomy
+  (schemas/substrate/projection, tools kit-vs-grown, capabilities/runs, views/bound-query,
+  data counts, static health). Bound `workspace` type; reads `template` + `examples/*`.
+  Centerpiece is the **reach graph** (agent → capabilities → tools → substrate; views →
+  queries): a deterministic skeleton plus **agent-mapped semantic edges on demand**
+  (`map-workspace-references`, delegated → contained `wsgraph` record, drawn dashed). Ties
+  to `visualize-workspace` (dev-viz; trigger = "grow capability" move).
 
 ## Next up
 
@@ -38,16 +46,10 @@ So Extensions must model two axes, not one `installed` bool:
 - **Read project `.claude/` dirs** — enumerate projects from session cwds, scan each for
   `agents`/`commands`/`skills`. This is where the user's real extensions live.
 
-### 2. Workspace inspector (living-workspace-aware)
-Point it at a living workspace and report its anatomy — capabilities, tools, schemas,
-views, data (counts, health). The manager inspecting living workspaces (meta). Ties into:
-
-### 3. Dev-visualization capability for living workspaces
-A reusable **skill** that visualizes a living workspace in a dev-friendly way, for use
-while building out a space's capabilities. **Trigger (the load-bearing idea):** surface it
-exactly when the next move / hop / step is to **grow capability** rather than **take a step
-forward** — the [move rule](../../canon/the-move-rule.md)'s "grow it" branch. Likely
-belongs at the **kit/canon level**, not just this workspace.
+### 2. Workspace inspector + dev-viz capability — ✅ BUILT (2026-07-11)
+The Workspaces module and `visualize-workspace` capability. Still open: the viz likely
+wants to be promoted to the **kit/canon level** (every workspace, not just the manager),
+and a health "run validate.py" action could deepen it.
 
 ### 4. Extension usage — "what earns its keep"
 Invocation counts per skill/agent/command, from a cached transcript scan (deferred until

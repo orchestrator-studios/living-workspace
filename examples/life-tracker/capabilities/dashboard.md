@@ -10,7 +10,7 @@ runs: in-context
 *Runs in-context: it is three commands and a link that must land in this conversation.
 Nothing here is worth a fresh context.*
 
-The dashboard (`tools/server.py` → http://127.0.0.1:8765/) is the user's window into the
+The dashboard (`tools/server.py` → http://127.0.0.1:8770/) is the user's window into the
 workspace: the index of everything it can show, each view updating live as data lands. A
 user working in one terminal will not start a second long-running server on their own —
 so *you* keep it up for them. Treat a running dashboard as a precondition for data work,
@@ -30,7 +30,7 @@ work runs, so they watch it happen — not discover a finished result after the 
 1. **Probe — never assume, never double-launch.** The health endpoint makes the check
    cheap and idempotent:
 
-       python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=1)"
+       python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8770/health', timeout=1)"
 
    Exit 0 → already up; just give the link (first time this session). Non-zero → launch it.
 
@@ -41,10 +41,10 @@ work runs, so they watch it happen — not discover a finished result after the 
 
    Re-probe until it answers (well under a second). If the port is held by a foreign
    process (the health check doesn't return our `{"ok": true}`, or the bind fails),
-   relaunch with `--port 8766` and use that port in the link.
+   relaunch with `--port 8771` and use that port in the link.
 
 3. **Tell the user, once**, framed as *watch it live*: "The dashboard is up at
-   http://127.0.0.1:8765/ — open it and you'll see the work land as it happens."
+   http://127.0.0.1:8770/ — open it and you'll see the work land as it happens."
 
 ## Lifecycle
 

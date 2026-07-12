@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!--
+  run_down.template.html — the daily driver, live (a grown view): "what should I
+  run down today?" Due follow-ups first, then untimed actions stalest-first, then
+  the stalled projects that need a next step decided.
+
+  A view is a named query plus this presentation. The serving contract
+  (tools/server.py) stamps two placeholders into the script below at serve time:
+  the initial answer of repo.QUERIES["run_down"](), and the live flag. When live,
+  the page re-asks the query at /api/run_down every 2 seconds (with its own
+  location.search — the query takes ?date=) and repaints on change.
+
+  The ordering here is OVERVIEW rule 6's *placeholder* — open question 2
+  (prioritization) is deliberately unsettled. This file owns markup only; the
+  ordering, like every number shown, comes from the query in tools/repo.py.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Run Down Today</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --track: #f0efec; --accent: #2a78d6;
+    --due: #b3372c; --due-bg: #fdeceb; --warn: #b3541e; --warn-bg: #fbeee4;
+    --ok: #2e9e5b; --dim: #8a897f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835;
+      --ink: #ffffff; --ink-2: #c3c2b7; --track: #2c2c2a; --accent: #3987e5;
+      --due: #e5695e; --due-bg: #3c2422; --warn: #e8874f; --warn-bg: #3a2b20;
+      --ok: #4dbb7e; --dim: #807f74;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface);
+         color: var(--ink); padding: 28px 22px; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin-bottom: 2px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 22px; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+              background: var(--ok); margin-right: 4px; }
+  h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+       color: var(--ink-2); margin: 18px 2px 8px; }
+  h2 .count { background: var(--track); border: 1px solid var(--border);
+              border-radius: 999px; padding: 0 8px; font-size: 0.75rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+           padding: 10px 12px; margin-bottom: 8px; }
+  .card.due { border-left: 3px solid var(--due); }
+  .card.stalled-card { border-left: 3px solid var(--warn); }
+  .rid { font-family: ui-monospace, Consolas, monospace; font-size: 0.7rem;
+          color: var(--accent); font-weight: 700; }
+  .ttl { font-size: 0.86rem; font-weight: 600; line-height: 1.35; margin: 2px 0 2px; }
+  .meta { font-size: 0.72rem; color: var(--ink-2); }
+  .when { font-size: 0.7rem; font-weight: 700; float: right; }
+  .when.overdue { color: var(--due); }
+  .when.stale { color: var(--dim); }
+  .empty { color: var(--ink-2); font-size: 0.8rem; padding: 4px 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Run Down Today</h1>
+  <p class="sub" id="sub"></p>
+  <div id="sections"></div>
+</div>
+<script>
+// Both constants below are placeholders stamped in by the server at serve time
+// (see "Template binding" in tools/server.py).
+const LIVE = __LIVE__;              // true when served live; false in a static instance
+const initialAnswer = __DATA__;     // the query's answer at the moment the page was served
+
+// Escape a value for safe interpolation into HTML.
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+}
+
+// One due-or-next action as a card: what to do, on which project, and its time
+// signal — all supplied by the query.
+function actionHtml(item, kind) {
+  const when = kind === "due"
+    ? `<span class="when overdue">follow up ${esc(item.follow_up)}</span>`
+    : `<span class="when stale">${item.days_stale}d since last touch</span>`;
+  return `<div class="card ${kind === "due" ? "due" : ""}">${when}` +
+         `<div class="rid">${esc(item.id)}</div>` +
+         `<div class="ttl">${esc(item.description)}</div>` +
+         `<div class="meta">${esc(item.project)} · ${esc(item.area)}</div></div>`;
+}
+
+// One stalled project as a card: the outcome that has no next step decided.
+function stalledHtml(project) {
+  return `<div class="card stalled-card"><div class="rid">${esc(project.id)}</div>` +
+         `<div class="ttl">${esc(project.title)}</div>` +
+         `<div class="meta">${esc(project.area)} · done looks like: ` +
+         `${esc(project.done_looks_like)}</div></div>`;
+}
+
+function section(title, cards, emptyNote) {
+  return `<h2>${title} <span class="count">${cards.length}</span></h2>` +
+         (cards.join("\n") || `<p class="empty">${emptyNote}</p>`);
+}
+
+// Repaint the whole page from one query answer. The ordering arrives already
+// decided by the query — nothing is re-sorted or re-derived here.
+function render(answer) {
+  // The binding contract allows a null answer (a server whose registry doesn't
+  // know this query yet). Render a note; the poll repaints when the server answers.
+  if (!answer) {
+    document.getElementById("sub").textContent =
+      "no data bound — the running server predates this view; it will recover on " +
+      "the next poll, or restart tools/server.py";
+    document.getElementById("sections").innerHTML = "";
+    return;
+  }
+  document.getElementById("sub").innerHTML =
+    (LIVE ? '<span class="live-dot"></span>live · ' : "") +
+    `as of ${esc(answer.as_of)} · ${answer.parked} parked until their follow-up · ` +
+    `placeholder ordering (open question 2) · one query, from <code>tools/repo.py</code>`;
+  document.getElementById("sections").innerHTML =
+    section("Due — follow-up has arrived", answer.due.map(i => actionHtml(i, "due")),
+            "nothing due") +
+    section("Next — untimed, stalest first", answer.next.map(i => actionHtml(i, "next")),
+            "no untimed open actions") +
+    section("Stalled — decide a next step", answer.stalled.map(stalledHtml),
+            "no stalled projects — every open project has a next action");
+}
+
+render(initialAnswer);
+
+// Liveness: re-ask the query every 2 seconds (carrying this page's own ?date=,
+// if any) and repaint only when the answer actually changed. Polling on purpose —
+// see canon/anatomy.md, "Why the live page polls".
+if (LIVE) {
+  let lastRendered = JSON.stringify(initialAnswer);
+  setInterval(async () => {
+    try {
+      const response = await fetch("/api/run_down" + location.search, {cache: "no-store"});
+      if (!response.ok) return;
+      const freshAnswer = await response.json();
+      const serialized = JSON.stringify(freshAnswer);
+      if (serialized === lastRendered) return;
+      lastRendered = serialized;
+      render(freshAnswer);
+    } catch (err) { /* server briefly away — keep the last good render */ }
+  }, 2000);
+}
+</script>
+</body>
+</html>

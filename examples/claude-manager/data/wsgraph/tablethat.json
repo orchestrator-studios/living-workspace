@@ -1,0 +1,55 @@
+{
+  "id": "tablethat",
+  "edges": [
+    {
+      "from": "cap:research-row",
+      "to": "schema:row",
+      "kind": "about",
+      "note": "The capability's whole subject is researching one entity and depositing it as a row record."
+    },
+    {
+      "from": "cap:research-row",
+      "to": "schema:table",
+      "kind": "about",
+      "note": "Step 1 reads the table's column keys, types, and select options to coerce each researched value to its column's declared type."
+    },
+    {
+      "from": "cap:research-row",
+      "to": "tool:repo.py",
+      "kind": "uses",
+      "note": "Reads the table definition via `import repo; repo.load('table',...)` before researching."
+    },
+    {
+      "from": "cap:research-row",
+      "to": "tool:validate.py",
+      "kind": "enforces",
+      "note": "Soft form of OVERVIEW rules 2/4/5 (type conformance and provenance) that validate.py's integrity_checks() enforces after every write."
+    },
+    {
+      "from": "cap:bottom-line",
+      "to": "schema:table",
+      "kind": "about",
+      "note": "The synthesis is written onto the table record as `bottom_line`; it judges what one table now says."
+    },
+    {
+      "from": "cap:bottom-line",
+      "to": "tool:repo.py",
+      "kind": "uses",
+      "note": "Persists the synthesis via repo.load/repo.save on the table record (rule 8: one definition, rendered by both card and viewer)."
+    },
+    {
+      "from": "cap:bottom-line",
+      "to": "cap:research-row",
+      "kind": "ref",
+      "note": "Explicit contrast: research-row is delegated because the conversation doesn't need the page text; bottom-line runs in-context because the conversation is where its value lands."
+    },
+    {
+      "from": "cap:dashboard",
+      "to": "view:index",
+      "kind": "about",
+      "note": "The dashboard is the live index of everything the workspace can show; the index view is the user's window it keeps up."
+    }
+  ],
+  "generated_at": "2026-07-11T01:26:44-06:00",
+  "model": "claude-fable-5"
+}

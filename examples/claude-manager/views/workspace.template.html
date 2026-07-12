@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<!--
+  workspace.template.html — one living workspace's anatomy (grown). The dev-friendly
+  visualization: the five folders plus the registry, laid out to read at a glance while
+  developing a space's capabilities. Parameterized: /view/workspace?workspace_id=<name>;
+  bound to the "workspace" query, polls /api/workspace + location.search (so it updates as
+  you edit the workspace's files). See capabilities/visualize-workspace.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workspace — Claude Manager</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de; --track: #f0efec;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --ink-3: #8b8a80; --accent: #2a78d6; --hover: #f6f9fe;
+    --bound: #8250c8; --contained: #2e9e5b; --kit: #5f5e57; --grown: #2a78d6;
+    --incontext: #2a78d6; --delegated: #8250c8; --either: #2e9e5b;
+    --warn: #c8901f; --ok: #2e9e5b; --info: #5f5e57;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835; --track: #2c2c2a;
+      --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #8b8a80; --accent: #3987e5; --hover: #262a30;
+      --bound: #a37fe0; --contained: #43b573; --kit: #8b8a80; --grown: #4f97e8;
+      --incontext: #4f97e8; --delegated: #a37fe0; --either: #43b573;
+      --warn: #d9a94e; --ok: #43b573; --info: #8b8a80;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scrollbar-gutter: stable; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface); color: var(--ink); padding: 20px 22px 60px; }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  .topnav { display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px; margin-bottom: 14px;
+            border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .topnav .brand { font-weight: 700; font-size: 1.05rem; margin-right: 4px; }
+  .topnav a { color: var(--ink-2); text-decoration: none; font-size: 0.9rem; }
+  .topnav a:hover { color: var(--accent); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; border-bottom: 2px solid var(--accent); padding-bottom: 3px; }
+  a.back { color: var(--accent); text-decoration: none; font-size: 0.84rem; }
+  h1 { font-size: 1.3rem; margin: 6px 0 2px; }
+  h1 .kind { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3);
+             border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; vertical-align: middle; margin-left: 6px; }
+  .path { color: var(--ink-3); font-size: 0.8rem; font-family: ui-monospace, Consolas, monospace; margin-bottom: 14px; }
+
+  .panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; align-items: start; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .panel h2 { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3);
+              margin-bottom: 9px; display: flex; align-items: baseline; gap: 6px; }
+  .panel h2 .cnt { margin-left: auto; color: var(--ink-2); font-weight: 700; }
+  .item { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.86rem; }
+  .item:last-child { border-bottom: none; }
+  .item .top { display: flex; align-items: baseline; gap: 7px; }
+  .item .nm { font-weight: 600; }
+  .item .mono { font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; color: var(--ink-2); }
+  .item .d { color: var(--ink-2); font-size: 0.8rem; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .d.open { white-space: normal; }
+  .tag { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-radius: 4px; padding: 0 6px; color: #fff; }
+  .tag.bound { background: var(--bound); } .tag.contained { background: var(--contained); }
+  .tag.kit { background: var(--kit); } .tag.grown { background: var(--grown); }
+  .tag.in-context { background: var(--incontext); } .tag.delegated { background: var(--delegated); } .tag.either { background: var(--either); }
+  .arrow { color: var(--ink-3); }
+  .q { color: var(--accent); font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; }
+  .muted { color: var(--ink-3); font-size: 0.84rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem; background: var(--track);
+          border-radius: 5px; padding: 1px 7px; }
+  .health .issue { display: flex; gap: 7px; align-items: baseline; padding: 4px 0; font-size: 0.84rem; }
+  .health .pip { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+  .health .pip.warn { background: var(--warn); } .health .pip.info { background: var(--info); }
+  .health.ok { color: var(--ok); font-size: 0.88rem; }
+  .graphwrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .graphwrap h2 { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3);
+                  margin-bottom: 8px; display: flex; align-items: baseline; gap: 6px; }
+  .graphwrap h2 .cnt { margin-left: auto; color: var(--ink-2); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .graph-scroll { overflow-x: auto; }
+  .graph-scroll svg text { font-family: system-ui, sans-serif; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 9px; font-size: 0.73rem; color: var(--ink-2); }
+  .legend .k { display: inline-flex; align-items: center; gap: 5px; }
+  .legend .nd { width: 10px; height: 10px; border-radius: 3px; }
+  .legend .sw { display: inline-block; width: 16px; border-top: 2px solid; }
+  /* hover-to-highlight: dim everything but the hovered node, its edges, its neighbours */
+  .graph-scroll svg.focus g[data-node] { opacity: 0.18; }
+  .graph-scroll svg.focus g[data-node].hi { opacity: 1; }
+  .graph-scroll svg.focus path { opacity: 0.05; }
+  .graph-scroll svg.focus path.hi { opacity: 0.8; stroke-width: 2; }
+  .graph-scroll g[data-node] { cursor: pointer; }
+  /* edge audit — how each edge was found */
+  .audit { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .audit h2 { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3);
+              margin-bottom: 6px; display: flex; align-items: baseline; gap: 6px; }
+  .audit h2 .cnt { margin-left: auto; color: var(--ink-2); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .audlegend { color: var(--ink-3); font-size: 0.74rem; margin-bottom: 8px; }
+  .aud { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.84rem; }
+  .aud:last-child { border-bottom: none; }
+  .atop { display: flex; gap: 7px; align-items: baseline; flex-wrap: wrap; }
+  .stier { font-size: 0.63rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-radius: 4px; padding: 0 6px; color: #fff; flex-shrink: 0; }
+  .stier.structural { background: #77756c; } .stier.regex { background: #2a78d6; } .stier.agent { background: #8250c8; }
+  .aud .mono { font-family: ui-monospace, Consolas, monospace; font-size: 0.82rem; }
+  .aud .arrow2 { color: var(--ink-3); }
+  .ev { color: var(--ink-2); font-size: 0.78rem; font-family: ui-monospace, Consolas, monospace; margin-top: 2px;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .ev.open { white-space: normal; word-break: break-word; }
+  .empty { background: var(--track); border-radius: 10px; padding: 18px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topnav">
+    <span class="brand">Claude Manager</span>
+    <a href="/view/overview">Overview</a>
+    <a href="/view/sessions">Sessions</a>
+    <a href="/view/usage">Usage</a>
+    <a href="/view/extensions">Extensions</a>
+    <a href="/view/workspaces" aria-current="page">Workspaces</a>
+  </div>
+  <p><a class="back" href="/view/workspaces">&larr; all workspaces</a></p>
+  <div id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+let payload = __DATA__;
+function esc(v) { return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function panel(title, count, inner) {
+  return `<div class="panel"><h2>${esc(title)}<span class="cnt">${count}</span></h2>` +
+         (inner || `<div class="muted">none</div>`) + `</div>`;
+}
+function toggle(el) { el.classList.toggle("open"); }
+
+// The reach graph — nodes laid out in columns by type, edges as curves. Deterministic
+// edges are solid; agent-mapped (semantic) edges are dashed.
+const NODE_COLOR = { capability: "#2a78d6", tool: "#77756c", schema: "#8250c8", view: "#c8901f", query: "#2e9e5b" };
+const EDGE_COLOR = { uses: "#2a78d6", ref: "#8250c8", binds: "#9a988f", projects: "#9a988f", about: "#2e9e5b" };
+const COLS = [["capability", "capabilities"], ["tool", "tools"], ["schema", "schemas"], ["view", "views"], ["query", "queries"]];
+
+function graphSVG(g) {
+  if (!g || !g.nodes || !g.nodes.length) return '<div class="muted">no nodes</div>';
+  const byCol = {}; COLS.forEach(([t]) => byCol[t] = []);
+  g.nodes.forEach(n => { if (byCol[n.type]) byCol[n.type].push(n); });
+  const colGap = 196, rowGap = 30, nodeW = 156, nodeH = 21, padX = 10, headY = 26;
+  const pos = {}; let maxRows = 0;
+  COLS.forEach(([t], ci) => {
+    byCol[t].forEach((n, ri) => { pos[n.id] = { x: padX + ci * colGap, y: headY + ri * rowGap, ci, ri }; });
+    maxRows = Math.max(maxRows, byCol[t].length);
+  });
+  const W = padX * 2 + (COLS.length - 1) * colGap + nodeW, H = headY + Math.max(1, maxRows) * rowGap + 6;
+  const headers = COLS.map(([t, l], ci) =>
+    `<text x="${padX + ci * colGap}" y="13" font-size="10" font-weight="700" fill="#8b8a80">${l.toUpperCase()} · ${byCol[t].length}</text>`).join("");
+  const paths = g.edges.map(e => {
+    const a = pos[e.from], b = pos[e.to]; if (!a || !b) return "";
+    const col = EDGE_COLOR[e.kind] || "#9a988f", dash = e.source === "agent" ? ' stroke-dasharray="4 3"' : "";
+    const y1 = a.y + nodeH / 2, y2 = b.y + nodeH / 2; let d;
+    if (b.ci > a.ci) { const x1 = a.x + nodeW, x2 = b.x, dx = Math.max(26, (x2 - x1) / 2); d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`; }
+    else if (b.ci < a.ci) { const x1 = a.x, x2 = b.x + nodeW, dx = Math.max(26, (x1 - x2) / 2); d = `M ${x1} ${y1} C ${x1 - dx} ${y1}, ${x2 + dx} ${y2}, ${x2} ${y2}`; }
+    else { const x1 = a.x, off = 32 + Math.abs(a.ri - b.ri) * 5; d = `M ${x1} ${y1} C ${x1 - off} ${y1}, ${x1 - off} ${y2}, ${x1} ${y2}`; }
+    return `<path data-from="${esc(e.from)}" data-to="${esc(e.to)}" d="${d}" fill="none" stroke="${col}" stroke-width="1.3" opacity="0.5"${dash}><title>${esc(e.from)} —${esc(e.kind)}→ ${esc(e.to)}  [${esc(e.source)}]${e.evidence ? "\n" + esc(e.evidence) : ""}</title></path>`;
+  }).join("");
+  const boxes = g.nodes.map(n => {
+    const p = pos[n.id]; if (!p) return ""; const c = NODE_COLOR[n.type] || "#77756c";
+    const lbl = n.label.length > 19 ? n.label.slice(0, 18) + "…" : n.label;
+    const meta = n.runs || n.substrate || n.role || "";
+    return `<g data-node="${esc(n.id)}" transform="translate(${p.x},${p.y})"><rect width="${nodeW}" height="${nodeH}" rx="4" fill="var(--card)" stroke="${c}" stroke-width="1.2"/>` +
+      `<rect width="4" height="${nodeH}" rx="2" fill="${c}"/>` +
+      `<text x="11" y="${nodeH / 2 + 3.5}" font-size="10.5" fill="var(--ink)">${esc(lbl)}</text>` +
+      `<title>${esc(n.type)}: ${esc(n.label)}${meta ? " · " + esc(meta) : ""}</title></g>`;
+  }).join("");
+  return `<div class="graph-scroll"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><g>${headers}</g><g>${paths}</g><g>${boxes}</g></svg></div>`;
+}
+
+function graphPanel(g) {
+  const n = g && g.nodes ? g.nodes.length : 0, e = g && g.edges ? g.edges.length : 0;
+  const agent = g && g.agent_mapped_at;
+  const legend =
+    `<div class="legend">` +
+    Object.entries(NODE_COLOR).map(([t, c]) => `<span class="k"><span class="nd" style="background:${c}"></span>${t}</span>`).join("") +
+    `<span class="k"><span class="sw" style="border-color:#2a78d6"></span>uses / ref</span>` +
+    `<span class="k"><span class="sw" style="border-color:#9a988f"></span>binds / projects</span>` +
+    `<span class="k"><span class="sw" style="border-color:#8250c8;border-top-style:dashed"></span>agent-mapped</span>` +
+    `</div>`;
+  return `<div class="graphwrap"><h2>Reach graph — how the agent gets anything done` +
+    `<span class="cnt">${n} nodes · ${e} edges${agent ? " · agent-mapped " + String(agent).slice(0, 10) : " · run map-workspace-references to enrich"}</span></h2>` +
+    graphSVG(g) + legend + `</div>`;
+}
+
+// The edge audit — every edge, its source tier, and the exact text that produced it. This
+// is how you verify the graph: structural = fact (file naming / schema); regex = matched in
+// capability prose (line shown); agent = read by an LLM on demand (its note shown).
+function auditPanel(g) {
+  if (!g || !g.edges || !g.edges.length) return "";
+  const order = { structural: 0, regex: 1, agent: 2 };
+  const rows = [...g.edges]
+    .sort((a, b) => (order[a.source] - order[b.source]) || a.from.localeCompare(b.from))
+    .map(e =>
+      `<div class="aud"><div class="atop">` +
+      `<span class="stier ${esc(e.source)}">${esc(e.source)}</span>` +
+      `<span class="mono">${esc(e.from)}</span><span class="arrow2">—${esc(e.kind)}→</span>` +
+      `<span class="mono">${esc(e.to)}</span></div>` +
+      `<div class="ev" onclick="toggle(this)">${esc(e.evidence || "—")}</div></div>`).join("");
+  return `<div class="audit"><h2>Edge audit — how each edge was found<span class="cnt">${g.edges.length} edges</span></h2>` +
+    `<div class="audlegend"><b>structural</b> = declared by file naming / schema (a fact) · ` +
+    `<b>regex</b> = matched in capability prose (line shown) · ` +
+    `<b>agent</b> = read by an LLM on demand. Click any evidence line to expand.</div>` +
+    rows + `</div>`;
+}
+
+function render() {
+  const w = payload;
+  const content = document.getElementById("content");
+  if (!w || w.error) {
+    content.innerHTML = `<div class="empty">${esc(w ? w.error : "no data")}</div>`;
+    return;
+  }
+  document.title = w.name + " — anatomy";
+  const recs = {}; (w.data || []).forEach(d => recs[d.kind] = d.records);
+
+  // Understanding — schemas (with substrate, projection, record count)
+  const schemas = w.schemas.map(s => {
+    const rc = recs[s.kind];
+    return `<div class="item"><div class="top">` +
+      `<span class="tag ${s.substrate}">${esc(s.substrate)}</span>` +
+      `<span class="nm mono">${esc(s.kind || s.file)}</span>` +
+      (s.projection ? `<span class="arrow">→</span><span class="q">${esc(s.projection)}()</span>` : "") +
+      (rc != null ? `<span class="muted" style="margin-left:auto">${rc} rec</span>` : "") +
+      `</div>` + (s.source ? `<div class="d" onclick="toggle(this)">${esc(s.source)}</div>` : "") + `</div>`;
+  }).join("");
+
+  // Capability — tools + capabilities
+  const tools = w.tools.map(t =>
+    `<div class="item"><div class="top"><span class="tag ${t.role}">${esc(t.role)}</span>` +
+    `<span class="nm mono">${esc(t.name)}</span></div></div>`).join("");
+  const caps = w.capabilities.map(c =>
+    `<div class="item"><div class="top"><span class="tag ${esc(c.runs)}">${esc(c.runs)}</span>` +
+    `<span class="nm">${esc(c.name)}</span></div>` +
+    (c.description ? `<div class="d" onclick="toggle(this)">${esc(c.description)}</div>` : "") + `</div>`).join("");
+
+  // Presentation — views (bound to which query)
+  const views = w.views.map(v =>
+    `<div class="item"><div class="top"><span class="tag ${v.role}">${esc(v.role)}</span>` +
+    `<span class="nm mono">${esc(v.name)}</span>` +
+    (v.query ? `<span class="arrow">→</span><span class="q">${esc(v.query)}()</span>` :
+      `<span class="muted" style="margin-left:auto">no query</span>`) + `</div></div>`).join("");
+
+  // Registry + data
+  const registry =
+    `<div style="margin-bottom:6px"><span class="muted">queries</span><div class="chips">` +
+    (w.queries.length ? w.queries.map(q => `<span class="chip">${esc(q)}</span>`).join("") : '<span class="muted">none</span>') + `</div></div>` +
+    `<div><span class="muted">actions</span><div class="chips">` +
+    (w.actions.length ? w.actions.map(a => `<span class="chip">${esc(a)}</span>`).join("") : '<span class="muted">none</span>') + `</div></div>`;
+  const data = (w.data && w.data.length)
+    ? w.data.map(d => `<div class="item"><div class="top"><span class="nm mono">${esc(d.kind)}</span>` +
+        `<span class="muted" style="margin-left:auto">${d.records} records</span></div></div>`).join("")
+    : null;
+
+  // Health
+  const health = w.health.ok
+    ? `<div class="health ok">✓ all static checks pass</div>`
+    : `<div class="health">` + w.health.issues.map(i =>
+        `<div class="issue"><span class="pip ${i.sev}"></span><span>${esc(i.text)}</span></div>`).join("") + `</div>`;
+
+  content.innerHTML =
+    `<h1>${esc(w.name)}<span class="kind">${esc(w.kind)}</span></h1>` +
+    `<p class="path">${esc(w.path)}</p>` +
+    graphPanel(w.graph) +
+    auditPanel(w.graph) +
+    `<div class="panels">` +
+      panel("Understanding · schemas", w.schemas.length, schemas) +
+      panel("Capability · capabilities", w.capabilities.length, caps) +
+      panel("Capability · tools", w.tools.length, tools) +
+      panel("Presentation · views", w.views.length, views) +
+      panel("Data · records", (w.data || []).reduce((a, d) => a + d.records, 0), data) +
+      panel("Registry", w.queries.length + w.actions.length, registry) +
+      panel("Health", w.health.ok ? "OK" : w.health.issues.length, health) +
+    `</div>`;
+}
+render();
+
+// Hover-to-highlight the graph: dim all but the hovered node, its edges, and neighbours.
+// Delegated on document because #content is replaced on every poll.
+document.addEventListener("mouseover", ev => {
+  const g = ev.target.closest && ev.target.closest("g[data-node]");
+  if (!g) return;
+  const svg = g.closest("svg"); if (!svg) return;
+  const id = g.getAttribute("data-node"), keep = new Set([id]);
+  svg.querySelectorAll("path[data-from]").forEach(p => {
+    const f = p.getAttribute("data-from"), t = p.getAttribute("data-to");
+    if (f === id || t === id) { p.classList.add("hi"); keep.add(f); keep.add(t); }
+  });
+  svg.querySelectorAll("g[data-node]").forEach(n => {
+    if (keep.has(n.getAttribute("data-node"))) n.classList.add("hi");
+  });
+  svg.classList.add("focus");
+});
+document.addEventListener("mouseout", ev => {
+  const g = ev.target.closest && ev.target.closest("g[data-node]");
+  if (!g) return;
+  const svg = g.closest("svg"); if (!svg) return;
+  svg.classList.remove("focus");
+  svg.querySelectorAll(".hi").forEach(x => x.classList.remove("hi"));
+});
+
+if (LIVE) {
+  setInterval(async () => {
+    try {
+      const r = await fetch("/api/workspace" + location.search, {cache: "no-store"});
+      if (!r.ok) return;
+      const fresh = await r.json();
+      if (JSON.stringify(fresh) === JSON.stringify(payload)) return;
+      const x = window.scrollX, y = window.scrollY; payload = fresh; render(); window.scrollTo(x, y);
+    } catch (err) {}
+  }, 2000);
+}
+</script>
+</body>
+</html>

@@ -114,7 +114,32 @@ def next_id(kind):
 # ----------------------------------------------------------------------------
 # 2. shared helpers
 # ----------------------------------------------------------------------------
-# (grown: the citation formatter, the label parser — whatever starts repeating)
+import datetime
+
+
+def _as_of(date_str):
+    """Coerce a query's ?date= string to a date; empty or malformed means today."""
+    if date_str:
+        try:
+            return datetime.date.fromisoformat(str(date_str))
+        except ValueError:
+            pass
+    return datetime.date.today()
+
+
+def last_touch(action):
+    """When an action was last touched: its newest log entry, else its creation.
+    Staleness — days since this — is the single derived time signal (OVERVIEW open
+    question 1's placeholder: derived from the log, never stored)."""
+    return max((e["date"] for e in action["log"]), default=action["created"])
+
+
+def _action_view(action, as_of):
+    touched = last_touch(action)
+    return {"id": action["id"], "description": action["description"],
+            "status": action["status"], "follow_up": action.get("follow_up"),
+            "done": action.get("done"), "last_touch": touched,
+            "days_stale": (as_of - datetime.date.fromisoformat(touched)).days}
 
 
 # ----------------------------------------------------------------------------
@@ -135,7 +160,77 @@ def next_id(kind):
 # Give every parameter a default, answer a bare ask helpfully (the index links queries
 # with no arguments), and remember values arrive as strings.
 
+def board(date=""):
+    """The whole tree, one ask: every area, its projects, their actions — with each
+    open project's stalled flag (OVERVIEW rule 2) and each action's staleness.
+    ?date=YYYY-MM-DD computes staleness as of another day (default: today)."""
+    as_of = _as_of(date)
+    actions_by_project = {}
+    for a in load_all("action"):
+        actions_by_project.setdefault(a["project_id"], []).append(_action_view(a, as_of))
+    area_views, totals = [], {"projects_open": 0, "projects_someday": 0,
+                              "projects_done": 0, "actions_open": 0, "stalled": 0}
+    projects = load_all("project")
+    for area in load_all("area"):
+        project_views = []
+        for p in [p for p in projects if p["area_id"] == area["id"]]:
+            acts = actions_by_project.get(p["id"], [])
+            open_acts = [a for a in acts if a["status"] == "open"]
+            stalled = p["status"] == "open" and not open_acts
+            project_views.append({"id": p["id"], "title": p["title"],
+                                  "done_looks_like": p["done_looks_like"],
+                                  "status": p["status"], "done": p.get("done"),
+                                  "stalled": stalled, "actions": acts})
+            totals[f"projects_{p['status']}"] += 1
+            totals["actions_open"] += len(open_acts)
+            totals["stalled"] += stalled
+        area_views.append({"id": area["id"], "name": area["name"],
+                           "good_shape": area["good_shape"], "projects": project_views})
+    return {"as_of": str(as_of), "totals": {"areas": len(area_views), **totals},
+            "areas": area_views}
+
+
+def run_down(date=""):
+    """The daily driver: "what should I run down today?" — OVERVIEW rule 6's
+    placeholder ordering, until open question 2 (prioritization) is settled.
+      due     — open actions whose follow-up has arrived, oldest follow-up first
+      next    — open actions with no follow-up, stalest first
+      parked  — count of open actions whose follow-up is still in the future
+      stalled — open projects with no open action: a next step needs deciding
+    ?date=YYYY-MM-DD answers as of another day (default: today)."""
+    as_of = _as_of(date)
+    projects = {p["id"]: p for p in load_all("project")}
+    areas = {a["id"]: a for a in load_all("area")}
+
+    def whose(view, pid):
+        p = projects[pid]
+        return {**view, "project_id": pid, "project": p["title"],
+                "area": areas[p["area_id"]]["name"]}
+
+    due, upcoming, parked = [], [], 0
+    for a in load_all("action"):
+        if a["status"] != "open":
+            continue
+        view = whose(_action_view(a, as_of), a["project_id"])
+        if not a.get("follow_up"):
+            upcoming.append(view)
+        elif a["follow_up"] <= str(as_of):
+            due.append(view)
+        else:
+            parked += 1
+    due.sort(key=lambda v: v["follow_up"])
+    upcoming.sort(key=lambda v: -v["days_stale"])
+
+    with_open = {a["project_id"] for a in load_all("action") if a["status"] == "open"}
+    stalled = [{"id": p["id"], "title": p["title"], "area": areas[p["area_id"]]["name"],
+                "done_looks_like": p["done_looks_like"]}
+               for p in projects.values()
+               if p["status"] == "open" and p["id"] not in with_open]
+    return {"as_of": str(as_of), "due": due, "next": upcoming,
+            "parked": parked, "stalled": stalled}
+
+
 # Publishing: every query registered here is served at /api/<name> by tools/server.py,
 # and a template named views/<name>.template.html is bound to it automatically. A
 # parameterized query's live page must poll with its own location.search.
-QUERIES = {}
+QUERIES = {"board": board, "run_down": run_down}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "action — one concrete next step on one project",
+  "description": "Progress lands in the dated log, through tools/log.py — the record, not the chat, is the memory (OVERVIEW rule 3). follow_up is the deliberate placeholder for open question 1 (the time model): when this should resurface if nothing has happened; staleness is derived from the log, not stored. 'Done is dated' (rule 4) is a cross-field rule enforced by tools/validate.py integrity_checks().",
+  "x-kind": "action",
+  "type": "object",
+  "required": ["id", "project_id", "description", "status", "created", "log"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^A-[0-9]{4}$" },
+    "project_id": { "type": "string", "pattern": "^P-[0-9]{3}$" },
+    "description": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["open", "done"] },
+    "created": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "follow_up": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Optional: when this should resurface if nothing has happened (open question 1's placeholder)."
+    },
+    "done": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "When the action was completed. Required when status is 'done'."
+    },
+    "log": {
+      "type": "array",
+      "description": "Dated progress notes, oldest first — what happened last touch, what's blocked on what.",
+      "items": {
+        "type": "object",
+        "required": ["date", "note"],
+        "additionalProperties": false,
+        "properties": {
+          "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+          "note": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

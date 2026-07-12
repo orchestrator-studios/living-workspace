@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "project — one outcome in one area",
+  "description": "Quick errands are still projects — ones whose single action is the whole job. An open project with no open action is stalled: a validator warning and a standing query, never an error (OVERVIEW rule 2). 'Done is dated' (rule 4) — status 'done' requires the done date — is a cross-field rule enforced by tools/validate.py integrity_checks().",
+  "x-kind": "project",
+  "type": "object",
+  "required": ["id", "area_id", "title", "done_looks_like", "status", "created"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^P-[0-9]{3}$" },
+    "area_id": { "type": "string", "pattern": "^AR-[0-9]{2}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "done_looks_like": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A plain statement of what done looks like."
+    },
+    "status": { "type": "string", "enum": ["open", "done", "someday"] },
+    "created": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "done": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "When the project was completed. Required when status is 'done'."
+    }
+  }
+}

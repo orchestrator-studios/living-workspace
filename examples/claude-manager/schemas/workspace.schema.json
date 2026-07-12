@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "workspace — a living workspace under the repo",
+  "description": "A BOUND type: the manager reading the living workspaces it lives among (template + examples/*), reporting each one's anatomy. Validated against the `workspaces` catalog projection; the full per-workspace anatomy is the (unvalidated) `workspace` detail projection.",
+  "x-kind": "workspace",
+  "x-substrate": "bound",
+  "x-source": "the living-workspace repo: <root>/template and <root>/examples/* (dirs with CLAUDE.md + tools/repo.py)",
+  "x-projection": "workspaces",
+  "x-records": "workspaces",
+  "type": "object",
+  "required": ["id", "name", "path", "kind", "counts", "substrate", "health"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "path": { "type": "string" },
+    "kind": { "enum": ["template", "example", "self"] },
+    "counts": { "type": "object", "description": "schemas, tools_grown, capabilities, views, queries, actions, records." },
+    "substrate": { "type": "object", "description": "schema counts by substrate: bound vs contained." },
+    "health": { "type": "object", "description": "{ok: bool, issues: count}." }
+  }
+}

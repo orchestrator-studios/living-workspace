@@ -20,14 +20,23 @@ Modules today:
   Code's own message/tool counts where its stats cache reaches.
 - **Extensions** — everything installed that extends Claude, unified: plugins, skills,
   agents, commands, and MCP servers. One bound `extension` type (a `kind` tag rather than
-  five near-identical schemas), filterable by kind and installed/available.
+  five near-identical schemas). Distinguishes **active / disabled / available** — leads
+  with what's installed; the marketplace catalog is one filter away.
+- **Workspaces** — the manager, living-workspace-aware: every living workspace under the
+  repo and its anatomy (schemas with substrate + projection, tools kit-vs-grown,
+  capabilities with how each runs, views and the query each binds, data record counts,
+  static health). The centerpiece is the **reach graph** — how the agent gets anything
+  done: it reaches *capabilities*, capabilities reach *tools* (and each other), views
+  reach *queries*. Edges come two ways: a **deterministic skeleton** (view→query,
+  schema→projection, `[[links]]` and `tools/x.py` parsed from prose, live and free) plus
+  **semantic edges an agent maps on demand** (`map-workspace-references`, delegated —
+  reads the capabilities, emits the relations a regex can't see, stored as a contained
+  `wsgraph` record and drawn dashed). The per-workspace anatomy
+  (`/view/workspace?workspace_id=…`) is the **dev-friendly visualization** — reach for it
+  when the next move is *grow capability* rather than *take a step* (capability
+  `visualize-workspace`, the move rule's "grow it" branch).
 
 Planned next:
-- **Workspace inspector** — a living-workspace-aware module: point it at a workspace and
-  report its anatomy (capabilities, tools, schemas, views, data). It should tie into a
-  reusable **dev-visualization capability** for living workspaces — the thing to surface
-  precisely when the next move is *grow capability* rather than *take a step* (the move
-  rule's "grow it" branch), while developing a space.
 - **Extension usage** — how often each skill/agent/command is actually invoked (a cached
   transcript scan, once the invocation format is pinned down) — "what earns its keep."
 - Deeper: token/cost (parse transcript usage records), plugin enable/disable **actions**,

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "area — one life domain",
+  "description": "Few and stable (OVERVIEW: the seven from the seed). Everything else hangs off an area: projects point here, actions point at projects — cross-record integrity enforced by tools/validate.py integrity_checks() (OVERVIEW rule 1).",
+  "x-kind": "area",
+  "type": "object",
+  "required": ["id", "name", "good_shape"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^AR-[0-9]{2}$" },
+    "name": { "type": "string", "minLength": 1 },
+    "good_shape": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One line: what this area looks like when it is in good shape."
+    }
+  }
+}

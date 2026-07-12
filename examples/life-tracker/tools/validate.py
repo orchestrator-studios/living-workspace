@@ -95,10 +95,44 @@ def alignment_checks(errors):
 
 
 def integrity_checks(errors):
-    # (grown: the workspace's cross-record rules — dedup, referential integrity,
-    #  closure guarantees. Validation reads the raw files on purpose — it checks the
-    #  substrate itself, not a query's answer — but paths still come from repo.)
-    pass
+    """The workspace's cross-record rules (OVERVIEW, "The rules"):
+      1. Everything hangs on the tree — every action's project exists, every
+         project's area exists.
+      4. Done is dated — status 'done' requires the done date, on both kinds.
+      2. An open project always has a next action — a project with no open action
+         is STALLED: printed as a warning, never an error (the system's job is to
+         make stalling visible, not to block writes on it).
+    Validation reads the raw files on purpose — it checks the substrate itself."""
+    area_ids = {a["id"] for a in repo.load_all("area")}
+    projects = repo.load_all("project")
+    actions = repo.load_all("action")
+
+    for p in projects:
+        if p["area_id"] not in area_ids:
+            errors.append(f"{p['id']}: area_id '{p['area_id']}' — no such area")
+        if p["status"] == "done" and not p.get("done"):
+            errors.append(f"{p['id']}: status is 'done' but carries no done date "
+                          f"(rule 4: done is dated)")
+    project_ids = {p["id"] for p in projects}
+    for a in actions:
+        if a["project_id"] not in project_ids:
+            errors.append(f"{a['id']}: project_id '{a['project_id']}' — no such project")
+        if a["status"] == "done" and not a.get("done"):
+            errors.append(f"{a['id']}: status is 'done' but carries no done date "
+                          f"(rule 4: done is dated)")
+
+    open_by_project = {}
+    for a in actions:
+        if a["status"] == "open":
+            open_by_project.setdefault(a["project_id"], 0)
+            open_by_project[a["project_id"]] += 1
+    stalled = [p for p in projects
+               if p["status"] == "open" and not open_by_project.get(p["id"])]
+    if stalled:
+        print(f"WARNING — {len(stalled)} stalled project(s) (open, no open action; "
+              f"rule 2 — decide a next step in conversation):")
+        for p in stalled:
+            print(f"  - {p['id']} {p['title']}")
 
 
 def main() -> int:

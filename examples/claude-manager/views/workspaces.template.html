@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+  workspaces.template.html — the workspace inspector catalog (grown). Bound to the
+  "workspaces" query. Every living workspace under the repo, its anatomy at a glance and a
+  static health verdict. Cards link to the per-workspace anatomy view.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workspaces — Claude Manager</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --card: #ffffff; --border: #e4e3de; --track: #f0efec;
+    --ink: #1c1c1a; --ink-2: #5f5e57; --ink-3: #8b8a80; --accent: #2a78d6; --hover: #f6f9fe;
+    --bound: #8250c8; --contained: #2e9e5b; --warn: #c8901f; --ok: #2e9e5b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19; --card: #232322; --border: #383835; --track: #2c2c2a;
+      --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #8b8a80; --accent: #3987e5; --hover: #262a30;
+      --bound: #a37fe0; --contained: #43b573; --warn: #d9a94e; --ok: #43b573;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scrollbar-gutter: stable; }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--surface); color: var(--ink); padding: 20px 22px 60px; }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  .topnav { display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px; margin-bottom: 16px;
+            border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .topnav .brand { font-weight: 700; font-size: 1.05rem; margin-right: 4px; }
+  .topnav a { color: var(--ink-2); text-decoration: none; font-size: 0.9rem; }
+  .topnav a:hover { color: var(--accent); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; border-bottom: 2px solid var(--accent); padding-bottom: 3px; }
+  .sub { color: var(--ink-2); font-size: 0.84rem; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
+          text-decoration: none; color: var(--ink); display: block; }
+  .card:hover { border-color: var(--accent); background: var(--hover); }
+  .chead { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .chead .name { font-weight: 700; font-size: 1.05rem; }
+  .chead .kind { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3);
+                 border: 1px solid var(--border); border-radius: 999px; padding: 0 7px; }
+  .chead .health { margin-left: auto; font-size: 0.76rem; }
+  .chead .health.ok { color: var(--ok); } .chead .health.warn { color: var(--warn); }
+  .counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 6px; }
+  .counts .c { text-align: center; }
+  .counts .c .n { font-size: 1.15rem; font-weight: 700; }
+  .counts .c .l { color: var(--ink-3); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .subst { margin-top: 10px; font-size: 0.76rem; color: var(--ink-2); }
+  .pill { display: inline-block; border-radius: 999px; padding: 0 7px; font-size: 0.72rem; color: #fff; margin-right: 4px; }
+  .pill.bound { background: var(--bound); } .pill.contained { background: var(--contained); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topnav">
+    <span class="brand">Claude Manager</span>
+    <a href="/view/overview">Overview</a>
+    <a href="/view/sessions">Sessions</a>
+    <a href="/view/usage">Usage</a>
+    <a href="/view/extensions">Extensions</a>
+    <a href="/view/workspaces" aria-current="page">Workspaces</a>
+  </div>
+  <p class="sub" id="sub">living workspaces under the repo</p>
+  <div class="grid" id="content"></div>
+</div>
+<script>
+const LIVE = __LIVE__;
+let payload = __DATA__;
+function esc(v) { return String(v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function card(w) {
+  const c = w.counts, s = w.substrate;
+  const cell = (n, l) => `<div class="c"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  return `<a class="card" href="/view/workspace?workspace_id=${esc(w.id)}">` +
+    `<div class="chead"><span class="name">${esc(w.name)}</span>` +
+    `<span class="kind">${esc(w.kind)}</span>` +
+    `<span class="health ${w.health.ok ? "ok" : "warn"}">${w.health.ok ? "✓ healthy" : "⚠ " + w.health.issues}</span></div>` +
+    `<div class="counts">` +
+      cell(c.schemas, "schemas") + cell(c.capabilities, "capabilities") +
+      cell(c.tools_grown, "tools") + cell(c.views, "views") +
+      cell(c.queries, "queries") + cell(c.actions, "actions") +
+      cell(c.records, "records") + cell(c.tools_grown + c.capabilities + c.views, "grown") +
+    `</div>` +
+    `<div class="subst">` +
+      (s.bound ? `<span class="pill bound">${s.bound} bound</span>` : "") +
+      (s.contained ? `<span class="pill contained">${s.contained} contained</span>` : "") +
+      (!s.bound && !s.contained ? '<span style="color:var(--ink-3)">no schemas yet</span>' : "") +
+    `</div></a>`;
+}
+
+function render() {
+  document.getElementById("sub").textContent =
+    `${payload.total} living workspaces under ${payload.root}`;
+  document.getElementById("content").innerHTML = payload.workspaces.map(card).join("");
+}
+render();
+if (LIVE) {
+  setInterval(async () => {
+    try {
+      const r = await fetch("/api/workspaces", {cache: "no-store"});
+      if (!r.ok) return;
+      const fresh = await r.json();
+      if (JSON.stringify(fresh) === JSON.stringify(payload)) return;
+      const x = window.scrollX, y = window.scrollY; payload = fresh; render(); window.scrollTo(x, y);
+    } catch (err) {}
+  }, 2000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "wsgraph — agent-mapped semantic edges for a workspace's reach graph",
+  "description": "A CONTAINED kind: the deterministic reach graph (view→query, [[links]], tools/x.py mentions) is computed live in the workspace() query; this stores the extra SEMANTIC edges an agent reads out of capability prose on demand (the map-workspace-references capability). One record per workspace, keyed by workspace name; workspace() merges these edges in, marked source=agent (drawn dashed).",
+  "x-kind": "wsgraph",
+  "type": "object",
+  "required": ["id", "edges", "generated_at"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "description": "= the workspace name." },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string", "description": "A node id, e.g. cap:research-row, tool:add_row.py, schema:table, query:table, view:tables." },
+          "to": { "type": "string" },
+          "kind": { "type": "string", "description": "The relation, e.g. uses, ref, about, enforces, gates." },
+          "note": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Why the edge exists (optional)." }
+        }
+      }
+    },
+    "generated_at": { "type": "string" },
+    "model": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+  }
+}
