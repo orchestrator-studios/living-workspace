@@ -26,13 +26,23 @@ sufficient:
    the person and the agent read and write — and the files carry all four kinds of content:
    data, understanding (schemas, rules), capability (tools, capabilities), and presentation
    (views). A file is simultaneously something to read, an instruction to follow, and a
-   program to run. The substrate may be *contained* in the workspace, *bound* from systems
-   that live elsewhere (a CRM, a drive, a database), or both — that's a spectrum within the
-   concept, not a boundary of it.
+   program to run. In application terms, the substrate is the **backend** — the data layer
+   (the system of record) and the application layer (the meaning, operations, and rules
+   that govern it), together — persisted as files rather than hidden behind a frozen
+   interface; *durable* because those files persist and accumulate across sessions, so the
+   workspace's memory is the substrate, never the conversation. The substrate may be
+   *contained* in the workspace, *bound* from systems that live elsewhere (a CRM, a drive,
+   a database), or both — that's a spectrum within the concept, not a boundary of it.
 
-2. **Agent operation.** An agent with tool reach is the primary operator. Conversation is
-   the native interface; every other interface — a board, a report, an export — is an
-   answer computed from the substrate that the agent can generate and regenerate on demand.
+2. **Agent operation.** An agent with tool reach is the primary operator, standing where
+   an application's frontend used to stand — and the user↔agent interaction runs both
+   ways. Conversation is the native interface; every other interface — a board, a report,
+   an export, an approval request — is an answer computed from the substrate that the
+   agent can generate and regenerate on demand. In return, the user's decisions and
+   intentions reach the substrate only through the agent and its tools. Neither direction
+   requires co-presence: a projected surface can outlive the session that produced it, and
+   a decision can wait, queued, until the agent next runs. A surface owns only the glass;
+   the workspace owns the meaning and the work.
 
 3. **Capability accretion — the "living" part.** There is no boundary between using the
    system and extending it. Every obstacle asks *"what capability is missing?"*, and every

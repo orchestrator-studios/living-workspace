@@ -34,6 +34,26 @@ The repo never builds into anything, and no one ships it. **The repo becomes an
 environment that an agent works inside, on behalf of the user.** You state what you want
 in conversation; the agent operates the system for you.
 
+Read the new shape as an application architect would. The living workspace is the
+**backend** — what that word has always meant: the application layer and the data layer,
+together. The data layer is the system of record, kept in plain files. The application
+layer is the schemas that say what those records mean, the deterministic tools that
+operate on them, and the rules those tools enforce. That pair is what these docs call
+the **durable substrate**: durable because it is files that persist and accumulate —
+owned, readable, diffable — not state trapped behind a session or a vendor's API.
+
+What the new shape removes is the frontend. Nothing is frozen at release, because the
+agent stands where the frontend stood — and the interaction between user and agent runs
+both ways. Outbound, the conversation is the primary interface, and every other surface
+— a live board, a report, an approval request — is projected from the backend on demand.
+Inbound, the user's decisions and intentions return through the agent and land in the
+backend only through its tools. Neither direction requires the user and agent to be
+co-present: a surface can be beamed to a persistent channel the user checks from
+anywhere, and a decision can wait, queued, until the agent next runs — the
+[life-tracker](examples/life-tracker/) beaming its board to BotBeam is the remote case
+of the same pattern the kit's local dashboard ships. The division of labor is strict:
+**the workspace owns the meaning and the work; a surface owns only the glass.**
+
 ## What kind of work this is for
 
 Some work needs more structure than chat and less than software. A literature review for
@@ -64,10 +84,10 @@ dashboard that shows the workspace filling in as you talk.
 
 ## Same substrate, three differences
 
-Under the hood, a living workspace has everything a regular application has: entities
-defined in schemas, records stored in a system of record, rules that must hold,
-deterministic operations, views over the data. The substrate is the same. What's different
-is what surrounds it:
+Under the hood, a living workspace has everything a regular application's backend has:
+entities defined in schemas, records stored in a system of record, rules that must hold,
+deterministic operations, views over the data. The substrate is the same backend any
+developer would recognize. What's different is what surrounds it:
 
 1. **The repo carries its own operating instructions.** Alongside the data sit the
    schemas that say what it means, the capabilities that say how to work with it
