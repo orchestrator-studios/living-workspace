@@ -122,6 +122,20 @@ step: reshaping required programming skill. An agent removes that step. Say what
 missing, and the workspace grows it — which is why the deploy boundary can collapse
 entirely, and building and using become the same activity in the same conversation.
 
+## One concept, two entry paths
+
+This repo is the **grow** path: start from empty folders and let the work pull capability
+into the workspace. The same thesis has a second entry path — **overlay**: install the agent
+over a company's existing systems, without migrating anything, and grow skills over
+substrates that stay exactly where they are. That expression is
+[orchestra](https://github.com/orchestrator-studios/orchestra), a cognitive operating system
+for a business. Same architecture — durable substrate + encoded know-how, agent as the
+interface and the runtime — with one more difference: **who holds the pen.** Here, the user
+and agent grow the workspace together, in the conversation where the work happens. In
+orchestra, evolution is a governed function: the team driving the adoption curates what the
+system learns, and its users experience a system that gets more capable every week. Both are
+living; they differ in where the living happens.
+
 ## This repo is three things
 
 | Part | What it is | Start here |
